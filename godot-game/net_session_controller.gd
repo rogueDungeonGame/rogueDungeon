@@ -1,13 +1,13 @@
 extends Node
 
 @export_enum("offline", "host", "client") var network_mode: String = "offline"
-@export_enum("enet_direct", "steam_stub", "steam_relay") var net_transport_mode: String = "enet_direct"
+@export_enum("enet_direct", "steam_stub", "steam_relay") var net_transport_mode: String = "steam_relay"
 @export var transport_config_enabled: bool = true
 @export var transport_config_path: String = "res://net_transport.cfg"
 @export var auto_start_network: bool = false
 @export var server_host: String = "127.0.0.1"
 @export var server_port: int = 19090
-@export var steam_app_id: int = 408
+@export var steam_app_id: int = 480
 @export var steam_embed_callbacks: bool = true
 @export var steam_virtual_port: int = 0
 @export var steam_local_id: String = ""
@@ -18,7 +18,10 @@ extends Node
 @export var steam_stub_endpoint_map_csv: String = ""
 @export var send_interval_sec: float = 0.05
 @export var hero_sync_interval_sec: float = 0.05
+@export var equipment_sync_interval_sec: float = 0.30
+@export var client_input_redundancy_count: int = 3
 @export var world_sync_interval_sec: float = 0.08
+@export var world_reliable_keyframe_interval_sec: float = 0.65
 @export var adaptive_world_sync_enabled: bool = true
 @export var world_sync_interval_min_sec: float = 0.07
 @export var world_sync_interval_max_sec: float = 0.24
@@ -59,18 +62,29 @@ extends Node
 @export var sync_equipment_state: bool = true
 @export var sync_boss_state: bool = true
 @export var sync_mob_state: bool = true
+@export var sync_breakable_state: bool = true
+@export var breakable_group_name: StringName = &"breakable"
+@export var damage_request_budget_per_sec: float = 180.0
+@export var damage_request_budget_burst_sec: float = 1.5
+@export var damage_request_breaker_window_sec: float = 8.0
+@export var damage_request_breaker_reject_threshold: int = 40
+@export var damage_request_breaker_block_sec: float = 5.0
 
 const SKILL_ID_W_RANGED_SPEED: int = 202
 
 var _peer: MultiplayerPeer = null
 var _is_network_running: bool = false
 var _send_elapsed_sec: float = 0.0
+var _equipment_send_elapsed_sec: float = 0.0
 var _hero_send_elapsed_sec: float = 0.0
 var _world_send_elapsed_sec: float = 0.0
+var _world_reliable_keyframe_elapsed_sec: float = 0.0
 var _dynamic_world_sync_interval_sec: float = 0.08
 var _dynamic_world_mob_chunk_size: int = 4
 var _world_mob_chunk_cursor: int = 0
 var _last_world_packet_bytes: int = 0
+var _host_world_snapshot_seq: int = 0
+var _last_applied_world_snapshot_seq: int = -1
 var _status_refresh_elapsed_sec: float = 0.0
 var _remote_players_root: Node3D = null
 var _remote_avatars: Dictionary = {}
@@ -84,8 +98,28 @@ var _remote_last_skill_event_seq: Dictionary = {}
 
 var _peer_latest_hero_state: Dictionary = {}
 var _peer_latest_equipment_state: Dictionary = {}
+var _peer_latest_equipment_signatures: Dictionary = {}
+var _peer_last_input_seq: Dictionary = {}
+var _peer_last_damage_request_seq: Dictionary = {}
+var _peer_last_damage_request_ms: Dictionary = {}
+var _peer_last_hero_positions: Dictionary = {}
+var _peer_last_hero_pos_ms: Dictionary = {}
+var _peer_damage_budget_tokens: Dictionary = {}
+var _peer_damage_budget_last_ms: Dictionary = {}
+var _peer_damage_accept_total: Dictionary = {}
+var _peer_damage_reject_total: Dictionary = {}
+var _peer_damage_reject_reason_counts: Dictionary = {}
+var _peer_damage_breaker_window_start_ms: Dictionary = {}
+var _peer_damage_breaker_reject_count: Dictionary = {}
+var _peer_damage_breaker_blocked_until_ms: Dictionary = {}
 var _host_hero_snapshot_seq: int = 0
 var _last_applied_hero_snapshot_seq: int = -1
+var _client_input_seq: int = 0
+var _client_recent_input_frames: Array = []
+var _client_enemy_damage_request_seq: int = 0
+var _last_sent_equipment_signature: String = ""
+var _last_ack_input_seq_from_host: int = -1
+var _local_equipment_request_seq: int = 0
 var _local_prev_flash_cd: float = 0.0
 var _local_prev_haste_active: bool = false
 var _local_skill_event_seq: int = 0
@@ -165,6 +199,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_notify_game_ui_observe_peer(0)
 
 func _tick_host(delta: float) -> void:
+	var safe_delta: float = maxf(delta, 0.0)
 	var host_id: int = multiplayer.get_unique_id()
 	if host_id > 0:
 		if sync_hero_state:
@@ -175,32 +210,46 @@ func _tick_host(delta: float) -> void:
 	if multiplayer.get_peers().is_empty():
 		return
 
-	_hero_send_elapsed_sec += maxf(delta, 0.0)
+	_hero_send_elapsed_sec += safe_delta
 	if _hero_send_elapsed_sec >= maxf(hero_sync_interval_sec, 0.02):
 		_hero_send_elapsed_sec = 0.0
 		var hero_snapshot: Dictionary = _build_hero_snapshot()
 		rpc("rpc_hero_snapshot", hero_snapshot)
 
-	_world_send_elapsed_sec += maxf(delta, 0.0)
+	_world_send_elapsed_sec += safe_delta
 	var active_world_interval: float = _get_active_world_sync_interval_sec()
 	if _world_send_elapsed_sec >= active_world_interval:
 		_world_send_elapsed_sec = 0.0
-		var world_snapshot: Dictionary = _build_world_snapshot()
+		var world_snapshot: Dictionary = _build_world_snapshot(false)
 		_last_world_packet_bytes = _estimate_payload_bytes(world_snapshot)
 		_adjust_dynamic_world_sync_interval(world_snapshot, _last_world_packet_bytes)
 		rpc("rpc_world_snapshot", world_snapshot)
+	_world_reliable_keyframe_elapsed_sec += safe_delta
+	if _world_reliable_keyframe_elapsed_sec >= maxf(world_reliable_keyframe_interval_sec, 0.25):
+		_world_reliable_keyframe_elapsed_sec = 0.0
+		var keyframe_snapshot: Dictionary = _build_world_snapshot(true)
+		keyframe_snapshot["keyframe"] = true
+		rpc("rpc_world_snapshot_keyframe", keyframe_snapshot)
 
 func _tick_client(delta: float) -> void:
-	_send_elapsed_sec += maxf(delta, 0.0)
+	var safe_delta: float = maxf(delta, 0.0)
+	_send_elapsed_sec += safe_delta
+	_equipment_send_elapsed_sec += safe_delta
+	if multiplayer.get_peers().is_empty():
+		return
+	var equipment_state: Dictionary = _collect_local_equipment_state()
+	var equipment_signature: String = _build_state_signature(equipment_state)
+	var should_send_equipment: bool = equipment_signature != _last_sent_equipment_signature
+	if should_send_equipment:
+		rpc_id(1, "rpc_submit_client_equipment_state", equipment_state, equipment_signature)
+		_last_sent_equipment_signature = equipment_signature
+		_equipment_send_elapsed_sec = 0.0
 	if _send_elapsed_sec < maxf(send_interval_sec, 0.01):
 		return
 	_send_elapsed_sec = 0.0
-	if multiplayer.get_peers().is_empty():
-		return
 	var hero_state: Dictionary = _collect_local_hero_state()
-	var equipment_state: Dictionary = _collect_local_equipment_state()
-	var combat_report: Dictionary = _collect_client_combat_report()
-	rpc_id(1, "rpc_submit_client_state", hero_state, equipment_state, combat_report)
+	var input_bundle: Dictionary = _build_client_input_bundle(hero_state)
+	rpc_id(1, "rpc_submit_client_input", input_bundle)
 
 func start_network() -> void:
 	stop_network()
@@ -285,10 +334,34 @@ func start_network() -> void:
 	multiplayer.multiplayer_peer = _peer
 	_is_network_running = true
 	_send_elapsed_sec = 0.0
+	_equipment_send_elapsed_sec = 0.0
 	_hero_send_elapsed_sec = 0.0
 	_world_send_elapsed_sec = 0.0
+	_world_reliable_keyframe_elapsed_sec = 0.0
 	_host_hero_snapshot_seq = 0
+	_host_world_snapshot_seq = 0
 	_last_applied_hero_snapshot_seq = -1
+	_last_applied_world_snapshot_seq = -1
+	_client_input_seq = 0
+	_client_recent_input_frames.clear()
+	_client_enemy_damage_request_seq = 0
+	_last_sent_equipment_signature = ""
+	_last_ack_input_seq_from_host = -1
+	_local_equipment_request_seq = 0
+	_peer_last_input_seq.clear()
+	_peer_last_damage_request_seq.clear()
+	_peer_last_damage_request_ms.clear()
+	_peer_last_hero_positions.clear()
+	_peer_last_hero_pos_ms.clear()
+	_peer_damage_budget_tokens.clear()
+	_peer_damage_budget_last_ms.clear()
+	_peer_damage_accept_total.clear()
+	_peer_damage_reject_total.clear()
+	_peer_damage_reject_reason_counts.clear()
+	_peer_damage_breaker_window_start_ms.clear()
+	_peer_damage_breaker_reject_count.clear()
+	_peer_damage_breaker_blocked_until_ms.clear()
+	_peer_latest_equipment_signatures.clear()
 	_reset_world_sync_adaptive_runtime()
 	_reset_local_skill_event_runtime(true)
 	_status_refresh_elapsed_sec = 0.0
@@ -300,16 +373,40 @@ func stop_network() -> void:
 	_clear_remote_avatars()
 	_peer_latest_hero_state.clear()
 	_peer_latest_equipment_state.clear()
+	_peer_latest_equipment_signatures.clear()
+	_peer_last_input_seq.clear()
+	_peer_last_damage_request_seq.clear()
+	_peer_last_damage_request_ms.clear()
+	_peer_last_hero_positions.clear()
+	_peer_last_hero_pos_ms.clear()
+	_peer_damage_budget_tokens.clear()
+	_peer_damage_budget_last_ms.clear()
+	_peer_damage_accept_total.clear()
+	_peer_damage_reject_total.clear()
+	_peer_damage_reject_reason_counts.clear()
+	_peer_damage_breaker_window_start_ms.clear()
+	_peer_damage_breaker_reject_count.clear()
+	_peer_damage_breaker_blocked_until_ms.clear()
 	if multiplayer.multiplayer_peer != null:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
 	_peer = null
 	_is_network_running = false
 	_send_elapsed_sec = 0.0
+	_equipment_send_elapsed_sec = 0.0
 	_hero_send_elapsed_sec = 0.0
 	_world_send_elapsed_sec = 0.0
+	_world_reliable_keyframe_elapsed_sec = 0.0
 	_host_hero_snapshot_seq = 0
+	_host_world_snapshot_seq = 0
 	_last_applied_hero_snapshot_seq = -1
+	_last_applied_world_snapshot_seq = -1
+	_client_input_seq = 0
+	_client_recent_input_frames.clear()
+	_client_enemy_damage_request_seq = 0
+	_last_sent_equipment_signature = ""
+	_last_ack_input_seq_from_host = -1
+	_local_equipment_request_seq = 0
 	_reset_world_sync_adaptive_runtime()
 	_reset_local_skill_event_runtime(false)
 	_status_refresh_elapsed_sec = 0.0
@@ -339,6 +436,23 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	_remove_remote_avatar(peer_id)
 	_peer_latest_hero_state.erase(peer_id)
 	_peer_latest_equipment_state.erase(peer_id)
+	_peer_latest_equipment_signatures.erase(peer_id)
+	_peer_last_input_seq.erase(peer_id)
+	_peer_last_damage_request_seq.erase(peer_id)
+	_peer_last_damage_request_ms.erase(peer_id)
+	_peer_last_hero_positions.erase(peer_id)
+	_peer_last_hero_pos_ms.erase(peer_id)
+	_peer_damage_budget_tokens.erase(peer_id)
+	_peer_damage_budget_last_ms.erase(peer_id)
+	_peer_damage_accept_total.erase(peer_id)
+	_peer_damage_reject_total.erase(peer_id)
+	_peer_damage_reject_reason_counts.erase(peer_id)
+	_peer_damage_breaker_window_start_ms.erase(peer_id)
+	_peer_damage_breaker_reject_count.erase(peer_id)
+	_peer_damage_breaker_blocked_until_ms.erase(peer_id)
+	var ui: Node = _get_game_ui()
+	if ui != null and ui.has_method("authority_drop_peer_state"):
+		ui.call("authority_drop_peer_state", peer_id)
 	if _ui_observed_peer_id == peer_id:
 		_ui_observed_peer_id = 0
 		_notify_game_ui_observe_peer(0)
@@ -361,19 +475,58 @@ func _on_server_disconnected() -> void:
 	_status_event_hint = "server_disconnected"
 	_refresh_status_text()
 
-@rpc("any_peer", "reliable")
-func rpc_submit_client_state(hero_state: Dictionary, equipment_state: Dictionary, combat_report: Dictionary = {}) -> void:
+@rpc("any_peer", "unreliable_ordered")
+func rpc_submit_client_input(input_bundle: Dictionary) -> void:
 	if network_mode.strip_edges().to_lower() != "host":
 		return
 	var sender_id: int = multiplayer.get_remote_sender_id()
 	if sender_id <= 0:
 		return
-	if sync_hero_state:
-		_peer_latest_hero_state[sender_id] = hero_state
-		_upsert_remote_avatar_from_state(sender_id, hero_state)
-	if sync_equipment_state:
-		_peer_latest_equipment_state[sender_id] = equipment_state
-	_merge_client_combat_report(combat_report, sender_id)
+	var latest_frame: Dictionary = _extract_latest_input_frame(input_bundle, sender_id)
+	if latest_frame.is_empty():
+		return
+	var hero_variant: Variant = latest_frame.get("hero", {})
+	if hero_variant is Dictionary:
+		_apply_client_hero_state_from_sender(sender_id, hero_variant)
+
+@rpc("any_peer", "reliable")
+func rpc_submit_client_enemy_damage_request(event: Dictionary) -> void:
+	if network_mode.strip_edges().to_lower() != "host":
+		return
+	var sender_id: int = multiplayer.get_remote_sender_id()
+	if sender_id <= 0:
+		return
+	_consume_client_enemy_damage_request(sender_id, event)
+
+@rpc("any_peer", "reliable")
+func rpc_submit_client_equipment_state(equipment_state: Dictionary, signature: String = "") -> void:
+	if network_mode.strip_edges().to_lower() != "host":
+		return
+	var sender_id: int = multiplayer.get_remote_sender_id()
+	if sender_id <= 0:
+		return
+	_apply_client_equipment_state_from_sender(sender_id, equipment_state, signature)
+
+@rpc("any_peer", "reliable")
+func rpc_request_equipment_action(request: Dictionary) -> void:
+	if network_mode.strip_edges().to_lower() != "host":
+		return
+	var sender_id: int = multiplayer.get_remote_sender_id()
+	if sender_id <= 0:
+		return
+	var commit: Dictionary = _process_equipment_action_request(sender_id, request)
+	rpc_id(sender_id, "rpc_apply_equipment_commit_from_authority", commit)
+
+@rpc("authority", "call_remote", "reliable")
+func rpc_apply_equipment_commit_from_authority(commit: Dictionary) -> void:
+	if network_mode.strip_edges().to_lower() == "host":
+		return
+	var ui: Node = _get_game_ui()
+	if ui != null and ui.has_method("apply_authoritative_equipment_commit"):
+		ui.call("apply_authoritative_equipment_commit", commit)
+	var state_variant: Variant = commit.get("state", null)
+	if state_variant is Dictionary:
+		_last_sent_equipment_signature = _build_state_signature(state_variant)
 
 @rpc("authority", "reliable")
 func rpc_hero_snapshot(snapshot: Dictionary) -> void:
@@ -381,8 +534,14 @@ func rpc_hero_snapshot(snapshot: Dictionary) -> void:
 		return
 	_apply_world_snapshot(snapshot)
 
-@rpc("authority", "unreliable")
+@rpc("authority", "unreliable_ordered")
 func rpc_world_snapshot(snapshot: Dictionary) -> void:
+	if network_mode.strip_edges().to_lower() == "host":
+		return
+	_apply_world_snapshot(snapshot)
+
+@rpc("authority", "reliable")
+func rpc_world_snapshot_keyframe(snapshot: Dictionary) -> void:
 	if network_mode.strip_edges().to_lower() == "host":
 		return
 	_apply_world_snapshot(snapshot)
@@ -403,9 +562,12 @@ func rpc_apply_hero_slow_from_authority(slow_percent: float, duration: float) ->
 	if hero_controller != null and hero_controller.has_method("apply_temporary_slow"):
 		hero_controller.call("apply_temporary_slow", slow_percent, duration)
 
-func _build_world_snapshot() -> Dictionary:
+func _build_world_snapshot(force_full_sync: bool = false) -> Dictionary:
 	var snapshot: Dictionary = {}
+	_host_world_snapshot_seq += 1
+	snapshot["world_seq"] = _host_world_snapshot_seq
 	snapshot["timestamp_ms"] = Time.get_ticks_msec()
+	snapshot["ack_input_seq"] = _peer_last_input_seq.duplicate(true)
 	if sync_boss_state:
 		snapshot["boss"] = _collect_boss_state()
 	if sync_mob_state:
@@ -418,7 +580,7 @@ func _build_world_snapshot() -> Dictionary:
 			snapshot["mobs_total"] = 0
 			snapshot["mobs_start"] = 0
 			_world_mob_chunk_cursor = 0
-		elif (world_full_sync_mob_threshold > 0 and total_mobs <= world_full_sync_mob_threshold) or chunk_size >= total_mobs:
+		elif force_full_sync or (world_full_sync_mob_threshold > 0 and total_mobs <= world_full_sync_mob_threshold) or chunk_size >= total_mobs:
 			snapshot["mobs"] = all_mobs
 			snapshot["mobs_partial"] = false
 			snapshot["mobs_total"] = total_mobs
@@ -435,6 +597,8 @@ func _build_world_snapshot() -> Dictionary:
 			snapshot["mobs_total"] = total_mobs
 			snapshot["mobs_start"] = start_idx
 			_world_mob_chunk_cursor = (start_idx + chunk_size) % total_mobs
+	if sync_breakable_state:
+		snapshot["breakables"] = _collect_breakable_states()
 	return snapshot
 
 
@@ -444,6 +608,7 @@ func _build_hero_snapshot() -> Dictionary:
 	snapshot["hero_seq"] = _host_hero_snapshot_seq
 	snapshot["timestamp_ms"] = Time.get_ticks_msec()
 	snapshot["host_peer_id"] = multiplayer.get_unique_id()
+	snapshot["ack_input_seq"] = _peer_last_input_seq.duplicate(true)
 	if sync_hero_state:
 		snapshot["host_hero"] = _collect_local_hero_state()
 	if sync_equipment_state:
@@ -462,6 +627,112 @@ func _build_hero_snapshot() -> Dictionary:
 		peers_payload[str(peer_id)] = payload
 	snapshot["peers"] = peers_payload
 	return snapshot
+
+
+func _build_client_input_bundle(hero_state: Dictionary) -> Dictionary:
+	_client_input_seq += 1
+	var now_ms: int = Time.get_ticks_msec()
+	var frame: Dictionary = {
+		"seq": _client_input_seq,
+		"t_ms": now_ms,
+		"hero": hero_state
+	}
+	_client_recent_input_frames.append(frame)
+	var max_cached: int = clampi(client_input_redundancy_count, 1, 8)
+	while _client_recent_input_frames.size() > max_cached:
+		_client_recent_input_frames.remove_at(0)
+	return {
+		"client_t_ms": now_ms,
+		"latest_seq": _client_input_seq,
+		"frames": _client_recent_input_frames.duplicate(true)
+	}
+
+
+func _extract_latest_input_frame(input_bundle: Dictionary, sender_id: int) -> Dictionary:
+	var last_seq: int = _int_from_variant(_peer_last_input_seq.get(sender_id, -1), -1)
+	var best_seq: int = last_seq
+	var best_frame: Dictionary = {}
+	var frames_variant: Variant = input_bundle.get("frames", null)
+	if frames_variant is Array:
+		var frames: Array = frames_variant
+		for frame_variant in frames:
+			if not (frame_variant is Dictionary):
+				continue
+			var frame: Dictionary = frame_variant
+			var seq: int = _int_from_variant(frame.get("seq", -1), -1)
+			if seq > best_seq:
+				best_seq = seq
+				best_frame = frame
+	if best_frame.is_empty():
+		var direct_seq: int = _int_from_variant(input_bundle.get("seq", -1), -1)
+		if direct_seq > best_seq:
+			best_seq = direct_seq
+			best_frame = input_bundle
+	if best_seq <= last_seq:
+		return {}
+	_peer_last_input_seq[sender_id] = best_seq
+	return best_frame
+
+
+func _apply_client_hero_state_from_sender(sender_id: int, hero_state: Dictionary) -> void:
+	if sender_id <= 0:
+		return
+	if not sync_hero_state:
+		return
+	var sanitized_state: Dictionary = _sanitize_peer_hero_state(sender_id, hero_state)
+	_peer_latest_hero_state[sender_id] = sanitized_state
+	_upsert_remote_avatar_from_state(sender_id, sanitized_state)
+
+
+func _sanitize_peer_hero_state(sender_id: int, hero_state: Dictionary) -> Dictionary:
+	var sanitized: Dictionary = hero_state.duplicate(true)
+	var pos_variant: Variant = sanitized.get("pos", null)
+	if not (pos_variant is Vector3):
+		return sanitized
+	var incoming_pos: Vector3 = pos_variant
+	var now_ms: int = Time.get_ticks_msec()
+	if _peer_last_hero_positions.has(sender_id):
+		var prev_pos_variant: Variant = _peer_last_hero_positions[sender_id]
+		if prev_pos_variant is Vector3:
+			var prev_pos: Vector3 = prev_pos_variant
+			var prev_ms: int = _int_from_variant(_peer_last_hero_pos_ms.get(sender_id, now_ms), now_ms)
+			var dt_sec: float = clampf(float(now_ms - prev_ms) * 0.001, 0.0, 0.6)
+			if dt_sec > 0.0:
+				var move_speed: float = clampf(_float_from_variant(sanitized.get("move_speed", 320.0), 320.0), 80.0, 1400.0)
+				var allowed_step: float = maxf(move_speed * dt_sec * 2.5 + 80.0, 40.0)
+				var dist: float = prev_pos.distance_to(incoming_pos)
+				if dist > allowed_step:
+					incoming_pos = prev_pos.move_toward(incoming_pos, allowed_step)
+					sanitized["pos"] = incoming_pos
+	_peer_last_hero_positions[sender_id] = incoming_pos
+	_peer_last_hero_pos_ms[sender_id] = now_ms
+	return sanitized
+
+
+func _apply_client_equipment_state_from_sender(sender_id: int, equipment_state: Dictionary, signature: String = "") -> void:
+	if sender_id <= 0:
+		return
+	if not sync_equipment_state:
+		return
+	var applied_state: Dictionary = equipment_state.duplicate(true)
+	if network_mode.strip_edges().to_lower() == "host":
+		var ui: Node = _get_game_ui()
+		if ui != null and ui.has_method("authority_ensure_peer_equipment_state"):
+			ui.call("authority_ensure_peer_equipment_state", sender_id, applied_state)
+		if ui != null and ui.has_method("authority_get_peer_equipment_state"):
+			var auth_state_variant: Variant = ui.call("authority_get_peer_equipment_state", sender_id)
+			if auth_state_variant is Dictionary:
+				var auth_state: Dictionary = auth_state_variant
+				if not auth_state.is_empty():
+					applied_state = auth_state.duplicate(true)
+	var state_signature: String = signature.strip_edges()
+	if network_mode.strip_edges().to_lower() == "host" or state_signature.is_empty():
+		state_signature = _build_state_signature(applied_state)
+	var last_signature: String = str(_peer_latest_equipment_signatures.get(sender_id, ""))
+	if state_signature == last_signature and _peer_latest_equipment_state.has(sender_id):
+		return
+	_peer_latest_equipment_state[sender_id] = applied_state
+	_peer_latest_equipment_signatures[sender_id] = state_signature
 
 
 func _reset_world_sync_adaptive_runtime() -> void:
@@ -495,6 +766,11 @@ func _get_active_world_mob_chunk_size(total_mobs: int) -> int:
 func _estimate_payload_bytes(payload: Variant) -> int:
 	var payload_bytes: PackedByteArray = var_to_bytes(payload)
 	return payload_bytes.size()
+
+
+func _build_state_signature(payload: Variant) -> String:
+	var payload_bytes: PackedByteArray = var_to_bytes(payload)
+	return str(hash(payload_bytes))
 
 
 func _extract_mob_count_from_snapshot(snapshot: Dictionary) -> int:
@@ -539,6 +815,13 @@ func _adjust_dynamic_world_sync_interval(snapshot: Dictionary, packet_bytes: int
 	_dynamic_world_mob_chunk_size = clampi(_dynamic_world_mob_chunk_size, min_chunk, max_chunk)
 
 func _apply_world_snapshot(snapshot: Dictionary) -> void:
+	var incoming_world_seq: int = _int_from_variant(snapshot.get("world_seq", -1), -1)
+	if incoming_world_seq >= 0:
+		if incoming_world_seq <= _last_applied_world_snapshot_seq:
+			return
+		_last_applied_world_snapshot_seq = incoming_world_seq
+	if snapshot.has("ack_input_seq"):
+		_consume_ack_input_seq(snapshot["ack_input_seq"])
 	var self_id: int = 0
 	if multiplayer.multiplayer_peer != null:
 		self_id = multiplayer.get_unique_id()
@@ -606,10 +889,50 @@ func _apply_world_snapshot(snapshot: Dictionary) -> void:
 		var mobs_variant: Variant = snapshot["mobs"]
 		if mobs_variant is Array:
 			_apply_mob_states(mobs_variant)
+	if sync_breakable_state and snapshot.has("breakables"):
+		var breakables_variant: Variant = snapshot["breakables"]
+		if breakables_variant is Array:
+			_apply_breakable_states(breakables_variant)
 
 	if has_hero_payload:
 		_remove_absent_remote_avatars(valid_remote_ids)
 	_refresh_status_text()
+
+
+func _consume_ack_input_seq(ack_variant: Variant) -> void:
+	if network_mode.strip_edges().to_lower() != "client":
+		return
+	if not (ack_variant is Dictionary):
+		return
+	if multiplayer.multiplayer_peer == null:
+		return
+	var self_id: int = multiplayer.get_unique_id()
+	if self_id <= 0:
+		return
+	var ack_map: Dictionary = ack_variant
+	var ack_seq: int = -1
+	if ack_map.has(self_id):
+		ack_seq = _int_from_variant(ack_map[self_id], -1)
+	elif ack_map.has(str(self_id)):
+		ack_seq = _int_from_variant(ack_map[str(self_id)], -1)
+	if ack_seq <= _last_ack_input_seq_from_host:
+		return
+	_last_ack_input_seq_from_host = ack_seq
+	_trim_acked_client_inputs(ack_seq)
+
+
+func _trim_acked_client_inputs(ack_seq: int) -> void:
+	if _client_recent_input_frames.is_empty():
+		return
+	var pending_frames: Array = []
+	for frame_variant in _client_recent_input_frames:
+		if not (frame_variant is Dictionary):
+			continue
+		var frame: Dictionary = frame_variant
+		var frame_seq: int = _int_from_variant(frame.get("seq", -1), -1)
+		if frame_seq > ack_seq:
+			pending_frames.append(frame)
+	_client_recent_input_frames = pending_frames
 
 func _collect_local_hero_state() -> Dictionary:
 	var state: Dictionary = {}
@@ -642,6 +965,13 @@ func _collect_local_hero_state() -> Dictionary:
 		state["is_transformed"] = _bool_from_variant(hero_controller.get("_is_transformed"), false)
 		state["transform_left"] = _float_from_variant(hero_controller.get("_transform_time_left"), 0.0)
 		state["damage"] = _int_from_variant(hero_controller.get("damage_per_hit"), 0)
+		state["flash_damage"] = _int_from_variant(hero_controller.get("flash_damage"), 0)
+		state["flash_origin_damage_radius"] = _float_from_variant(hero_controller.get("flash_origin_damage_radius"), 0.0)
+		state["flash_destination_damage_radius"] = _float_from_variant(hero_controller.get("flash_destination_damage_radius"), 0.0)
+		state["ranged_q_ray_damage"] = _int_from_variant(hero_controller.get("ranged_q_ray_damage"), 0)
+		state["ranged_q_ray_length"] = _float_from_variant(hero_controller.get("ranged_q_ray_length"), 0.0)
+		state["poison_damage_per_second"] = _int_from_variant(hero_controller.get("poison_damage_per_second"), 0)
+		state["poison_tick_interval"] = _float_from_variant(hero_controller.get("poison_tick_interval"), 1.0)
 		state["armor"] = _float_from_variant(hero_controller.get("armor"), 0.0)
 		state["move_speed"] = _float_from_variant(hero_controller.get("move_speed"), 0.0)
 		state["attack_speed"] = _float_from_variant(hero_controller.get("attack_speed"), 0.0)
@@ -693,17 +1023,22 @@ func _collect_local_equipment_state() -> Dictionary:
 	if ui != null:
 		state["gold"] = _int_from_variant(ui.get("_gold"), 0)
 		state["shop_level"] = _int_from_variant(ui.get("_shop_level"), 1)
+		state["shop_offer_ids"] = _extract_int_array(ui.get("_shop_offered"))
+		state["destroy_mode"] = _bool_from_variant(ui.get("_destroy_mode"), false)
 	return state
 
 func _extract_inventory_from_hero_controller(hero_controller: Node) -> Array:
-	var out: Array = []
 	if hero_controller == null:
-		return out
-	var inv_variant: Variant = hero_controller.get("inventory")
-	if inv_variant is Array:
-		var inv: Array = inv_variant
-		for item in inv:
-			out.append(int(item))
+		return []
+	return _extract_int_array(hero_controller.get("inventory"))
+
+
+func _extract_int_array(values_variant: Variant) -> Array:
+	var out: Array = []
+	if values_variant is Array:
+		var values: Array = values_variant
+		for value in values:
+			out.append(int(value))
 	return out
 
 func _collect_boss_state() -> Dictionary:
@@ -774,68 +1109,467 @@ func _apply_mob_states(states: Array) -> void:
 		spawner.call("apply_network_states", states)
 
 
-func _collect_client_combat_report() -> Dictionary:
-	var report: Dictionary = {}
-	if sync_boss_state:
-		var boss_state: Dictionary = _collect_boss_state()
-		if not boss_state.is_empty():
-			report["boss"] = {
-				"hp": _int_from_variant(boss_state.get("hp", 0), 0),
-				"dead": _bool_from_variant(boss_state.get("dead", false), false)
-			}
-	if sync_mob_state:
-		var mobs: Array = _collect_mob_states()
-		var damage_states: Array = []
-		for mob_variant in mobs:
-			if not (mob_variant is Dictionary):
-				continue
-			var mob_state: Dictionary = mob_variant
-			damage_states.append({
-				"id": str(mob_state.get("id", "")),
-				"hp": _int_from_variant(mob_state.get("hp", 0), 0),
-				"dead": _bool_from_variant(mob_state.get("dead", false), false)
-			})
-		report["mobs"] = damage_states
-	return report
+func _collect_breakable_states() -> Array:
+	var states: Array = []
+	var scene_tree: SceneTree = get_tree()
+	if scene_tree == null:
+		return states
+	var breakables: Array = scene_tree.get_nodes_in_group(breakable_group_name)
+	for node_variant in breakables:
+		var breakable_node: Node = node_variant as Node
+		if breakable_node == null:
+			continue
+		if breakable_node.has_method("export_network_state"):
+			var exported_variant: Variant = breakable_node.call("export_network_state")
+			if exported_variant is Dictionary:
+				var exported_state: Dictionary = (exported_variant as Dictionary).duplicate(true)
+				if not exported_state.has("id"):
+					exported_state["id"] = str(breakable_node.get_path())
+				states.append(exported_state)
+			continue
+		var fallback_state: Dictionary = _build_breakable_fallback_state(breakable_node)
+		if not fallback_state.is_empty():
+			states.append(fallback_state)
+	return states
 
 
-func _merge_client_combat_report(report: Dictionary, reporter_peer_id: int = 0) -> void:
-	if report.is_empty():
+func _apply_breakable_states(states: Array) -> void:
+	var scene_tree: SceneTree = get_tree()
+	if scene_tree == null:
 		return
-	if sync_boss_state and report.has("boss"):
-		var boss_variant: Variant = report["boss"]
-		if boss_variant is Dictionary:
-			_merge_client_boss_damage_state(boss_variant, reporter_peer_id)
-	if sync_mob_state and report.has("mobs"):
-		var mobs_variant: Variant = report["mobs"]
-		if mobs_variant is Array:
-			_merge_client_mob_damage_states(mobs_variant, reporter_peer_id)
+	var nodes_by_id: Dictionary = {}
+	var breakables: Array = scene_tree.get_nodes_in_group(breakable_group_name)
+	for node_variant in breakables:
+		var breakable_node: Node = node_variant as Node
+		if breakable_node == null:
+			continue
+		nodes_by_id[str(breakable_node.get_path())] = breakable_node
+	for state_variant in states:
+		if not (state_variant is Dictionary):
+			continue
+		var state: Dictionary = state_variant
+		var breakable_id: String = str(state.get("id", "")).strip_edges()
+		if breakable_id.is_empty():
+			continue
+		if not nodes_by_id.has(breakable_id):
+			continue
+		var target_node: Node = nodes_by_id[breakable_id] as Node
+		if target_node == null:
+			continue
+		if target_node.has_method("apply_network_state"):
+			target_node.call("apply_network_state", state)
+			continue
+		_apply_breakable_fallback_state(target_node, state)
 
 
-func _merge_client_boss_damage_state(state: Dictionary, reporter_peer_id: int = 0) -> void:
+func _build_breakable_fallback_state(node: Node) -> Dictionary:
+	if node == null:
+		return {}
+	var state: Dictionary = {}
+	var has_syncable_field: bool = false
+	if node.has_method("is_dead"):
+		state["dead"] = bool(node.call("is_dead"))
+		has_syncable_field = true
+	if _object_has_property(node, "current_hp"):
+		state["hp"] = _int_from_variant(node.get("current_hp"), 0)
+		has_syncable_field = true
+	if _object_has_property(node, "max_hp"):
+		state["max_hp"] = _int_from_variant(node.get("max_hp"), 1)
+		has_syncable_field = true
+	if not has_syncable_field:
+		return {}
+	state["id"] = str(node.get_path())
+	if node is Node3D:
+		state["visible"] = (node as Node3D).visible
+	return state
+
+
+func _apply_breakable_fallback_state(node: Node, state: Dictionary) -> void:
+	if node == null:
+		return
+	if state.has("max_hp") and _object_has_property(node, "max_hp"):
+		node.set("max_hp", maxi(int(state["max_hp"]), 1))
+	if state.has("hp") and _object_has_property(node, "current_hp"):
+		var max_hp_value: int = 1
+		if _object_has_property(node, "max_hp"):
+			max_hp_value = maxi(_int_from_variant(node.get("max_hp"), 1), 1)
+		node.set("current_hp", clampi(int(state["hp"]), 0, max_hp_value))
+	if state.has("dead"):
+		var is_dead: bool = _bool_from_variant(state["dead"], false)
+		if is_dead:
+			if node.has_method("_die"):
+				node.call("_die")
+			elif node is Node3D:
+				(node as Node3D).visible = false
+		elif state.has("visible") and node is Node3D:
+			(node as Node3D).visible = _bool_from_variant(state["visible"], true)
+	elif state.has("visible") and node is Node3D:
+		(node as Node3D).visible = _bool_from_variant(state["visible"], true)
+
+
+func _consume_client_enemy_damage_request(sender_id: int, event: Dictionary) -> void:
+	if sender_id <= 0:
+		return
+	if _is_damage_request_breaker_blocked(sender_id):
+		_record_damage_request_reject(sender_id, "breaker_blocked")
+		return
+	if event.is_empty():
+		_record_damage_request_reject(sender_id, "empty_event")
+		return
+	var event_seq: int = _int_from_variant(event.get("seq", -1), -1)
+	if event_seq >= 0:
+		var last_seq: int = _int_from_variant(_peer_last_damage_request_seq.get(sender_id, -1), -1)
+		if event_seq <= last_seq:
+			_record_damage_request_reject(sender_id, "seq_replay")
+			return
+		_peer_last_damage_request_seq[sender_id] = event_seq
+	var target_path: String = str(event.get("target_path", "")).strip_edges()
+	if target_path.is_empty():
+		_record_damage_request_reject(sender_id, "missing_target_path")
+		return
+	var target_node: Node = get_node_or_null(NodePath(target_path))
+	if target_node == null:
+		_record_damage_request_reject(sender_id, "target_node_missing")
+		return
+	var enemy_controller: Node = _resolve_enemy_damage_controller(target_node)
+	if enemy_controller == null:
+		_record_damage_request_reject(sender_id, "target_not_authorized")
+		return
+	var attacker_avatar: Node3D = _get_remote_avatar_for_peer(sender_id)
+	if attacker_avatar == null or not is_instance_valid(attacker_avatar):
+		_record_damage_request_reject(sender_id, "attacker_avatar_missing")
+		return
+	var target_pos: Vector3 = _resolve_enemy_damage_target_position(target_node, enemy_controller)
+	var max_range: float = _float_from_variant(event.get("max_range", -1.0), -1.0)
+	var context: Dictionary = {}
+	var context_variant: Variant = event.get("context", {})
+	if context_variant is Dictionary:
+		context = context_variant as Dictionary
+	var requested_damage: int = _int_from_variant(event.get("amount", 0), 0)
+	if requested_damage <= 0:
+		_record_damage_request_reject(sender_id, "invalid_damage")
+		return
+	var hero_state: Dictionary = {}
+	var hero_state_variant: Variant = _peer_latest_hero_state.get(sender_id, {})
+	if hero_state_variant is Dictionary:
+		hero_state = hero_state_variant
+	if hero_state.is_empty():
+		_record_damage_request_reject(sender_id, "hero_state_missing")
+		return
+	var source_text_raw: String = str(event.get("source", "attack")).strip_edges().to_lower()
+	var source_kind: String = _normalize_damage_source(source_text_raw)
+	if not _consume_damage_request_budget(sender_id, source_kind):
+		_record_damage_request_reject(sender_id, "budget_exceeded")
+		return
+	var attack_range: float = clampf(_float_from_variant(hero_state.get("attack_range", 220.0), 220.0), 80.0, 2200.0)
+	var q_ray_length: float = clampf(_float_from_variant(hero_state.get("ranged_q_ray_length", 1200.0), 1200.0), 120.0, 5200.0)
+	var flash_origin_radius: float = clampf(_float_from_variant(hero_state.get("flash_origin_damage_radius", 420.0), 420.0), 40.0, 2200.0)
+	var flash_destination_radius: float = clampf(_float_from_variant(hero_state.get("flash_destination_damage_radius", 320.0), 320.0), 40.0, 2200.0)
+	var flash_radius: float = maxf(flash_origin_radius, flash_destination_radius)
+	if not _consume_damage_request_interval(sender_id, source_text_raw, source_kind, target_path, hero_state):
+		_record_damage_request_reject(sender_id, "interval_limited")
+		return
+	var allowed_dist: float = attack_range + 260.0
+	match source_kind:
+		"basic_attack":
+			allowed_dist = attack_range + 120.0
+		"poison":
+			allowed_dist = attack_range + 420.0
+		"q_ray":
+			allowed_dist = q_ray_length + 200.0
+		"flash":
+			allowed_dist = flash_radius + 180.0
+		_:
+			allowed_dist = attack_range + 260.0
+	if max_range > 0.0:
+		allowed_dist = minf(allowed_dist, clampf(max_range, 1.0, 2600.0) + 120.0)
+	if attacker_avatar.global_position.distance_to(target_pos) > allowed_dist:
+		_record_damage_request_reject(sender_id, "distance_exceeded")
+		return
+	if not _validate_enemy_damage_geometry(source_kind, attacker_avatar, target_pos, context):
+		_record_damage_request_reject(sender_id, "geometry_invalid")
+		return
+	var base_damage: int = _int_from_variant(hero_state.get("damage", 0), 0)
+	var physical_crit_multiplier: float = clampf(_float_from_variant(hero_state.get("physical_crit_multiplier", 2.0), 2.0), 1.0, 6.0)
+	var spell_crit_multiplier: float = clampf(_float_from_variant(hero_state.get("spell_crit_multiplier", 2.0), 2.0), 1.0, 6.0)
+	var source_base_damage: int = maxi(base_damage, 1)
+	var damage_cap_multiplier: float = 6.0
+	var min_cap_floor: int = 120
+	match source_kind:
+		"basic_attack":
+			source_base_damage = maxi(base_damage, 1)
+			damage_cap_multiplier = maxf(physical_crit_multiplier + 0.8, 2.2)
+			min_cap_floor = 100
+		"poison":
+			source_base_damage = maxi(_int_from_variant(hero_state.get("poison_damage_per_second", base_damage), base_damage), 1)
+			damage_cap_multiplier = maxf(spell_crit_multiplier + 1.2, 2.8)
+			min_cap_floor = 120
+		"q_ray":
+			source_base_damage = maxi(_int_from_variant(hero_state.get("ranged_q_ray_damage", base_damage), base_damage), 1)
+			damage_cap_multiplier = maxf(spell_crit_multiplier + 2.0, 3.8)
+			min_cap_floor = 260
+		"flash":
+			source_base_damage = maxi(_int_from_variant(hero_state.get("flash_damage", base_damage), base_damage), 1)
+			damage_cap_multiplier = maxf(spell_crit_multiplier + 2.0, 3.8)
+			min_cap_floor = 260
+		_:
+			source_base_damage = maxi(base_damage, 1)
+			damage_cap_multiplier = 6.0
+			min_cap_floor = 120
+	var max_allowed_damage: int = maxi(int(round(float(source_base_damage) * damage_cap_multiplier)), min_cap_floor)
+	var safe_damage: int = clampi(requested_damage, 1, max_allowed_damage)
+	if enemy_controller.has_method("is_dead") and bool(enemy_controller.call("is_dead")):
+		_record_damage_request_reject(sender_id, "target_dead")
+		return
+	enemy_controller.call("apply_damage", safe_damage, attacker_avatar)
+	_record_damage_request_accept(sender_id)
+
+
+func _record_damage_request_accept(sender_id: int) -> void:
+	if sender_id <= 0:
+		return
+	var count: int = _int_from_variant(_peer_damage_accept_total.get(sender_id, 0), 0) + 1
+	_peer_damage_accept_total[sender_id] = count
+
+
+func _record_damage_request_reject(sender_id: int, reason: String) -> void:
+	if sender_id <= 0:
+		return
+	var reason_key: String = reason.strip_edges().to_lower()
+	if reason_key.is_empty():
+		reason_key = "unknown"
+	var total_count: int = _int_from_variant(_peer_damage_reject_total.get(sender_id, 0), 0) + 1
+	_peer_damage_reject_total[sender_id] = total_count
+	var reason_counts_variant: Variant = _peer_damage_reject_reason_counts.get(sender_id, {})
+	var reason_counts: Dictionary = {}
+	if reason_counts_variant is Dictionary:
+		reason_counts = (reason_counts_variant as Dictionary).duplicate(true)
+	var reason_count: int = _int_from_variant(reason_counts.get(reason_key, 0), 0) + 1
+	reason_counts[reason_key] = reason_count
+	_peer_damage_reject_reason_counts[sender_id] = reason_counts
+	_update_damage_request_breaker_on_reject(sender_id, reason_key)
+
+
+func _is_damage_request_breaker_blocked(sender_id: int) -> bool:
+	if sender_id <= 0:
+		return false
+	var now_ms: int = Time.get_ticks_msec()
+	var blocked_until_ms: int = _int_from_variant(_peer_damage_breaker_blocked_until_ms.get(sender_id, 0), 0)
+	if blocked_until_ms <= 0:
+		return false
+	if blocked_until_ms <= now_ms:
+		_peer_damage_breaker_blocked_until_ms.erase(sender_id)
+		return false
+	return true
+
+
+func _update_damage_request_breaker_on_reject(sender_id: int, reason_key: String) -> void:
+	if sender_id <= 0:
+		return
+	if not _is_breaker_counted_reject_reason(reason_key):
+		return
+	var threshold: int = maxi(damage_request_breaker_reject_threshold, 0)
+	if threshold <= 0:
+		return
+	var window_ms: int = int(round(clampf(damage_request_breaker_window_sec, 1.0, 120.0) * 1000.0))
+	var now_ms: int = Time.get_ticks_msec()
+	var window_start_ms: int = _int_from_variant(_peer_damage_breaker_window_start_ms.get(sender_id, now_ms), now_ms)
+	var reject_count: int = _int_from_variant(_peer_damage_breaker_reject_count.get(sender_id, 0), 0)
+	if now_ms - window_start_ms > window_ms:
+		window_start_ms = now_ms
+		reject_count = 0
+	reject_count += 1
+	if reject_count >= threshold:
+		var block_ms: int = int(round(clampf(damage_request_breaker_block_sec, 0.5, 120.0) * 1000.0))
+		_peer_damage_breaker_blocked_until_ms[sender_id] = now_ms + block_ms
+		window_start_ms = now_ms
+		reject_count = 0
+	_peer_damage_breaker_window_start_ms[sender_id] = window_start_ms
+	_peer_damage_breaker_reject_count[sender_id] = reject_count
+
+
+func _is_breaker_counted_reject_reason(reason_key: String) -> bool:
+	match reason_key:
+		"target_dead", "interval_limited", "seq_replay", "breaker_blocked":
+			return false
+		_:
+			return true
+
+
+func _resolve_enemy_damage_controller(target_node: Node) -> Node:
+	if target_node == null:
+		return null
+	var candidate: Node = target_node
+	if not candidate.has_method("apply_damage"):
+		candidate = target_node.get_parent()
+	if candidate == null:
+		return null
+	if not candidate.has_method("apply_damage"):
+		return null
+	if not candidate.has_method("set_network_authority"):
+		return null
+	if not candidate.has_method("is_dead"):
+		return null
 	var boss_controller: Node = _get_boss_controller()
-	if boss_controller == null:
-		return
-	var attacker_avatar: Node3D = _get_remote_avatar_for_peer(reporter_peer_id)
-	var current_hp: int = _int_from_variant(boss_controller.get("_current_hp"), 0)
-	var reported_hp: int = _int_from_variant(state.get("hp", current_hp), current_hp)
-	reported_hp = clampi(reported_hp, 0, maxi(_int_from_variant(boss_controller.get("max_hp"), 1), 1))
-	if reported_hp < current_hp and boss_controller.has_method("apply_damage"):
-		boss_controller.call("apply_damage", current_hp - reported_hp, attacker_avatar)
-	var reported_dead: bool = _bool_from_variant(state.get("dead", false), false)
-	if reported_dead and not _bool_from_variant(boss_controller.get("_is_dead"), false):
-		var now_hp: int = _int_from_variant(boss_controller.get("_current_hp"), 0)
-		if now_hp > 0 and boss_controller.has_method("apply_damage"):
-			boss_controller.call("apply_damage", now_hp, attacker_avatar)
-
-
-func _merge_client_mob_damage_states(states: Array, reporter_peer_id: int = 0) -> void:
+	if candidate == boss_controller:
+		return candidate
 	var spawner: Node = _get_tauren_spawner()
-	if spawner == null:
-		return
-	var attacker_avatar: Node3D = _get_remote_avatar_for_peer(reporter_peer_id)
-	if spawner.has_method("merge_client_damage_states"):
-		spawner.call("merge_client_damage_states", states, attacker_avatar)
+	if spawner != null and candidate.get_parent() == spawner:
+		return candidate
+	if candidate.is_in_group("boss"):
+		return candidate
+	return null
+
+
+func _resolve_enemy_damage_target_position(target_node: Node, enemy_controller: Node) -> Vector3:
+	if enemy_controller != null:
+		var model_variant: Variant = enemy_controller.get("_enemy")
+		if model_variant is Node3D:
+			var enemy_model: Node3D = model_variant as Node3D
+			if enemy_model != null and is_instance_valid(enemy_model):
+				return enemy_model.global_position
+	var target_node_3d: Node3D = target_node as Node3D
+	if target_node_3d != null and is_instance_valid(target_node_3d):
+		return target_node_3d.global_position
+	var controller_3d: Node3D = enemy_controller as Node3D
+	if controller_3d != null and is_instance_valid(controller_3d):
+		return controller_3d.global_position
+	return Vector3.ZERO
+
+
+func _consume_damage_request_interval(sender_id: int, source_key: String, source_kind: String, target_path: String, hero_state: Dictionary) -> bool:
+	var key: String = "%s|%s" % [source_key, target_path]
+	var now_ms: int = Time.get_ticks_msec()
+	var min_interval_ms: int = _compute_damage_request_min_interval_ms(source_kind, hero_state)
+	if min_interval_ms <= 0:
+		return true
+	var peer_cache_variant: Variant = _peer_last_damage_request_ms.get(sender_id, {})
+	var peer_cache: Dictionary = {}
+	if peer_cache_variant is Dictionary:
+		peer_cache = (peer_cache_variant as Dictionary).duplicate(true)
+	var last_ms: int = _int_from_variant(peer_cache.get(key, -1000000), -1000000)
+	if now_ms - last_ms < min_interval_ms:
+		return false
+	peer_cache[key] = now_ms
+	_peer_last_damage_request_ms[sender_id] = peer_cache
+	return true
+
+
+func _consume_damage_request_budget(sender_id: int, source_kind: String) -> bool:
+	var refill_per_sec: float = maxf(damage_request_budget_per_sec, 20.0)
+	var burst_sec: float = clampf(damage_request_budget_burst_sec, 1.0, 4.0)
+	var max_tokens: float = refill_per_sec * burst_sec
+	var now_ms: int = Time.get_ticks_msec()
+	var last_ms: int = _int_from_variant(_peer_damage_budget_last_ms.get(sender_id, now_ms), now_ms)
+	var elapsed_sec: float = maxf(float(now_ms - last_ms) * 0.001, 0.0)
+	var tokens: float = _float_from_variant(_peer_damage_budget_tokens.get(sender_id, max_tokens), max_tokens)
+	tokens = minf(max_tokens, tokens + elapsed_sec * refill_per_sec)
+	var cost: float = _damage_request_budget_cost(source_kind)
+	if tokens < cost:
+		_peer_damage_budget_tokens[sender_id] = tokens
+		_peer_damage_budget_last_ms[sender_id] = now_ms
+		return false
+	tokens -= cost
+	_peer_damage_budget_tokens[sender_id] = tokens
+	_peer_damage_budget_last_ms[sender_id] = now_ms
+	return true
+
+
+func _damage_request_budget_cost(source_kind: String) -> float:
+	match source_kind:
+		"basic_attack":
+			return 1.0
+		"poison":
+			return 0.7
+		"q_ray":
+			return 1.2
+		"flash":
+			return 1.2
+		_:
+			return 1.0
+
+
+func _compute_damage_request_min_interval_ms(source_kind: String, hero_state: Dictionary) -> int:
+	var attack_interval_sec: float = clampf(_float_from_variant(hero_state.get("attack_interval", 0.45), 0.45), 0.08, 2.5)
+	var poison_tick_sec: float = clampf(_float_from_variant(hero_state.get("poison_tick_interval", 0.6), 0.6), 0.1, 3.0)
+	var attack_interval_ms: int = int(round(attack_interval_sec * 1000.0))
+	var poison_tick_ms: int = int(round(poison_tick_sec * 1000.0))
+	match source_kind:
+		"basic_attack":
+			return maxi(int(round(float(attack_interval_ms) * 0.28)), 45)
+		"poison":
+			return maxi(int(round(float(poison_tick_ms) * 0.55)), 90)
+		"q_ray":
+			return 90
+		"flash":
+			return 90
+		_:
+			return 70
+
+
+func _normalize_damage_source(source_text: String) -> String:
+	var source: String = source_text.strip_edges().to_lower()
+	if source.begins_with("flash"):
+		return "flash"
+	if source.begins_with("q_ray"):
+		return "q_ray"
+	if source.begins_with("poison"):
+		return "poison"
+	if source.begins_with("basic_attack"):
+		return "basic_attack"
+	return source
+
+
+func _validate_enemy_damage_geometry(source_kind: String, attacker_avatar: Node3D, target_pos: Vector3, context: Dictionary) -> bool:
+	if attacker_avatar == null or not is_instance_valid(attacker_avatar):
+		return false
+	match source_kind:
+		"q_ray":
+			var ray_start_variant: Variant = context.get("ray_start", null)
+			var ray_end_variant: Variant = context.get("ray_end", null)
+			if not (ray_start_variant is Vector3) or not (ray_end_variant is Vector3):
+				return false
+			var ray_start: Vector3 = ray_start_variant
+			var ray_end: Vector3 = ray_end_variant
+			var ray_vec: Vector3 = ray_end - ray_start
+			ray_vec.y = 0.0
+			var ray_len: float = ray_vec.length()
+			if ray_len <= 1.0:
+				return false
+			var attacker_offset: Vector3 = attacker_avatar.global_position - ray_start
+			attacker_offset.y = 0.0
+			if attacker_offset.length() > 220.0:
+				return false
+			var ray_dir: Vector3 = ray_vec / ray_len
+			var rel: Vector3 = target_pos - ray_start
+			rel.y = 0.0
+			var projection: float = rel.dot(ray_dir)
+			if projection < -80.0 or projection > ray_len + 80.0:
+				return false
+			var closest: Vector3 = ray_start + ray_dir * clampf(projection, 0.0, ray_len)
+			var lateral: Vector3 = target_pos - closest
+			lateral.y = 0.0
+			var ray_radius: float = clampf(_float_from_variant(context.get("ray_radius", 48.0), 48.0), 1.0, 280.0)
+			if lateral.length() > ray_radius + 60.0:
+				return false
+			return true
+		"flash":
+			var center_variant: Variant = context.get("center", null)
+			if not (center_variant is Vector3):
+				return false
+			var center: Vector3 = center_variant
+			var radius: float = clampf(_float_from_variant(context.get("radius", 380.0), 380.0), 1.0, 2600.0)
+			var to_target: Vector3 = target_pos - center
+			to_target.y = 0.0
+			if to_target.length() > radius + 80.0:
+				return false
+			var attacker_to_center: Vector3 = attacker_avatar.global_position - center
+			attacker_to_center.y = 0.0
+			if attacker_to_center.length() > 1800.0:
+				return false
+			return true
+		_:
+			return true
 
 
 func _get_remote_avatar_for_peer(peer_id: int) -> Node3D:
@@ -867,6 +1601,83 @@ func request_slow_remote_hero(peer_id: int, slow_percent: float, duration: float
 	if peer_id <= 0:
 		return
 	rpc_id(peer_id, "rpc_apply_hero_slow_from_authority", slow_percent, duration)
+
+func request_enemy_damage_from_client(target_path: String, amount: int, max_range: float = -1.0, source: String = "attack", context: Dictionary = {}) -> bool:
+	if network_mode.strip_edges().to_lower() != "client":
+		return false
+	if not _is_network_running:
+		return false
+	if multiplayer.multiplayer_peer == null:
+		return false
+	if multiplayer.get_peers().is_empty():
+		return false
+	var normalized_target_path: String = target_path.strip_edges()
+	if normalized_target_path.is_empty():
+		return false
+	var safe_amount: int = maxi(amount, 0)
+	if safe_amount <= 0:
+		return false
+	_client_enemy_damage_request_seq += 1
+	var event: Dictionary = {
+		"seq": _client_enemy_damage_request_seq,
+		"target_path": normalized_target_path,
+		"amount": safe_amount,
+		"max_range": max_range,
+		"source": source.strip_edges().to_lower(),
+		"context": context.duplicate(true)
+	}
+	rpc_id(1, "rpc_submit_client_enemy_damage_request", event)
+	return true
+
+func request_equipment_action(action: String, payload: Dictionary = {}) -> bool:
+	if network_mode.strip_edges().to_lower() != "client":
+		return false
+	if not _is_network_running:
+		return false
+	if multiplayer.multiplayer_peer == null:
+		return false
+	if multiplayer.get_peers().is_empty():
+		return false
+	var action_text: String = action.strip_edges().to_lower()
+	if action_text.is_empty():
+		return false
+	_local_equipment_request_seq += 1
+	var request: Dictionary = {
+		"action": action_text,
+		"request_seq": _local_equipment_request_seq,
+		"payload": payload.duplicate(true),
+		"baseline": _collect_local_equipment_state()
+	}
+	rpc_id(1, "rpc_request_equipment_action", request)
+	return true
+
+
+func _process_equipment_action_request(sender_id: int, request: Dictionary) -> Dictionary:
+	var action_text: String = str(request.get("action", "")).strip_edges().to_lower()
+	var request_seq: int = _int_from_variant(request.get("request_seq", -1), -1)
+	var baseline_variant: Variant = request.get("baseline", {})
+	var baseline_state: Dictionary = {}
+	if baseline_variant is Dictionary:
+		baseline_state = (baseline_variant as Dictionary).duplicate(true)
+	var commit: Dictionary = {}
+	var ui: Node = _get_game_ui()
+	if ui != null and ui.has_method("authority_handle_equipment_action"):
+		var commit_variant: Variant = ui.call("authority_handle_equipment_action", sender_id, request, baseline_state)
+		if commit_variant is Dictionary:
+			commit = commit_variant
+	if commit.is_empty():
+		commit = {
+			"ok": false,
+			"peer_id": sender_id,
+			"action": action_text,
+			"request_seq": request_seq,
+			"reason": "authority_handler_missing",
+			"state": baseline_state
+		}
+	var state_variant: Variant = commit.get("state", null)
+	if state_variant is Dictionary:
+		_apply_client_equipment_state_from_sender(sender_id, state_variant as Dictionary)
+	return commit
 
 func _upsert_remote_avatar_from_state(peer_id: int, hero_state: Dictionary) -> void:
 	var pos_variant: Variant = hero_state.get("pos", null)
@@ -1821,6 +2632,28 @@ func _refresh_status_text() -> void:
 		_last_world_packet_bytes,
 		"on" if adaptive_world_sync_enabled else "off"
 	]
+	if mode_raw == "client":
+		text += "\ninput=seq:%d ack:%d pending:%d" % [
+			_client_input_seq,
+			_last_ack_input_seq_from_host,
+			_client_recent_input_frames.size()
+		]
+	elif mode_raw == "host":
+		text += "\ninput_ack_peers=%d world_seq=%d" % [
+			_peer_last_input_seq.size(),
+			_host_world_snapshot_seq
+		]
+		text += " dmg_budget=%.0f/s x%.1f active=%d" % [
+			maxf(damage_request_budget_per_sec, 0.0),
+			clampf(damage_request_budget_burst_sec, 1.0, 4.0),
+			_peer_damage_budget_tokens.size()
+		]
+		var breaker_summary: String = _build_damage_breaker_summary(room_ids)
+		if not breaker_summary.is_empty():
+			text += " breaker=%s" % breaker_summary
+		var damage_audit_summary: String = _build_damage_request_audit_summary(room_ids)
+		if not damage_audit_summary.is_empty():
+			text += "\ndmg_audit=%s" % damage_audit_summary
 	if not _status_event_hint.is_empty():
 		text += "\nevent=%s" % _status_event_hint
 	_set_status_text(text)
@@ -1857,8 +2690,48 @@ func _build_equipment_summary(room_ids: Array[int]) -> String:
 			inv_text = _format_int_array(inv_variant)
 		var gold: int = _int_from_variant(state.get("gold", -1), -1)
 		var shop_level: int = _int_from_variant(state.get("shop_level", -1), -1)
-		parts.append("P%d inv=%s gold=%d shop=%d" % [peer_id, inv_text, gold, shop_level])
+		var offer_count: int = 0
+		var offer_variant: Variant = state.get("shop_offer_ids", [])
+		if offer_variant is Array:
+			offer_count = (offer_variant as Array).size()
+		parts.append("P%d inv=%s gold=%d shop=%d offer=%d" % [peer_id, inv_text, gold, shop_level, offer_count])
 	return " | ".join(parts)
+
+
+func _build_damage_request_audit_summary(room_ids: Array[int]) -> String:
+	var parts: Array[String] = []
+	for peer_id in room_ids:
+		var ok_count: int = _int_from_variant(_peer_damage_accept_total.get(peer_id, 0), 0)
+		var reject_count: int = _int_from_variant(_peer_damage_reject_total.get(peer_id, 0), 0)
+		if ok_count <= 0 and reject_count <= 0:
+			continue
+		var top_reason: String = "-"
+		var top_reason_count: int = 0
+		var reasons_variant: Variant = _peer_damage_reject_reason_counts.get(peer_id, {})
+		if reasons_variant is Dictionary:
+			var reasons: Dictionary = reasons_variant
+			for reason_key_variant in reasons.keys():
+				var reason_key: String = str(reason_key_variant)
+				var reason_hits: int = _int_from_variant(reasons[reason_key_variant], 0)
+				if reason_hits > top_reason_count:
+					top_reason_count = reason_hits
+					top_reason = reason_key
+		parts.append("P%d ok=%d rej=%d top=%s(%d)" % [peer_id, ok_count, reject_count, top_reason, top_reason_count])
+	return " | ".join(parts)
+
+
+func _build_damage_breaker_summary(room_ids: Array[int]) -> String:
+	var now_ms: int = Time.get_ticks_msec()
+	var active_parts: Array[String] = []
+	for peer_id in room_ids:
+		var blocked_until_ms: int = _int_from_variant(_peer_damage_breaker_blocked_until_ms.get(peer_id, 0), 0)
+		if blocked_until_ms <= now_ms:
+			continue
+		var left_sec: float = maxf(float(blocked_until_ms - now_ms) * 0.001, 0.0)
+		active_parts.append("P%d %.1fs" % [peer_id, left_sec])
+	if active_parts.is_empty():
+		return "active=0"
+	return "active=%d [%s]" % [active_parts.size(), ", ".join(active_parts)]
 
 func _set_status_text(text: String) -> void:
 	_last_status_text = text
@@ -2038,6 +2911,20 @@ func _parse_bool_or_default(raw: String, fallback: bool) -> bool:
 	if text == "0" or text == "false" or text == "no" or text == "off":
 		return false
 	return fallback
+
+func _object_has_property(target: Object, property_name: String) -> bool:
+	if target == null:
+		return false
+	if property_name.strip_edges().is_empty():
+		return false
+	var properties: Array = target.get_property_list()
+	for property_variant in properties:
+		if not (property_variant is Dictionary):
+			continue
+		var property_info: Dictionary = property_variant
+		if str(property_info.get("name", "")) == property_name:
+			return true
+	return false
 
 func _int_from_variant(value: Variant, fallback: int) -> int:
 	if value == null:

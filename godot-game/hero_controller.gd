@@ -823,13 +823,13 @@ func _handle_flash_click() -> void:
 	if dist > flash_max_distance:
 		target = current + direction.normalized() * flash_max_distance
 		target.y = _plane_height
-	_apply_flash_area_damage(current, flash_origin_damage_radius, flash_damage)
+	_apply_flash_area_damage(current, flash_origin_damage_radius, flash_damage, "flash_origin")
 	_spawn_flash_effect(current)
 	_interrupt_attack_for_move()
 	_has_move_target = false
 	_is_moving = false
 	_hero.global_position = target
-	_apply_flash_area_damage(target, flash_destination_damage_radius, flash_damage)
+	_apply_flash_area_damage(target, flash_destination_damage_radius, flash_damage, "flash_destination")
 	_flash_cooldown = _compute_skill_cooldown(flash_cooldown_time)
 	_push_network_skill_event("q", skill_q_id, {
 		"from_pos": current,
@@ -941,6 +941,11 @@ func _apply_ranged_q_ray_damage(ray_start: Vector3, ray_end: Vector3) -> void:
 	if safe_damage <= 0:
 		return
 	var safe_hit_radius: float = maxf(ranged_q_ray_hit_radius, 1.0)
+	var request_context: Dictionary = {
+		"ray_start": ray_start,
+		"ray_end": ray_end,
+		"ray_radius": safe_hit_radius
+	}
 	var hit_controllers: Dictionary = {}
 	var candidates := get_tree().get_nodes_in_group(enemy_group_name)
 	for candidate in candidates:
@@ -970,13 +975,17 @@ func _apply_ranged_q_ray_damage(ray_start: Vector3, ray_end: Vector3) -> void:
 		if hit_controllers.has(controller_id):
 			continue
 		hit_controllers[controller_id] = true
-		enemy_controller.call("apply_damage", safe_damage, _hero)
-		_add_attack_count(1)
+		if _apply_enemy_damage_with_network(enemy_controller, enemy, safe_damage, ray_len + 40.0, "q_ray", request_context):
+			_add_attack_count(1)
 
 
-func _apply_flash_area_damage(center: Vector3, radius: float, damage: int) -> void:
+func _apply_flash_area_damage(center: Vector3, radius: float, damage: int, source: String = "flash") -> void:
 	if radius <= 0.0 or damage <= 0:
 		return
+	var request_context: Dictionary = {
+		"center": center,
+		"radius": radius
+	}
 	var hit_controllers: Dictionary = {}
 	var candidates := get_tree().get_nodes_in_group(enemy_group_name)
 	for candidate in candidates:
@@ -1001,8 +1010,8 @@ func _apply_flash_area_damage(center: Vector3, radius: float, damage: int) -> vo
 			continue
 		hit_controllers[controller_id] = true
 		var final_damage: int = _compute_spell_damage(damage)
-		enemy_controller.call("apply_damage", final_damage, _hero)
-		_add_attack_count(1)
+		if _apply_enemy_damage_with_network(enemy_controller, enemy, final_damage, radius + 40.0, source, request_context):
+			_add_attack_count(1)
 
 
 func _activate_haste() -> void:
@@ -1064,10 +1073,47 @@ func _apply_poison_tick_damage(enemy: Node3D) -> void:
 	var enemy_controller: Node = enemy.get_parent()
 	if enemy_controller != null and enemy_controller.has_method("apply_damage") and _can_receive_skill_damage(enemy_controller):
 		var final_damage: int = _compute_spell_damage(poison_damage_per_second)
-		enemy_controller.call("apply_damage", final_damage, _hero)
-		_add_attack_count(1)
-		if _target_enemy == enemy and _is_enemy_dead(enemy):
-			_acquire_next_enemy_target_after_kill()
+		if _apply_enemy_damage_with_network(enemy_controller, enemy, final_damage, -1.0, "poison"):
+			_add_attack_count(1)
+			if _target_enemy == enemy and _is_enemy_dead(enemy):
+				_acquire_next_enemy_target_after_kill()
+
+
+func _apply_enemy_damage_with_network(enemy_controller: Node, enemy: Node3D, damage: int, max_range: float, source: String, context: Dictionary = {}) -> bool:
+	if enemy_controller == null:
+		return false
+	var safe_damage: int = maxi(damage, 0)
+	if safe_damage <= 0:
+		return false
+	var net_ctrl: Node = _get_network_session_controller()
+	if net_ctrl != null:
+		var mode_text: String = str(net_ctrl.get("network_mode")).strip_edges().to_lower()
+		if mode_text == "client":
+			if not net_ctrl.has_method("request_enemy_damage_from_client"):
+				return false
+			var target_path: String = ""
+			if enemy != null and is_instance_valid(enemy):
+				target_path = str(enemy.get_path())
+			if target_path.is_empty():
+				target_path = str(enemy_controller.get_path())
+			if target_path.is_empty():
+				return false
+			var accepted_variant: Variant = net_ctrl.call("request_enemy_damage_from_client", target_path, safe_damage, max_range, source, context)
+			return bool(accepted_variant)
+	if enemy_controller.has_method("apply_damage"):
+		if _hero != null and is_instance_valid(_hero):
+			enemy_controller.call("apply_damage", safe_damage, _hero)
+		else:
+			enemy_controller.call("apply_damage", safe_damage)
+		return true
+	return false
+
+
+func _get_network_session_controller() -> Node:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return null
+	return tree.get_first_node_in_group("net_session_controller")
 
 
 func _roll_critical(chance_percent: float) -> bool:
@@ -1980,12 +2026,12 @@ func _try_apply_damage_to_enemy() -> void:
 	var enemy_controller := _target_enemy.get_parent()
 	if enemy_controller != null and enemy_controller.has_method("apply_damage"):
 		var final_damage: int = _compute_physical_damage(damage_per_hit)
-		enemy_controller.call("apply_damage", final_damage, _hero)
-		_add_attack_count(1)
-		if _haste_active and skill_w_id == SKILL_ID_W_HASTE:
-			_apply_poison_to_enemy(_target_enemy)
-		if _is_enemy_dead(_target_enemy):
-			_acquire_next_enemy_target_after_kill()
+		if _apply_enemy_damage_with_network(enemy_controller, _target_enemy, final_damage, attack_range + 30.0, "basic_attack"):
+			_add_attack_count(1)
+			if _haste_active and skill_w_id == SKILL_ID_W_HASTE:
+				_apply_poison_to_enemy(_target_enemy)
+			if _is_enemy_dead(_target_enemy):
+				_acquire_next_enemy_target_after_kill()
 
 
 func _acquire_next_enemy_target_after_kill() -> void:

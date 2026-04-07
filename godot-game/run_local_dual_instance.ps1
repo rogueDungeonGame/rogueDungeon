@@ -2,14 +2,14 @@ param(
     [string]$GodotExe = "godot4",
     [string]$ProjectPath = $PSScriptRoot,
     [ValidateSet("enet", "sdr", "enet_direct", "steam_stub", "steam_relay")]
-    [string]$Transport = "enet_direct",
+    [string]$Transport = "sdr",
     [string]$HostAddress = "127.0.0.1",
     [ValidateRange(1, 65535)]
     [int]$Port = 19090,
     [ValidateRange(1, 65535)]
     [int]$ClientListenPort = 19091,
     [ValidateRange(1, 10000000)]
-    [int]$SteamAppId = 408,
+    [int]$SteamAppId = 480,
     [string]$HostSteamId = "76561198000000001",
     [string]$ClientSteamId = "76561198000000002",
     [string]$SteamHostId = "",

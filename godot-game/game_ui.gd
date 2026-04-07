@@ -56,6 +56,8 @@ var _gold_label: Label
 var _upgrade_btn: Button
 var _refresh_btn: Button
 var _destroy_skill_panel: PanelContainer
+var _authority_peer_shop_states: Dictionary = {}
+var _authority_last_commit_by_peer: Dictionary = {}
 
 const P := "res://icons/skills/"
 
@@ -1386,6 +1388,8 @@ func _populate_offered_items() -> void:
 func _on_refresh_pressed() -> void:
 	if _is_observing_remote():
 		return
+	if _request_authority_equipment_action("refresh_shop"):
+		return
 	if _gold < SHOP_REFRESH_COST:
 		return
 	_gold -= SHOP_REFRESH_COST
@@ -1397,6 +1401,8 @@ func _on_refresh_pressed() -> void:
 func _on_upgrade_shop() -> void:
 	if _is_observing_remote():
 		return
+	if _request_authority_equipment_action("upgrade_shop"):
+		return
 	if _shop_level >= 7:
 		return
 	var cost: int = SHOP_UPGRADE_COST[_shop_level]
@@ -1407,6 +1413,26 @@ func _on_upgrade_shop() -> void:
 	_roll_shop_items()
 	_populate_offered_items()
 	_update_shop_info()
+
+
+func _request_authority_equipment_action(action: String, payload: Dictionary = {}) -> bool:
+	if _is_observing_remote():
+		return false
+	if _net_ctrl == null:
+		_net_ctrl = get_node_or_null(net_session_controller_path)
+	if _net_ctrl == null:
+		return false
+	var net_mode: String = str(_net_ctrl.get("network_mode")).strip_edges().to_lower()
+	if net_mode == "client":
+		if _net_ctrl.has_method("request_equipment_action"):
+			var request_payload_client: Dictionary = payload.duplicate(true)
+			_net_ctrl.call("request_equipment_action", action, request_payload_client)
+		return true
+	if not _net_ctrl.has_method("request_equipment_action"):
+		return false
+	var request_payload: Dictionary = payload.duplicate(true)
+	var result_variant: Variant = _net_ctrl.call("request_equipment_action", action, request_payload)
+	return bool(result_variant)
 
 
 func _get_build_color(build_name: String) -> Color:
@@ -1512,6 +1538,8 @@ func _create_shop_item(data: Dictionary, index: int) -> PanelContainer:
 func _on_buy_item(index: int) -> void:
 	if _is_observing_remote():
 		return
+	if _request_authority_equipment_action("buy_item", {"item_idx": index}):
+		return
 	if _hero_ctrl == null:
 		return
 	var inv: Array = _hero_ctrl.get("inventory")
@@ -1531,6 +1559,42 @@ func _on_buy_item(index: int) -> void:
 	_refresh_inventory()
 	_populate_offered_items()
 	_update_shop_info()
+
+
+func apply_authoritative_equipment_commit(commit: Dictionary) -> void:
+	if commit.is_empty():
+		return
+	var state_variant: Variant = commit.get("state", null)
+	if not (state_variant is Dictionary):
+		return
+	var state: Dictionary = state_variant as Dictionary
+	var inv: Array = _to_int_array(state.get("inventory", []))
+	var next_destroy_mode: bool = bool(state.get("destroy_mode", _destroy_mode))
+	if _hero_ctrl != null:
+		_hero_ctrl.set("inventory", inv)
+		if _hero_ctrl.has_method("set_destroy_cursor_mode"):
+			_hero_ctrl.call("set_destroy_cursor_mode", next_destroy_mode)
+	_gold = int(state.get("gold", _gold))
+	_shop_level = clampi(int(state.get("shop_level", _shop_level)), 1, 7)
+	_shop_offered = _to_int_array(state.get("shop_offer_ids", _shop_offered))
+	_destroy_mode = next_destroy_mode
+	_destroy_hover_index = -1
+	_last_inventory_signature = ""
+	_refresh_inventory()
+	if _offered_grid != null and is_instance_valid(_offered_grid):
+		_populate_offered_items()
+	_update_shop_info()
+	_update_destroy_visual()
+	_sync_destroy_hover_cursor()
+
+
+func _to_int_array(values_variant: Variant) -> Array:
+	var out: Array = []
+	if values_variant is Array:
+		var values: Array = values_variant
+		for value in values:
+			out.append(int(value))
+	return out
 
 
 func _find_item_index_by_name(item_name: String) -> int:
@@ -1706,6 +1770,285 @@ func _try_synthesize() -> void:
 		return
 
 
+func authority_ensure_peer_equipment_state(peer_id: int, baseline_state: Dictionary = {}) -> void:
+	if peer_id <= 0:
+		return
+	if _authority_peer_shop_states.has(peer_id):
+		return
+	_authority_peer_shop_states[peer_id] = _authority_build_peer_state(baseline_state)
+
+
+func authority_drop_peer_state(peer_id: int) -> void:
+	if peer_id <= 0:
+		return
+	_authority_peer_shop_states.erase(peer_id)
+	_authority_last_commit_by_peer.erase(peer_id)
+
+
+func authority_get_peer_equipment_state(peer_id: int) -> Dictionary:
+	if peer_id <= 0:
+		return {}
+	var state_variant: Variant = _authority_peer_shop_states.get(peer_id, {})
+	if state_variant is Dictionary:
+		return (state_variant as Dictionary).duplicate(true)
+	return {}
+
+
+func authority_handle_equipment_action(peer_id: int, request: Dictionary, baseline_state: Dictionary = {}) -> Dictionary:
+	if peer_id <= 0:
+		return {
+			"ok": false,
+			"peer_id": peer_id,
+			"action": "",
+			"request_seq": -1,
+			"reason": "invalid_peer_id",
+			"state": {}
+		}
+	authority_ensure_peer_equipment_state(peer_id, baseline_state)
+	var request_seq: int = int(request.get("request_seq", -1))
+	var action: String = str(request.get("action", "")).strip_edges().to_lower()
+	var last_commit_variant: Variant = _authority_last_commit_by_peer.get(peer_id, null)
+	if request_seq >= 0 and last_commit_variant is Dictionary:
+		var last_commit: Dictionary = last_commit_variant
+		var last_request_seq: int = int(last_commit.get("request_seq", -2))
+		if request_seq <= last_request_seq:
+			return last_commit.duplicate(true)
+	var payload: Dictionary = {}
+	var payload_variant: Variant = request.get("payload", {})
+	if payload_variant is Dictionary:
+		payload = payload_variant
+	var current_state_variant: Variant = _authority_peer_shop_states.get(peer_id, {})
+	var current_state: Dictionary = {}
+	if current_state_variant is Dictionary:
+		current_state = (current_state_variant as Dictionary).duplicate(true)
+	if current_state.is_empty():
+		current_state = _authority_build_peer_state(baseline_state)
+	var next_state: Dictionary = current_state.duplicate(true)
+	var reason: String = ""
+	match action:
+		"buy_item":
+			reason = _authority_buy_item(next_state, payload)
+		"refresh_shop":
+			reason = _authority_refresh_shop(next_state)
+		"upgrade_shop":
+			reason = _authority_upgrade_shop(next_state)
+		"destroy_item":
+			reason = _authority_destroy_item(next_state, payload)
+		"set_destroy_mode":
+			reason = _authority_set_destroy_mode(next_state, payload)
+		_:
+			reason = "unknown_action"
+	var ok: bool = reason.is_empty()
+	var commit_state: Dictionary = current_state
+	if ok:
+		_authority_peer_shop_states[peer_id] = next_state.duplicate(true)
+		commit_state = next_state
+	var commit: Dictionary = {
+		"ok": ok,
+		"peer_id": peer_id,
+		"action": action,
+		"request_seq": request_seq,
+		"state": commit_state
+	}
+	if not ok:
+		commit["reason"] = reason
+	_authority_last_commit_by_peer[peer_id] = commit.duplicate(true)
+	return commit
+
+
+func _authority_build_peer_state(baseline_state: Dictionary) -> Dictionary:
+	var shop_level: int = clampi(int(baseline_state.get("shop_level", 1)), 1, 7)
+	var gold: int = clampi(int(baseline_state.get("gold", _gold)), 0, 200000)
+	var inventory: Array = _sanitize_inventory(_to_int_array(baseline_state.get("inventory", [])))
+	var offer_ids: Array = _sanitize_offer_ids(_to_int_array(baseline_state.get("shop_offer_ids", [])), shop_level)
+	if offer_ids.is_empty():
+		offer_ids = _authority_roll_shop_items_for_level(shop_level)
+	return {
+		"inventory": inventory,
+		"gold": gold,
+		"shop_level": shop_level,
+		"shop_offer_ids": offer_ids,
+		"destroy_mode": bool(baseline_state.get("destroy_mode", false))
+	}
+
+
+func _sanitize_inventory(values: Array) -> Array:
+	var out: Array = []
+	for value in values:
+		var idx: int = int(value)
+		if idx < 0 or idx >= ITEM_DB.size():
+			continue
+		out.append(idx)
+		if out.size() >= 6:
+			break
+	return out
+
+
+func _sanitize_offer_ids(values: Array, shop_level: int) -> Array:
+	var out: Array = []
+	var max_count: int = clampi(int(SHOP_ITEM_COUNT.get(shop_level, 4)), 1, 8)
+	for value in values:
+		var idx: int = int(value)
+		if idx < 0 or idx >= ITEM_DB.size():
+			continue
+		if idx in out:
+			continue
+		out.append(idx)
+		if out.size() >= max_count:
+			break
+	return out
+
+
+func _authority_buy_item(state: Dictionary, payload: Dictionary) -> String:
+	var item_idx: int = int(payload.get("item_idx", -1))
+	if item_idx < 0 or item_idx >= ITEM_DB.size():
+		return "invalid_item_idx"
+	var offers: Array = _to_int_array(state.get("shop_offer_ids", []))
+	var offer_pos: int = offers.find(item_idx)
+	if offer_pos < 0:
+		return "item_not_offered"
+	var inventory: Array = _to_int_array(state.get("inventory", []))
+	if inventory.size() >= 6:
+		return "inventory_full"
+	var item_level: int = _get_item_level(ITEM_DB[item_idx])
+	var item_cost: int = int(ITEM_COST.get(item_level, 50))
+	var gold: int = maxi(int(state.get("gold", 0)), 0)
+	if gold < item_cost:
+		return "gold_not_enough"
+	gold -= item_cost
+	inventory.append(item_idx)
+	offers.remove_at(offer_pos)
+	_synthesize_inventory_in_place(inventory)
+	state["gold"] = gold
+	state["inventory"] = inventory
+	state["shop_offer_ids"] = offers
+	return ""
+
+
+func _authority_refresh_shop(state: Dictionary) -> String:
+	var gold: int = maxi(int(state.get("gold", 0)), 0)
+	if gold < SHOP_REFRESH_COST:
+		return "gold_not_enough"
+	var shop_level: int = clampi(int(state.get("shop_level", 1)), 1, 7)
+	gold -= SHOP_REFRESH_COST
+	state["gold"] = gold
+	state["shop_level"] = shop_level
+	state["shop_offer_ids"] = _authority_roll_shop_items_for_level(shop_level)
+	return ""
+
+
+func _authority_upgrade_shop(state: Dictionary) -> String:
+	var shop_level: int = clampi(int(state.get("shop_level", 1)), 1, 7)
+	if shop_level >= 7:
+		return "shop_max_level"
+	var upgrade_cost: int = int(SHOP_UPGRADE_COST.get(shop_level, 0))
+	var gold: int = maxi(int(state.get("gold", 0)), 0)
+	if gold < upgrade_cost:
+		return "gold_not_enough"
+	gold -= upgrade_cost
+	shop_level = clampi(shop_level + 1, 1, 7)
+	state["gold"] = gold
+	state["shop_level"] = shop_level
+	state["shop_offer_ids"] = _authority_roll_shop_items_for_level(shop_level)
+	return ""
+
+
+func _authority_destroy_item(state: Dictionary, payload: Dictionary) -> String:
+	var slot_idx: int = int(payload.get("slot_idx", -1))
+	var inventory: Array = _to_int_array(state.get("inventory", []))
+	if slot_idx < 0 or slot_idx >= inventory.size():
+		return "invalid_slot_idx"
+	inventory.remove_at(slot_idx)
+	state["inventory"] = inventory
+	state["destroy_mode"] = false
+	return ""
+
+
+func _authority_set_destroy_mode(state: Dictionary, payload: Dictionary) -> String:
+	state["destroy_mode"] = bool(payload.get("enabled", false))
+	return ""
+
+
+func _authority_roll_shop_items_for_level(level: int) -> Array:
+	var safe_level: int = clampi(level, 1, 7)
+	var offered: Array[int] = []
+	var target_count: int = int(SHOP_ITEM_COUNT.get(safe_level, 4))
+	var weights_variant: Variant = LEVEL_WEIGHTS.get(safe_level, {1: 100})
+	if not (weights_variant is Dictionary):
+		return offered
+	var weights: Dictionary = weights_variant
+	var total_weight: int = 0
+	for w_variant in weights.values():
+		total_weight += maxi(int(w_variant), 0)
+	total_weight = maxi(total_weight, 1)
+	for _n in range(maxi(target_count, 1)):
+		var rolled_level: int = 1
+		var roll: int = randi() % total_weight
+		var accum: int = 0
+		for lv_variant in weights.keys():
+			var weight_value: int = maxi(int(weights[lv_variant]), 0)
+			accum += weight_value
+			if roll < accum:
+				rolled_level = int(lv_variant)
+				break
+		var candidates: Array[int] = []
+		for i in range(ITEM_DB.size()):
+			if _get_item_level(ITEM_DB[i]) == rolled_level and i not in offered:
+				candidates.append(i)
+		if candidates.is_empty():
+			for i in range(ITEM_DB.size()):
+				if _get_item_level(ITEM_DB[i]) <= rolled_level and i not in offered:
+					candidates.append(i)
+		if not candidates.is_empty():
+			offered.append(candidates[randi() % candidates.size()])
+	return offered
+
+
+func _synthesize_inventory_in_place(inventory: Array) -> void:
+	var crafted_any: bool = true
+	while crafted_any:
+		crafted_any = false
+		for recipe_variant in RECIPES:
+			if not (recipe_variant is Dictionary):
+				continue
+			var recipe: Dictionary = recipe_variant
+			var inputs_variant: Variant = recipe.get("inputs", {})
+			if not (inputs_variant is Dictionary):
+				continue
+			var inputs: Dictionary = inputs_variant
+			var can_craft: bool = true
+			for item_name_variant in inputs.keys():
+				var item_name: String = str(item_name_variant)
+				var needed: int = maxi(int(inputs[item_name_variant]), 0)
+				var item_idx: int = _find_item_index_by_name(item_name)
+				if item_idx < 0:
+					can_craft = false
+					break
+				var count: int = 0
+				for held_variant in inventory:
+					if int(held_variant) == item_idx:
+						count += 1
+				if count < needed:
+					can_craft = false
+					break
+			if not can_craft:
+				continue
+			for item_name_variant in inputs.keys():
+				var item_name: String = str(item_name_variant)
+				var needed: int = maxi(int(inputs[item_name_variant]), 0)
+				var item_idx: int = _find_item_index_by_name(item_name)
+				for _i in range(needed):
+					var remove_idx: int = inventory.find(item_idx)
+					if remove_idx >= 0:
+						inventory.remove_at(remove_idx)
+			var output_name: String = str(recipe.get("output", ""))
+			var output_idx: int = _find_item_index_by_name(output_name)
+			if output_idx >= 0:
+				inventory.append(output_idx)
+			crafted_any = true
+			break
+
+
 func _get_display_inventory() -> Array:
 	var out: Array = []
 	if _is_observing_remote():
@@ -1821,6 +2164,9 @@ func _input(event: InputEvent) -> void:
 func _toggle_destroy_mode() -> void:
 	if _is_observing_remote():
 		return
+	var target_mode: bool = not _destroy_mode
+	if _request_authority_equipment_action("set_destroy_mode", {"enabled": target_mode}):
+		return
 	_destroy_mode = not _destroy_mode
 	if _hero_ctrl != null and _hero_ctrl.has_method("set_destroy_cursor_mode"):
 		_hero_ctrl.call("set_destroy_cursor_mode", _destroy_mode)
@@ -1877,6 +2223,8 @@ func _on_inv_slot_input(event: InputEvent, index: int) -> void:
 
 func _destroy_item(index: int) -> void:
 	if _is_observing_remote():
+		return
+	if _request_authority_equipment_action("destroy_item", {"slot_idx": index}):
 		return
 	if _hero_ctrl == null:
 		return

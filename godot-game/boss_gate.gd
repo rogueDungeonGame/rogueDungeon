@@ -13,6 +13,7 @@ var _hp_bar_material: ShaderMaterial
 
 
 func _ready() -> void:
+	add_to_group("breakable")
 	max_hp = maxi(max_hp, 1)
 	current_hp = max_hp
 	_create_hp_bar()
@@ -39,6 +40,32 @@ func is_dead() -> bool:
 
 func can_receive_skill_damage() -> bool:
 	return false
+
+
+func export_network_state() -> Dictionary:
+	return {
+		"id": str(get_path()),
+		"hp": current_hp,
+		"max_hp": max_hp,
+		"dead": _is_dead,
+		"visible": visible
+	}
+
+
+func apply_network_state(state: Dictionary) -> void:
+	if state.has("max_hp"):
+		max_hp = maxi(int(state["max_hp"]), 1)
+	if state.has("hp"):
+		current_hp = clampi(int(state["hp"]), 0, max_hp)
+	var incoming_dead: bool = bool(state.get("dead", _is_dead))
+	if incoming_dead and not _is_dead:
+		_die()
+		return
+	if state.has("visible"):
+		visible = bool(state["visible"])
+	if _hp_bar != null:
+		_hp_bar.visible = visible and not _is_dead
+	_update_hp_bar()
 
 
 func _create_hp_bar() -> void:

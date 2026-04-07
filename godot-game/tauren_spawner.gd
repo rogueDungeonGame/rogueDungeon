@@ -120,33 +120,3 @@ func apply_network_states(states: Array) -> void:
 			unit_ref.call("apply_network_state", state)
 
 
-func merge_client_damage_states(states: Array, attacker: Node3D = null) -> void:
-	var units_by_id: Dictionary = {}
-	for child in get_children():
-		var unit: TaurenUnitAI = child as TaurenUnitAI
-		if unit == null:
-			continue
-		units_by_id[unit.name] = unit
-
-	for state_variant in states:
-		if not (state_variant is Dictionary):
-			continue
-		var state: Dictionary = state_variant
-		var unit_id: String = str(state.get("id", ""))
-		if unit_id.is_empty():
-			continue
-		if not units_by_id.has(unit_id):
-			continue
-		var unit_ref: TaurenUnitAI = units_by_id[unit_id] as TaurenUnitAI
-		if unit_ref == null:
-			continue
-		var current_hp: int = int(unit_ref.get("_current_hp"))
-		var reported_hp: int = int(state.get("hp", current_hp))
-		reported_hp = clampi(reported_hp, 0, maxi(int(unit_ref.get("max_hp")), 1))
-		if reported_hp < current_hp and unit_ref.has_method("apply_damage"):
-			unit_ref.call("apply_damage", current_hp - reported_hp, attacker)
-		var reported_dead: bool = bool(state.get("dead", false))
-		if reported_dead and unit_ref.has_method("is_dead") and not bool(unit_ref.call("is_dead")):
-			var now_hp: int = int(unit_ref.get("_current_hp"))
-			if now_hp > 0 and unit_ref.has_method("apply_damage"):
-				unit_ref.call("apply_damage", now_hp, attacker)

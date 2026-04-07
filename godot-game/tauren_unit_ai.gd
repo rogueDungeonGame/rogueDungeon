@@ -168,6 +168,9 @@ func apply_damage(amount: int, attacker: Node3D = null) -> void:
 
 
 func _retarget_to_attacker(attacker: Node3D) -> void:
+	# 有攻击对象时保持当前仇恨；仅在无目标时才由受击触发追击。
+	if _target != null and is_instance_valid(_target) and not _is_target_dead(_target):
+		return
 	if attacker == null or not is_instance_valid(attacker):
 		return
 	if _is_target_dead(attacker):

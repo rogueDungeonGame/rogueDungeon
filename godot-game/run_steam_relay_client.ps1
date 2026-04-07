@@ -2,7 +2,7 @@ param(
     [string]$GodotExe = "godot4",
     [string]$ProjectPath = $PSScriptRoot,
     [ValidateRange(1, 10000000)]
-    [int]$SteamAppId = 408,
+    [int]$SteamAppId = 480,
     [string]$LocalSteamId = "",
     [string]$HostSteamId = "",
     [ValidateRange(0, 65535)]

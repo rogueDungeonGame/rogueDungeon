@@ -555,6 +555,9 @@ func apply_damage(amount: int, attacker: Node3D = null) -> void:
 
 
 func _retarget_to_attacker(attacker: Node3D) -> void:
+	# 仅在当前没有有效攻击目标时，才根据受击来源切换追击对象。
+	if _hero != null and is_instance_valid(_hero) and not _is_hero_dead(_hero) and _hero.visible:
+		return
 	if attacker == null or not is_instance_valid(attacker):
 		return
 	if _is_hero_dead(attacker):
