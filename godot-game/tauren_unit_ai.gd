@@ -56,6 +56,8 @@ var _remote_target_yaw: float = 0.0
 var _remote_velocity: Vector3 = Vector3.ZERO
 var _remote_last_receive_ms: int = 0
 var _remote_has_target: bool = false
+var _network_command_seq: int = 0
+var _network_last_command: Dictionary = {}
 var _dynamic_detour_time_left: float = 0.0
 var _dynamic_detour_side: float = 1.0
 var _dynamic_blocked_time: float = 0.0
@@ -110,6 +112,9 @@ func _bind_runtime_after_model_ready() -> void:
 	_animation_player = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	_resolve_animations()
 	_play_idle_animation()
+	_push_network_control_command("idle", {
+		"target_pos": global_position
+	})
 	if _animation_player != null and not _animation_player.animation_finished.is_connected(_on_animation_finished):
 		_animation_player.animation_finished.connect(_on_animation_finished)
 
@@ -132,6 +137,7 @@ func _process(delta: float) -> void:
 		if _is_attacking:
 			_is_attacking = false
 			_queue_idle_after_current_animation()
+			_push_network_control_command("idle")
 		else:
 			_stop_move_and_idle()
 		return
@@ -183,6 +189,10 @@ func _retarget_to_attacker(attacker: Node3D) -> void:
 	if not _is_moving:
 		_is_moving = true
 		_play_walk_animation()
+		_push_network_control_command("chase_target", {
+			"target_path": str(attacker.get_path()),
+			"target_pos": attacker.global_position
+		})
 
 
 func is_dead() -> bool:
@@ -308,12 +318,24 @@ func _chase_target(target_pos: Vector3, delta: float) -> void:
 	if not _is_moving:
 		_is_moving = true
 		_play_walk_animation()
+		if _target != null and is_instance_valid(_target):
+			_push_network_control_command("chase_target", {
+				"target_path": str(_target.get_path()),
+				"target_pos": _target.global_position
+			})
 
 
 func _start_attack() -> void:
+	if _target != null and is_instance_valid(_target) and not _is_target_dead(_target):
+		_face_toward(_target.global_position)
 	_is_attacking = true
 	velocity = Vector3.ZERO
 	_attack_cooldown = _get_attack_interval()
+	if _target != null and is_instance_valid(_target):
+		_push_network_control_command("attack_target", {
+			"target_path": str(_target.get_path()),
+			"target_pos": _target.global_position
+		})
 	var attack_anim := _choose_attack_animation()
 	if _animation_player != null and attack_anim != "":
 		var anim := _animation_player.get_animation(attack_anim)
@@ -334,6 +356,7 @@ func _try_apply_damage_to_target() -> void:
 		return
 	if _is_target_dead(_target):
 		return
+	_face_toward(_target.global_position)
 	var distance: float = _distance_xz(global_position, _target.global_position)
 	if distance > attack_range:
 		return
@@ -365,11 +388,14 @@ func _on_animation_finished(_anim_name: StringName) -> void:
 
 
 func _stop_move_and_idle() -> void:
+	var had_motion: bool = _is_moving or _is_attacking
 	velocity = Vector3.ZERO
 	_reset_dynamic_detour_runtime()
 	if _is_moving:
 		_is_moving = false
 	_play_idle_animation()
+	if had_motion:
+		_push_network_control_command("idle")
 
 
 func _queue_idle_after_current_animation() -> void:
@@ -410,6 +436,7 @@ func _die() -> void:
 	_reset_dynamic_detour_runtime()
 	velocity = Vector3.ZERO
 	_target = null
+	_push_network_control_command("dead")
 	if _hp_bar != null:
 		_hp_bar.visible = false
 	if _animation_player != null and _resolved_death_animation != "":
@@ -570,6 +597,28 @@ func _get_attack_interval() -> float:
 	return 1.0 / _get_attack_speed_scale()
 
 
+func _push_network_control_command(command_type: String, extra: Dictionary = {}) -> void:
+	var normalized_type: String = command_type.strip_edges().to_lower()
+	if normalized_type.is_empty():
+		normalized_type = "idle"
+	_network_command_seq += 1
+	var payload: Dictionary = {
+		"seq": _network_command_seq,
+		"type": normalized_type,
+		"t_ms": Time.get_ticks_msec()
+	}
+	payload["target_pos"] = global_position
+	for key_variant in extra.keys():
+		payload[key_variant] = extra[key_variant]
+	_network_last_command = payload
+
+
+func get_network_command_state() -> Dictionary:
+	if _network_last_command.is_empty():
+		return {}
+	return _network_last_command.duplicate(true)
+
+
 func _create_hp_bar() -> void:
 	var shader := Shader.new()
 	shader.code = "shader_type spatial;\nrender_mode unshaded, cull_disabled, shadows_disabled;\nuniform float hp_ratio : hint_range(0.0, 1.0) = 1.0;\nvoid vertex() {\n\tMODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0], INV_VIEW_MATRIX[1], INV_VIEW_MATRIX[2], MODEL_MATRIX[3]);\n\tMODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);\n}\nvoid fragment() {\n\tvec2 uv = UV;\n\tfloat bw = 0.04;\n\tfloat bh = 0.12;\n\tif (uv.x < bw || uv.x > 1.0 - bw || uv.y < bh || uv.y > 1.0 - bh) {\n\t\tALBEDO = vec3(0.0);\n\t\tALPHA = 0.9;\n\t} else {\n\t\tfloat ix = (uv.x - bw) / (1.0 - 2.0 * bw);\n\t\tif (ix <= hp_ratio) {\n\t\t\tALBEDO = vec3(1.0 - hp_ratio, hp_ratio, 0.0);\n\t\t\tALPHA = 0.9;\n\t\t} else {\n\t\t\tALBEDO = vec3(0.15);\n\t\t\tALPHA = 0.5;\n\t\t}\n\t}\n}\n"
@@ -631,6 +680,7 @@ func export_network_state() -> Dictionary:
 		state["anim_name"] = String(_animation_player.current_animation)
 		state["anim_playing"] = _animation_player.is_playing()
 		state["anim_speed"] = _animation_player.speed_scale
+	state["command_bus"] = get_network_command_state()
 	return state
 
 
@@ -650,6 +700,9 @@ func apply_network_state(state: Dictionary) -> void:
 		_is_moving = bool(state["is_moving"])
 	if state.has("is_attacking"):
 		_is_attacking = bool(state["is_attacking"])
+	var command_variant: Variant = state.get("command_bus", null)
+	if command_variant is Dictionary:
+		_network_last_command = (command_variant as Dictionary).duplicate(true)
 
 	var visible_target: bool = not _is_dead
 	if state.has("visible"):

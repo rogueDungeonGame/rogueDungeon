@@ -71,6 +71,8 @@ var _remote_target_yaw: float = 0.0
 var _remote_velocity: Vector3 = Vector3.ZERO
 var _remote_last_receive_ms: int = 0
 var _remote_has_target: bool = false
+var _network_command_seq: int = 0
+var _network_last_command: Dictionary = {}
 const OBSTACLE_RAY_MASK: int = 1 << 0
 const OBSTACLE_STEER_ANGLES := [20.0, -20.0, 40.0, -40.0, 60.0, -60.0, 80.0, -80.0, 100.0, -100.0]
 
@@ -113,6 +115,9 @@ func _ready() -> void:
 	_create_hp_bar()
 	_update_hp_bar()
 	_play_idle_animation()
+	_push_network_control_command("idle", {
+		"target_pos": _enemy.global_position
+	})
 
 
 func _play_idle_animation() -> void:
@@ -149,10 +154,12 @@ func _process(delta: float) -> void:
 			_is_casting_skill2 = false
 			_hide_skill_warning()
 			_queue_idle_after_current_animation()
+			_push_network_control_command("idle")
 			return
 		if _is_moving:
 			_is_moving = false
 			_stop_animation()
+			_push_network_control_command("idle")
 		return
 	
 	if _attack_cooldown > 0.0:
@@ -241,6 +248,7 @@ func _process(delta: float) -> void:
 		if _is_moving:
 			_is_moving = false
 			_stop_animation()
+			_push_network_control_command("idle")
 		return
 	
 	if distance <= attack_range:
@@ -280,6 +288,7 @@ func _process(delta: float) -> void:
 		if _is_moving:
 			_is_moving = false
 			_stop_animation()
+			_push_network_control_command("idle")
 		return
 	
 	_nav_agent.target_position = hero_pos
@@ -296,6 +305,11 @@ func _process(delta: float) -> void:
 	if not _is_moving:
 		_is_moving = true
 		_play_walk_animation()
+		if _hero != null and is_instance_valid(_hero):
+			_push_network_control_command("chase_target", {
+				"target_path": str(_hero.get_path()),
+				"target_pos": _hero.global_position
+			})
 
 
 func _look_at_target(target_pos: Vector3) -> void:
@@ -317,9 +331,16 @@ func _start_attack() -> void:
 	if _animation_player == null:
 		return
 	
+	if _hero != null and is_instance_valid(_hero) and not _is_hero_dead(_hero):
+		_face_toward(_hero.global_position)
 	_is_attacking = true
 	_attack_cooldown = _get_attack_interval()
 	_current_attack_index = 0
+	if _hero != null and is_instance_valid(_hero):
+		_push_network_control_command("attack_target", {
+			"target_path": str(_hero.get_path()),
+			"target_pos": _hero.global_position
+		})
 	
 	if not _animation_player.animation_finished.is_connected(_on_attack_finished):
 		_animation_player.animation_finished.connect(_on_attack_finished)
@@ -331,6 +352,8 @@ func _play_current_attack_animation() -> void:
 	if _animation_player == null:
 		return
 	
+	if _hero != null and is_instance_valid(_hero) and not _is_hero_dead(_hero):
+		_face_toward(_hero.global_position)
 	if _current_attack_index >= _attack_animations.size():
 		return
 	
@@ -510,6 +533,7 @@ func _try_apply_damage_to_hero() -> void:
 		return
 	if _is_hero_dead(_hero):
 		return
+	_face_toward(_hero.global_position)
 	
 	var distance := _distance_xz(_enemy.global_position, _hero.global_position)
 	if distance > attack_range:
@@ -578,6 +602,10 @@ func _retarget_to_attacker(attacker: Node3D) -> void:
 	if _is_attacking:
 		_interrupt_attack_for_chase()
 	_face_toward(attacker.global_position)
+	_push_network_control_command("chase_target", {
+		"target_path": str(attacker.get_path()),
+		"target_pos": attacker.global_position
+	})
 
 
 func is_dead() -> bool:
@@ -598,6 +626,7 @@ func _die() -> void:
 	_is_casting_skill2 = false
 	_hero = null
 	_hide_skill_warning()
+	_push_network_control_command("dead")
 	
 	if _animation_player != null:
 		_animation_player.stop()
@@ -673,12 +702,40 @@ func _get_attack_interval() -> float:
 	return 1.0 / _get_attack_speed_scale()
 
 
+func _push_network_control_command(command_type: String, extra: Dictionary = {}) -> void:
+	var normalized_type: String = command_type.strip_edges().to_lower()
+	if normalized_type.is_empty():
+		normalized_type = "idle"
+	_network_command_seq += 1
+	var payload: Dictionary = {
+		"seq": _network_command_seq,
+		"type": normalized_type,
+		"t_ms": Time.get_ticks_msec()
+	}
+	if _enemy != null and is_instance_valid(_enemy):
+		payload["target_pos"] = _enemy.global_position
+	for key_variant in extra.keys():
+		payload[key_variant] = extra[key_variant]
+	_network_last_command = payload
+
+
+func get_network_command_state() -> Dictionary:
+	if _network_last_command.is_empty():
+		return {}
+	return _network_last_command.duplicate(true)
+
+
 func _start_skill() -> void:
 	if _animation_player == null:
 		return
+	if _hero != null and is_instance_valid(_hero) and not _is_hero_dead(_hero):
+		_face_toward(_hero.global_position)
 	_is_casting_skill = true
 	_is_attacking = false
 	_skill_cast_timer = skill_cast_time
+	_push_network_control_command("cast_skill", {
+		"skill_id": 1
+	})
 	if _animation_player.has_animation(skill_animation):
 		var anim = _animation_player.get_animation(skill_animation)
 		if anim != null:
@@ -710,6 +767,8 @@ func _finish_skill() -> void:
 func _start_skill2() -> void:
 	if _animation_player == null:
 		return
+	if _hero != null and is_instance_valid(_hero) and not _is_hero_dead(_hero):
+		_face_toward(_hero.global_position)
 	_is_casting_skill2 = true
 	_is_attacking = false
 	_is_moving = false
@@ -725,6 +784,10 @@ func _start_skill2() -> void:
 	var charge_distance := attack_range * skill2_distance_multiplier
 	_skill2_end_pos = _skill2_start_pos + forward * charge_distance
 	_skill2_end_pos.y = _skill2_start_pos.y
+	_push_network_control_command("cast_skill", {
+		"skill_id": 2,
+		"target_pos": _skill2_end_pos
+	})
 	
 	if _animation_player.has_animation(skill2_animation):
 		var anim = _animation_player.get_animation(skill2_animation)
@@ -882,6 +945,7 @@ func export_network_state() -> Dictionary:
 		state["anim_name"] = String(_animation_player.current_animation)
 		state["anim_playing"] = _animation_player.is_playing()
 		state["anim_speed"] = _animation_player.speed_scale
+	state["command_bus"] = get_network_command_state()
 	return state
 
 
@@ -907,6 +971,9 @@ func apply_network_state(state: Dictionary) -> void:
 		_is_casting_skill = bool(state["casting_skill"])
 	if state.has("casting_skill2"):
 		_is_casting_skill2 = bool(state["casting_skill2"])
+	var command_variant: Variant = state.get("command_bus", null)
+	if command_variant is Dictionary:
+		_network_last_command = (command_variant as Dictionary).duplicate(true)
 
 	var visible_target: bool = not _is_dead
 	if state.has("visible"):

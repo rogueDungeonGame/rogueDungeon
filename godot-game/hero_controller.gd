@@ -201,6 +201,8 @@ var _ranged_q_backstep_end_pos: Vector3 = Vector3.ZERO
 var _resolved_idle_animation: String = ""
 var _resolved_walk_animation: String = ""
 var _resolved_death_animation: String = ""
+var _network_command_seq: int = 0
+var _network_last_command: Dictionary = {}
 var _network_skill_event_seq: int = 0
 var _network_last_skill_event: Dictionary = {}
 var _dynamic_detour_time_left: float = 0.0
@@ -261,6 +263,9 @@ func _ready() -> void:
 	_create_hp_bar()
 	_update_hp_bar()
 	_play_idle_animation()
+	_push_network_control_command("idle", {
+		"target_pos": _hero.global_position
+	})
 	_apply_mouse_cursor(false, false, false)
 
 
@@ -790,6 +795,10 @@ func _handle_right_click() -> void:
 			_target_enemy = clicked_enemy
 			_has_move_target = false
 			_focus_lock = false
+			_push_network_control_command("chase_target", {
+				"target_path": str(clicked_enemy.get_path()),
+				"target_pos": clicked_enemy.global_position
+			})
 		else:
 			var click_pos: Vector3 = result.position
 			_interrupt_attack_for_move()
@@ -797,6 +806,9 @@ func _handle_right_click() -> void:
 			_focus_lock = false
 			_target_position = Vector3(click_pos.x, _plane_height, click_pos.z)
 			_has_move_target = true
+			_push_network_control_command("move_to", {
+				"target_pos": _target_position
+			})
 			_spawn_move_confirmation_effect(_target_position)
 	else:
 		_interrupt_attack_for_move()
@@ -804,6 +816,9 @@ func _handle_right_click() -> void:
 		_focus_lock = false
 		_target_position = _get_ground_position(mouse_pos)
 		_has_move_target = true
+		_push_network_control_command("move_to", {
+			"target_pos": _target_position
+		})
 		_spawn_move_confirmation_effect(_target_position)
 
 
@@ -836,6 +851,10 @@ func _handle_flash_click() -> void:
 		"to_pos": target,
 		"yaw": _hero.rotation.y
 	})
+	_push_network_control_command("cast_skill", {
+		"skill_id": skill_q_id,
+		"target_pos": target
+	})
 	_stop_animation()
 	if had_enemy_target:
 		_resume_enemy_target_after_skill()
@@ -864,6 +883,10 @@ func _cast_ranged_q(target: Vector3) -> void:
 		"from_pos": current,
 		"to_pos": ray_end,
 		"yaw": _hero.rotation.y
+	})
+	_push_network_control_command("cast_skill", {
+		"skill_id": skill_q_id,
+		"target_pos": ray_end
 	})
 	_interrupt_attack_for_move()
 	_has_move_target = false
@@ -1030,7 +1053,40 @@ func _activate_haste() -> void:
 	_push_network_skill_event("w", skill_w_id, {
 		"pos": event_pos
 	})
+	_push_network_control_command("cast_skill", {
+		"skill_id": skill_w_id,
+		"target_pos": event_pos
+	})
 	_sync_walk_animation_speed_if_needed()
+
+
+func _push_network_control_command(command_type: String, extra: Dictionary = {}) -> void:
+	var normalized_type: String = command_type.strip_edges().to_lower()
+	if normalized_type.is_empty():
+		normalized_type = "idle"
+	_network_command_seq += 1
+	var payload: Dictionary = {
+		"seq": _network_command_seq,
+		"type": normalized_type,
+		"t_ms": Time.get_ticks_msec()
+	}
+	if _hero != null and is_instance_valid(_hero):
+		payload["target_pos"] = _hero.global_position
+	for key_variant in extra.keys():
+		payload[key_variant] = extra[key_variant]
+	_network_last_command = payload
+	var net_ctrl: Node = _get_network_session_controller()
+	if net_ctrl == null:
+		return
+	var mode_text: String = str(net_ctrl.get("network_mode")).strip_edges().to_lower()
+	if mode_text == "client" and net_ctrl.has_method("request_hero_control_command_from_client"):
+		net_ctrl.call("request_hero_control_command_from_client", payload.duplicate(true))
+
+
+func get_network_command_state() -> Dictionary:
+	if _network_last_command.is_empty():
+		return {}
+	return _network_last_command.duplicate(true)
 
 
 func _push_network_skill_event(event_type: String, event_skill_id: int, extra: Dictionary = {}) -> void:
@@ -1213,6 +1269,10 @@ func _resume_enemy_target_after_skill() -> void:
 		_is_moving = true
 		_nav_agent.target_position = _target_enemy.global_position
 		_play_walk_animation()
+		_push_network_control_command("chase_target", {
+			"target_path": str(_target_enemy.get_path()),
+			"target_pos": _target_enemy.global_position
+		})
 
 
 func _check_passive_transform() -> void:
@@ -1505,12 +1565,17 @@ func _handle_attack_click() -> void:
 		_target_enemy = selected_enemy
 		_has_move_target = false
 		_focus_lock = true
+		_push_network_control_command("attack_target", {
+			"target_path": str(selected_enemy.get_path()),
+			"target_pos": selected_enemy.global_position
+		})
 	else:
 		# A 键攻击点击未命中且附近没有可索敌目标时，取消当前攻击目标。
 		_target_enemy = null
 		_has_move_target = false
 		_focus_lock = false
 		_interrupt_attack_for_chase()
+		_push_network_control_command("idle")
 
 
 func _get_ground_position(mouse_pos: Vector2) -> Vector3:
@@ -1600,6 +1665,7 @@ func _process(delta: float) -> void:
 			if _is_moving:
 				_is_moving = false
 				_stop_animation()
+				_push_network_control_command("idle")
 			return
 		
 		if distance > attack_range:
@@ -1617,10 +1683,16 @@ func _process(delta: float) -> void:
 			if not _is_moving:
 				_is_moving = true
 				_play_walk_animation()
+				if _target_enemy != null and is_instance_valid(_target_enemy):
+					_push_network_control_command("chase_target", {
+						"target_path": str(_target_enemy.get_path()),
+						"target_pos": _target_enemy.global_position
+					})
 		else:
 			if _is_moving:
 				_is_moving = false
 				_stop_animation()
+				_push_network_control_command("idle")
 			_face_toward(enemy_pos)
 			if _attack_cooldown <= 0.0:
 				_start_attack()
@@ -1630,6 +1702,7 @@ func _process(delta: float) -> void:
 			_has_move_target = false
 			_is_moving = false
 			_stop_animation()
+			_push_network_control_command("idle")
 		else:
 			_nav_agent.target_position = _target_position
 			var move_target := _target_position
@@ -1645,10 +1718,14 @@ func _process(delta: float) -> void:
 			if not _is_moving:
 				_is_moving = true
 				_play_walk_animation()
+				_push_network_control_command("move_to", {
+					"target_pos": _target_position
+				})
 	else:
 		if _is_moving:
 			_is_moving = false
 			_stop_animation()
+			_push_network_control_command("idle")
 
 
 func _update_mouse_cursor_icon() -> void:
@@ -1728,6 +1805,11 @@ func _start_attack() -> void:
 	_is_attacking = true
 	_has_move_target = false
 	_current_attack_index = 0
+	if _target_enemy != null and is_instance_valid(_target_enemy):
+		_push_network_control_command("attack_target", {
+			"target_path": str(_target_enemy.get_path()),
+			"target_pos": _target_enemy.global_position
+		})
 	
 	if not _animation_player.animation_finished.is_connected(_on_attack_finished):
 		_animation_player.animation_finished.connect(_on_attack_finished)
@@ -1985,6 +2067,10 @@ func _update_auto_attack_target() -> void:
 	if in_enemy_engage_range and (not _was_in_enemy_engage_range or _last_auto_enemy != enemy):
 		_target_enemy = enemy
 		_has_move_target = false
+		_push_network_control_command("chase_target", {
+			"target_path": str(enemy.get_path()),
+			"target_pos": enemy.global_position
+		})
 	
 	_was_in_enemy_engage_range = in_enemy_engage_range
 	_last_auto_enemy = enemy
@@ -2109,6 +2195,10 @@ func _retarget_to_attacker(attacker: Node3D) -> void:
 	if _is_attacking:
 		_interrupt_attack_for_chase()
 	_face_toward(target_enemy.global_position)
+	_push_network_control_command("chase_target", {
+		"target_path": str(target_enemy.get_path()),
+		"target_pos": target_enemy.global_position
+	})
 
 
 func is_dead() -> bool:
@@ -2133,6 +2223,7 @@ func _die() -> void:
 	_mana_regen_pool = 0.0
 	_slow_percent = 0.0
 	_slow_time_left = 0.0
+	_push_network_control_command("dead")
 	
 	if _animation_player != null:
 		_animation_player.stop()

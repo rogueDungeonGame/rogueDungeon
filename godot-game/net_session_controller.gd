@@ -1,7 +1,7 @@
 extends Node
 
 @export_enum("offline", "host", "client") var network_mode: String = "offline"
-@export_enum("enet_direct", "steam_stub", "steam_relay") var net_transport_mode: String = "steam_relay"
+@export_enum("enet_direct", "steam_stub", "steam_relay") var net_transport_mode: String = "enet_direct"
 @export var transport_config_enabled: bool = true
 @export var transport_config_path: String = "res://net_transport.cfg"
 @export var auto_start_network: bool = false
@@ -47,6 +47,10 @@ extends Node
 @export var remote_position_smooth_speed: float = 16.0
 @export var remote_rotation_smooth_speed: float = 14.0
 @export var remote_snap_distance: float = 260.0
+@export var remote_position_prediction_sec: float = 0.10
+@export var remote_prediction_timeout_sec: float = 0.30
+@export var remote_prediction_velocity_damping: float = 8.0
+@export var remote_prediction_max_speed: float = 2400.0
 @export var remote_select_screen_radius: float = 72.0
 @export var sync_skill_effects: bool = true
 @export var remote_flash_effect_scene: PackedScene = preload("res://effects/HeroWarden/FanOfKnivesCaster/FanOfKnivesCaster.glb")
@@ -92,14 +96,18 @@ var _remote_avatar_model_keys: Dictionary = {}
 var _remote_avatar_last_anims: Dictionary = {}
 var _remote_avatar_target_positions: Dictionary = {}
 var _remote_avatar_target_yaws: Dictionary = {}
+var _remote_avatar_velocities: Dictionary = {}
+var _remote_avatar_last_receive_ms: Dictionary = {}
 var _remote_last_flash_cd: Dictionary = {}
 var _remote_last_haste_active: Dictionary = {}
 var _remote_last_skill_event_seq: Dictionary = {}
 
 var _peer_latest_hero_state: Dictionary = {}
+var _peer_latest_hero_command: Dictionary = {}
 var _peer_latest_equipment_state: Dictionary = {}
 var _peer_latest_equipment_signatures: Dictionary = {}
 var _peer_last_input_seq: Dictionary = {}
+var _peer_last_hero_command_seq: Dictionary = {}
 var _peer_last_damage_request_seq: Dictionary = {}
 var _peer_last_damage_request_ms: Dictionary = {}
 var _peer_last_hero_positions: Dictionary = {}
@@ -116,6 +124,7 @@ var _host_hero_snapshot_seq: int = 0
 var _last_applied_hero_snapshot_seq: int = -1
 var _client_input_seq: int = 0
 var _client_recent_input_frames: Array = []
+var _local_last_sent_hero_command_seq: int = -1
 var _client_enemy_damage_request_seq: int = 0
 var _last_sent_equipment_signature: String = ""
 var _last_ack_input_seq_from_host: int = -1
@@ -248,6 +257,7 @@ func _tick_client(delta: float) -> void:
 		return
 	_send_elapsed_sec = 0.0
 	var hero_state: Dictionary = _collect_local_hero_state()
+	_send_latest_hero_command_if_needed(hero_state)
 	var input_bundle: Dictionary = _build_client_input_bundle(hero_state)
 	rpc_id(1, "rpc_submit_client_input", input_bundle)
 
@@ -344,11 +354,13 @@ func start_network() -> void:
 	_last_applied_world_snapshot_seq = -1
 	_client_input_seq = 0
 	_client_recent_input_frames.clear()
+	_local_last_sent_hero_command_seq = -1
 	_client_enemy_damage_request_seq = 0
 	_last_sent_equipment_signature = ""
 	_last_ack_input_seq_from_host = -1
 	_local_equipment_request_seq = 0
 	_peer_last_input_seq.clear()
+	_peer_last_hero_command_seq.clear()
 	_peer_last_damage_request_seq.clear()
 	_peer_last_damage_request_ms.clear()
 	_peer_last_hero_positions.clear()
@@ -361,6 +373,7 @@ func start_network() -> void:
 	_peer_damage_breaker_window_start_ms.clear()
 	_peer_damage_breaker_reject_count.clear()
 	_peer_damage_breaker_blocked_until_ms.clear()
+	_peer_latest_hero_command.clear()
 	_peer_latest_equipment_signatures.clear()
 	_reset_world_sync_adaptive_runtime()
 	_reset_local_skill_event_runtime(true)
@@ -373,8 +386,10 @@ func stop_network() -> void:
 	_clear_remote_avatars()
 	_peer_latest_hero_state.clear()
 	_peer_latest_equipment_state.clear()
+	_peer_latest_hero_command.clear()
 	_peer_latest_equipment_signatures.clear()
 	_peer_last_input_seq.clear()
+	_peer_last_hero_command_seq.clear()
 	_peer_last_damage_request_seq.clear()
 	_peer_last_damage_request_ms.clear()
 	_peer_last_hero_positions.clear()
@@ -403,6 +418,7 @@ func stop_network() -> void:
 	_last_applied_world_snapshot_seq = -1
 	_client_input_seq = 0
 	_client_recent_input_frames.clear()
+	_local_last_sent_hero_command_seq = -1
 	_client_enemy_damage_request_seq = 0
 	_last_sent_equipment_signature = ""
 	_last_ack_input_seq_from_host = -1
@@ -438,6 +454,7 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	_peer_latest_equipment_state.erase(peer_id)
 	_peer_latest_equipment_signatures.erase(peer_id)
 	_peer_last_input_seq.erase(peer_id)
+	_peer_last_hero_command_seq.erase(peer_id)
 	_peer_last_damage_request_seq.erase(peer_id)
 	_peer_last_damage_request_ms.erase(peer_id)
 	_peer_last_hero_positions.erase(peer_id)
@@ -450,6 +467,7 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	_peer_damage_breaker_window_start_ms.erase(peer_id)
 	_peer_damage_breaker_reject_count.erase(peer_id)
 	_peer_damage_breaker_blocked_until_ms.erase(peer_id)
+	_peer_latest_hero_command.erase(peer_id)
 	var ui: Node = _get_game_ui()
 	if ui != null and ui.has_method("authority_drop_peer_state"):
 		ui.call("authority_drop_peer_state", peer_id)
@@ -488,6 +506,15 @@ func rpc_submit_client_input(input_bundle: Dictionary) -> void:
 	var hero_variant: Variant = latest_frame.get("hero", {})
 	if hero_variant is Dictionary:
 		_apply_client_hero_state_from_sender(sender_id, hero_variant)
+
+@rpc("any_peer", "reliable")
+func rpc_submit_client_hero_command(command: Dictionary) -> void:
+	if network_mode.strip_edges().to_lower() != "host":
+		return
+	var sender_id: int = multiplayer.get_remote_sender_id()
+	if sender_id <= 0:
+		return
+	_consume_client_hero_command(sender_id, command)
 
 @rpc("any_peer", "reliable")
 func rpc_submit_client_enemy_damage_request(event: Dictionary) -> void:
@@ -610,7 +637,9 @@ func _build_hero_snapshot() -> Dictionary:
 	snapshot["host_peer_id"] = multiplayer.get_unique_id()
 	snapshot["ack_input_seq"] = _peer_last_input_seq.duplicate(true)
 	if sync_hero_state:
-		snapshot["host_hero"] = _collect_local_hero_state()
+		var host_hero_state: Dictionary = _collect_local_hero_state()
+		_consume_peer_hero_command_from_state(multiplayer.get_unique_id(), host_hero_state)
+		snapshot["host_hero"] = host_hero_state
 	if sync_equipment_state:
 		snapshot["host_equipment"] = _collect_local_equipment_state()
 
@@ -621,7 +650,14 @@ func _build_hero_snapshot() -> Dictionary:
 			continue
 		var payload: Dictionary = {}
 		if sync_hero_state and _peer_latest_hero_state.has(peer_id):
-			payload["hero"] = _peer_latest_hero_state[peer_id]
+			var peer_hero_state_variant: Variant = _peer_latest_hero_state[peer_id]
+			if peer_hero_state_variant is Dictionary:
+				var peer_hero_state: Dictionary = (peer_hero_state_variant as Dictionary).duplicate(true)
+				if not peer_hero_state.has("command_bus") and _peer_latest_hero_command.has(peer_id):
+					var cmd_variant: Variant = _peer_latest_hero_command[peer_id]
+					if cmd_variant is Dictionary:
+						peer_hero_state["command_bus"] = (cmd_variant as Dictionary).duplicate(true)
+				payload["hero"] = peer_hero_state
 		if sync_equipment_state and _peer_latest_equipment_state.has(peer_id):
 			payload["equipment"] = _peer_latest_equipment_state[peer_id]
 		peers_payload[str(peer_id)] = payload
@@ -646,6 +682,19 @@ func _build_client_input_bundle(hero_state: Dictionary) -> Dictionary:
 		"latest_seq": _client_input_seq,
 		"frames": _client_recent_input_frames.duplicate(true)
 	}
+
+
+func _send_latest_hero_command_if_needed(hero_state: Dictionary) -> void:
+	if network_mode.strip_edges().to_lower() != "client":
+		return
+	var command_variant: Variant = hero_state.get("command_bus", null)
+	if not (command_variant is Dictionary):
+		return
+	var command: Dictionary = command_variant
+	var seq: int = _int_from_variant(command.get("seq", -1), -1)
+	if seq <= _local_last_sent_hero_command_seq:
+		return
+	request_hero_control_command_from_client(command)
 
 
 func _extract_latest_input_frame(input_bundle: Dictionary, sender_id: int) -> Dictionary:
@@ -680,8 +729,85 @@ func _apply_client_hero_state_from_sender(sender_id: int, hero_state: Dictionary
 	if not sync_hero_state:
 		return
 	var sanitized_state: Dictionary = _sanitize_peer_hero_state(sender_id, hero_state)
+	_consume_peer_hero_command_from_state(sender_id, sanitized_state)
 	_peer_latest_hero_state[sender_id] = sanitized_state
 	_upsert_remote_avatar_from_state(sender_id, sanitized_state)
+
+
+func _consume_client_hero_command(sender_id: int, command: Dictionary) -> void:
+	if sender_id <= 0:
+		return
+	if command.is_empty():
+		return
+	var sanitized: Dictionary = _sanitize_peer_hero_command(command)
+	if sanitized.is_empty():
+		return
+	var command_seq: int = _int_from_variant(sanitized.get("seq", -1), -1)
+	var last_seq: int = _int_from_variant(_peer_last_hero_command_seq.get(sender_id, -1), -1)
+	if command_seq <= last_seq:
+		return
+	_peer_last_hero_command_seq[sender_id] = command_seq
+	_peer_latest_hero_command[sender_id] = sanitized
+	if _peer_latest_hero_state.has(sender_id):
+		var state_variant: Variant = _peer_latest_hero_state[sender_id]
+		if state_variant is Dictionary:
+			var state: Dictionary = (state_variant as Dictionary).duplicate(true)
+			state["command_bus"] = sanitized.duplicate(true)
+			_peer_latest_hero_state[sender_id] = state
+
+
+func _consume_peer_hero_command_from_state(peer_id: int, hero_state: Dictionary) -> void:
+	if peer_id <= 0:
+		return
+	var command_variant: Variant = hero_state.get("command_bus", null)
+	if not (command_variant is Dictionary):
+		if _peer_latest_hero_command.has(peer_id):
+			var latest_cmd_variant: Variant = _peer_latest_hero_command[peer_id]
+			if latest_cmd_variant is Dictionary:
+				hero_state["command_bus"] = (latest_cmd_variant as Dictionary).duplicate(true)
+		return
+	var sanitized: Dictionary = _sanitize_peer_hero_command(command_variant as Dictionary)
+	if sanitized.is_empty():
+		return
+	var command_seq: int = _int_from_variant(sanitized.get("seq", -1), -1)
+	var last_seq: int = _int_from_variant(_peer_last_hero_command_seq.get(peer_id, -1), -1)
+	if command_seq > last_seq:
+		_peer_last_hero_command_seq[peer_id] = command_seq
+		_peer_latest_hero_command[peer_id] = sanitized.duplicate(true)
+	if _peer_latest_hero_command.has(peer_id):
+		var active_cmd_variant: Variant = _peer_latest_hero_command[peer_id]
+		if active_cmd_variant is Dictionary:
+			hero_state["command_bus"] = (active_cmd_variant as Dictionary).duplicate(true)
+
+
+func _sanitize_peer_hero_command(command: Dictionary) -> Dictionary:
+	if command.is_empty():
+		return {}
+	var sanitized: Dictionary = {}
+	var seq: int = _int_from_variant(command.get("seq", -1), -1)
+	if seq < 0:
+		return {}
+	var cmd_type: String = str(command.get("type", "idle")).strip_edges().to_lower()
+	if cmd_type.is_empty():
+		cmd_type = "idle"
+	match cmd_type:
+		"idle", "move_to", "chase_target", "attack_target", "cast_skill", "dead":
+			pass
+		_:
+			cmd_type = "idle"
+	sanitized["seq"] = seq
+	sanitized["type"] = cmd_type
+	sanitized["t_ms"] = _int_from_variant(command.get("t_ms", Time.get_ticks_msec()), Time.get_ticks_msec())
+	var target_path: String = str(command.get("target_path", "")).strip_edges()
+	if not target_path.is_empty():
+		sanitized["target_path"] = target_path
+	var target_pos_variant: Variant = command.get("target_pos", null)
+	if target_pos_variant is Vector3:
+		sanitized["target_pos"] = target_pos_variant
+	var skill_id: int = _int_from_variant(command.get("skill_id", -1), -1)
+	if skill_id >= 0:
+		sanitized["skill_id"] = skill_id
+	return sanitized
 
 
 func _sanitize_peer_hero_state(sender_id: int, hero_state: Dictionary) -> Dictionary:
@@ -845,7 +971,8 @@ func _apply_world_snapshot(snapshot: Dictionary) -> void:
 	if sync_hero_state and snapshot.has("host_hero"):
 		var host_hero_variant: Variant = snapshot["host_hero"]
 		if host_hero_variant is Dictionary:
-			var host_hero: Dictionary = host_hero_variant
+			var host_hero: Dictionary = (host_hero_variant as Dictionary).duplicate(true)
+			_consume_peer_hero_command_from_state(host_id, host_hero)
 			_peer_latest_hero_state[host_id] = host_hero
 			if host_id != self_id:
 				_upsert_remote_avatar_from_state(host_id, host_hero)
@@ -870,7 +997,8 @@ func _apply_world_snapshot(snapshot: Dictionary) -> void:
 			if sync_hero_state and payload.has("hero"):
 				var hero_variant: Variant = payload["hero"]
 				if hero_variant is Dictionary:
-					var hero_state: Dictionary = hero_variant
+					var hero_state: Dictionary = (hero_variant as Dictionary).duplicate(true)
+					_consume_peer_hero_command_from_state(peer_id, hero_state)
 					_peer_latest_hero_state[peer_id] = hero_state
 					if peer_id != self_id:
 						_upsert_remote_avatar_from_state(peer_id, hero_state)
@@ -1012,6 +1140,10 @@ func _collect_local_hero_state() -> Dictionary:
 		_update_local_skill_event_from_state(state)
 	if not _local_last_skill_event.is_empty():
 		state["skill_event"] = _local_last_skill_event.duplicate(true)
+	if hero_controller != null and hero_controller.has_method("get_network_command_state"):
+		var command_state_variant: Variant = hero_controller.call("get_network_command_state")
+		if command_state_variant is Dictionary:
+			state["command_bus"] = _sanitize_peer_hero_command(command_state_variant as Dictionary)
 	return state
 
 func _collect_local_equipment_state() -> Dictionary:
@@ -1602,6 +1734,28 @@ func request_slow_remote_hero(peer_id: int, slow_percent: float, duration: float
 		return
 	rpc_id(peer_id, "rpc_apply_hero_slow_from_authority", slow_percent, duration)
 
+
+func request_hero_control_command_from_client(command: Dictionary) -> bool:
+	if network_mode.strip_edges().to_lower() != "client":
+		return false
+	if not _is_network_running:
+		return false
+	if multiplayer.multiplayer_peer == null:
+		return false
+	if multiplayer.get_peers().is_empty():
+		return false
+	if command.is_empty():
+		return false
+	var sanitized: Dictionary = _sanitize_peer_hero_command(command)
+	if sanitized.is_empty():
+		return false
+	var seq: int = _int_from_variant(sanitized.get("seq", -1), -1)
+	if seq <= _local_last_sent_hero_command_seq:
+		return false
+	rpc_id(1, "rpc_submit_client_hero_command", sanitized)
+	_local_last_sent_hero_command_seq = seq
+	return true
+
 func request_enemy_damage_from_client(target_path: String, amount: int, max_range: float = -1.0, source: String = "attack", context: Dictionary = {}) -> bool:
 	if network_mode.strip_edges().to_lower() != "client":
 		return false
@@ -1685,10 +1839,26 @@ func _upsert_remote_avatar_from_state(peer_id: int, hero_state: Dictionary) -> v
 		return
 	var pos: Vector3 = pos_variant
 	var previous_pos: Vector3 = pos
+	var has_previous_pos: bool = false
 	if _remote_avatar_target_positions.has(peer_id):
 		var prev_pos_variant: Variant = _remote_avatar_target_positions[peer_id]
 		if prev_pos_variant is Vector3:
 			previous_pos = prev_pos_variant
+			has_previous_pos = true
+	var now_ms: int = Time.get_ticks_msec()
+	var prev_receive_ms: int = _int_from_variant(_remote_avatar_last_receive_ms.get(peer_id, now_ms), now_ms)
+	if has_previous_pos:
+		var dt_sec: float = clampf(float(now_ms - prev_receive_ms) * 0.001, 0.016, 0.5)
+		var remote_velocity: Vector3 = (pos - previous_pos) / dt_sec
+		remote_velocity.y = 0.0
+		var max_predict_speed: float = maxf(remote_prediction_max_speed, 200.0)
+		var velocity_len: float = remote_velocity.length()
+		if velocity_len > max_predict_speed:
+			remote_velocity = remote_velocity / velocity_len * max_predict_speed
+		_remote_avatar_velocities[peer_id] = remote_velocity
+	else:
+		_remote_avatar_velocities[peer_id] = Vector3.ZERO
+	_remote_avatar_last_receive_ms[peer_id] = now_ms
 	var prev_flash_cd: float = _float_from_variant(_remote_last_flash_cd.get(peer_id, 0.0), 0.0)
 	var prev_haste_active: bool = _bool_from_variant(_remote_last_haste_active.get(peer_id, false), false)
 	var yaw: float = _float_from_variant(hero_state.get("yaw", 0.0), 0.0)
@@ -1764,8 +1934,12 @@ func _update_remote_avatar_smoothing(delta: float) -> void:
 	if _remote_avatars.is_empty():
 		return
 
+	var now_ms: int = Time.get_ticks_msec()
 	var pos_alpha: float = 1.0 - exp(-maxf(remote_position_smooth_speed, 0.01) * delta)
 	var rot_alpha: float = 1.0 - exp(-maxf(remote_rotation_smooth_speed, 0.01) * delta)
+	var prediction_sec: float = clampf(remote_position_prediction_sec, 0.0, 0.25)
+	var prediction_timeout_sec: float = clampf(remote_prediction_timeout_sec, 0.05, 1.2)
+	var prediction_velocity_damping: float = maxf(remote_prediction_velocity_damping, 0.01)
 
 	for key_variant in _remote_avatars.keys():
 		var peer_id: int = int(key_variant)
@@ -1778,7 +1952,21 @@ func _update_remote_avatar_smoothing(delta: float) -> void:
 			var pos_variant: Variant = _remote_avatar_target_positions[peer_id]
 			if pos_variant is Vector3:
 				target_pos = pos_variant
-		avatar.global_position = avatar.global_position.lerp(target_pos, pos_alpha)
+		var predicted_pos: Vector3 = target_pos
+		if prediction_sec > 0.0 and _remote_avatar_velocities.has(peer_id):
+			var velocity_variant: Variant = _remote_avatar_velocities[peer_id]
+			if velocity_variant is Vector3:
+				var velocity: Vector3 = velocity_variant
+				var receive_ms: int = _int_from_variant(_remote_avatar_last_receive_ms.get(peer_id, now_ms), now_ms)
+				var gap_sec: float = maxf(float(now_ms - receive_ms) * 0.001, 0.0)
+				if gap_sec <= prediction_timeout_sec:
+					var damping: float = exp(-prediction_velocity_damping * gap_sec)
+					velocity *= damping
+					predicted_pos += velocity * prediction_sec
+				else:
+					_remote_avatar_velocities[peer_id] = Vector3.ZERO
+		predicted_pos.y = target_pos.y
+		avatar.global_position = avatar.global_position.lerp(predicted_pos, pos_alpha)
 
 		var target_yaw: float = avatar.rotation.y
 		if _remote_avatar_target_yaws.has(peer_id):
@@ -2083,6 +2271,8 @@ func _remove_remote_avatar(peer_id: int) -> void:
 	_remote_avatar_last_anims.erase(peer_id)
 	_remote_avatar_target_positions.erase(peer_id)
 	_remote_avatar_target_yaws.erase(peer_id)
+	_remote_avatar_velocities.erase(peer_id)
+	_remote_avatar_last_receive_ms.erase(peer_id)
 	_remote_last_flash_cd.erase(peer_id)
 	_remote_last_haste_active.erase(peer_id)
 	_remote_last_skill_event_seq.erase(peer_id)
@@ -2098,6 +2288,8 @@ func _clear_remote_avatars() -> void:
 	_remote_avatar_last_anims.clear()
 	_remote_avatar_target_positions.clear()
 	_remote_avatar_target_yaws.clear()
+	_remote_avatar_velocities.clear()
+	_remote_avatar_last_receive_ms.clear()
 	_remote_last_flash_cd.clear()
 	_remote_last_haste_active.clear()
 	_remote_last_skill_event_seq.clear()
@@ -2672,7 +2864,11 @@ func _build_hero_summary(room_ids: Array[int]) -> String:
 		var mana: int = _int_from_variant(state.get("mana", 0), 0)
 		var max_mana: int = _int_from_variant(state.get("max_mana", 0), 0)
 		var profile: String = str(state.get("hero_profile", "-"))
-		parts.append("P%d hp=%d/%d mp=%d/%d profile=%s" % [peer_id, hp, max_hp, mana, max_mana, profile])
+		var cmd_type: String = "-"
+		var command_variant: Variant = state.get("command_bus", null)
+		if command_variant is Dictionary:
+			cmd_type = str((command_variant as Dictionary).get("type", "-"))
+		parts.append("P%d hp=%d/%d mp=%d/%d profile=%s cmd=%s" % [peer_id, hp, max_hp, mana, max_mana, profile, cmd_type])
 	return " | ".join(parts)
 
 func _build_equipment_summary(room_ids: Array[int]) -> String:
