@@ -1,7 +1,7 @@
 extends Node
 
 @export_enum("offline", "host", "client") var network_mode: String = "offline"
-@export_enum("enet_direct", "steam_stub", "steam_relay") var net_transport_mode: String = "enet_direct"
+@export_enum("enet_direct", "steam_stub", "steam_relay") var net_transport_mode: String = "steam_relay"
 @export var transport_config_enabled: bool = true
 @export var transport_config_path: String = "res://net_transport.cfg"
 @export var auto_start_network: bool = false
