@@ -51,6 +51,12 @@ extends Node
 @export var remote_prediction_timeout_sec: float = 0.30
 @export var remote_prediction_velocity_damping: float = 8.0
 @export var remote_prediction_max_speed: float = 2400.0
+@export var remote_command_drive_enabled: bool = true
+@export var remote_command_drive_stop_distance: float = 18.0
+@export var remote_command_drive_soft_correction_distance: float = 48.0
+@export var remote_command_drive_hard_snap_distance: float = 220.0
+@export var remote_command_drive_correction_speed: float = 7.5
+@export var remote_command_drive_turn_speed: float = 20.0
 @export var remote_select_screen_radius: float = 72.0
 @export var sync_skill_effects: bool = true
 @export var remote_flash_effect_scene: PackedScene = preload("res://effects/HeroWarden/FanOfKnivesCaster/FanOfKnivesCaster.glb")
@@ -120,6 +126,7 @@ var _peer_damage_reject_reason_counts: Dictionary = {}
 var _peer_damage_breaker_window_start_ms: Dictionary = {}
 var _peer_damage_breaker_reject_count: Dictionary = {}
 var _peer_damage_breaker_blocked_until_ms: Dictionary = {}
+var _peer_input_latency_ms: Dictionary = {}
 var _host_hero_snapshot_seq: int = 0
 var _last_applied_hero_snapshot_seq: int = -1
 var _client_input_seq: int = 0
@@ -144,6 +151,8 @@ var _status_label: Label = null
 var _last_status_text: String = ""
 var _status_event_hint: String = ""
 var _ui_observed_peer_id: int = 0
+var _last_snapshot_latency_ms: int = -1
+var _avg_snapshot_latency_ms: float = -1.0
 
 func _ready() -> void:
 	set_process(true)
@@ -373,8 +382,11 @@ func start_network() -> void:
 	_peer_damage_breaker_window_start_ms.clear()
 	_peer_damage_breaker_reject_count.clear()
 	_peer_damage_breaker_blocked_until_ms.clear()
+	_peer_input_latency_ms.clear()
 	_peer_latest_hero_command.clear()
 	_peer_latest_equipment_signatures.clear()
+	_last_snapshot_latency_ms = -1
+	_avg_snapshot_latency_ms = -1.0
 	_reset_world_sync_adaptive_runtime()
 	_reset_local_skill_event_runtime(true)
 	_status_refresh_elapsed_sec = 0.0
@@ -402,6 +414,7 @@ func stop_network() -> void:
 	_peer_damage_breaker_window_start_ms.clear()
 	_peer_damage_breaker_reject_count.clear()
 	_peer_damage_breaker_blocked_until_ms.clear()
+	_peer_input_latency_ms.clear()
 	if multiplayer.multiplayer_peer != null:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
@@ -422,6 +435,8 @@ func stop_network() -> void:
 	_client_enemy_damage_request_seq = 0
 	_last_sent_equipment_signature = ""
 	_last_ack_input_seq_from_host = -1
+	_last_snapshot_latency_ms = -1
+	_avg_snapshot_latency_ms = -1.0
 	_local_equipment_request_seq = 0
 	_reset_world_sync_adaptive_runtime()
 	_reset_local_skill_event_runtime(false)
@@ -467,6 +482,7 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	_peer_damage_breaker_window_start_ms.erase(peer_id)
 	_peer_damage_breaker_reject_count.erase(peer_id)
 	_peer_damage_breaker_blocked_until_ms.erase(peer_id)
+	_peer_input_latency_ms.erase(peer_id)
 	_peer_latest_hero_command.erase(peer_id)
 	var ui: Node = _get_game_ui()
 	if ui != null and ui.has_method("authority_drop_peer_state"):
@@ -503,6 +519,11 @@ func rpc_submit_client_input(input_bundle: Dictionary) -> void:
 	var latest_frame: Dictionary = _extract_latest_input_frame(input_bundle, sender_id)
 	if latest_frame.is_empty():
 		return
+	var client_frame_ms: int = _int_from_variant(latest_frame.get("t_ms", input_bundle.get("client_t_ms", -1)), -1)
+	if client_frame_ms > 0:
+		var now_ms: int = Time.get_ticks_msec()
+		if now_ms >= client_frame_ms:
+			_peer_input_latency_ms[sender_id] = clampi(now_ms - client_frame_ms, 0, 20000)
 	var hero_variant: Variant = latest_frame.get("hero", {})
 	if hero_variant is Dictionary:
 		_apply_client_hero_state_from_sender(sender_id, hero_variant)
@@ -946,6 +967,7 @@ func _apply_world_snapshot(snapshot: Dictionary) -> void:
 		if incoming_world_seq <= _last_applied_world_snapshot_seq:
 			return
 		_last_applied_world_snapshot_seq = incoming_world_seq
+	_update_snapshot_latency_from_snapshot(snapshot)
 	if snapshot.has("ack_input_seq"):
 		_consume_ack_input_seq(snapshot["ack_input_seq"])
 	var self_id: int = 0
@@ -1025,6 +1047,23 @@ func _apply_world_snapshot(snapshot: Dictionary) -> void:
 	if has_hero_payload:
 		_remove_absent_remote_avatars(valid_remote_ids)
 	_refresh_status_text()
+
+
+func _update_snapshot_latency_from_snapshot(snapshot: Dictionary) -> void:
+	if network_mode.strip_edges().to_lower() != "client":
+		return
+	var sent_ms: int = _int_from_variant(snapshot.get("timestamp_ms", -1), -1)
+	if sent_ms <= 0:
+		return
+	var now_ms: int = Time.get_ticks_msec()
+	if now_ms < sent_ms:
+		return
+	var latency_ms: int = clampi(now_ms - sent_ms, 0, 60000)
+	_last_snapshot_latency_ms = latency_ms
+	if _avg_snapshot_latency_ms < 0.0:
+		_avg_snapshot_latency_ms = float(latency_ms)
+	else:
+		_avg_snapshot_latency_ms = lerpf(_avg_snapshot_latency_ms, float(latency_ms), 0.25)
 
 
 func _consume_ack_input_seq(ack_variant: Variant) -> void:
@@ -1928,6 +1967,141 @@ func _upsert_remote_avatar(peer_id: int, position: Vector3, yaw: float, model_ke
 	return avatar
 
 
+func _get_peer_latest_hero_command(peer_id: int) -> Dictionary:
+	if not _peer_latest_hero_command.has(peer_id):
+		return {}
+	var command_variant: Variant = _peer_latest_hero_command[peer_id]
+	if command_variant is Dictionary:
+		return command_variant as Dictionary
+	return {}
+
+
+func _is_remote_avatar_command_drive_active(peer_id: int) -> bool:
+	if not remote_command_drive_enabled:
+		return false
+	if network_mode.strip_edges().to_lower() != "host":
+		return false
+	var command: Dictionary = _get_peer_latest_hero_command(peer_id)
+	if command.is_empty():
+		return false
+	var cmd_type: String = str(command.get("type", "")).strip_edges().to_lower()
+	return cmd_type == "move_to" or cmd_type == "chase_target" or cmd_type == "attack_target"
+
+
+func _resolve_remote_command_target_node(command: Dictionary) -> Node3D:
+	var target_path: String = str(command.get("target_path", "")).strip_edges()
+	if target_path.is_empty():
+		return null
+	var target_node: Node = get_node_or_null(NodePath(target_path))
+	if target_node is Node3D:
+		return target_node as Node3D
+	if target_node != null:
+		var parent_node_3d: Node3D = target_node.get_parent() as Node3D
+		if parent_node_3d != null:
+			return parent_node_3d
+	return null
+
+
+func _resolve_remote_command_target_position(peer_id: int, command: Dictionary, fallback: Vector3) -> Vector3:
+	var target_pos: Vector3 = fallback
+	var target_node: Node3D = _resolve_remote_command_target_node(command)
+	if target_node != null and is_instance_valid(target_node):
+		target_pos = target_node.global_position
+	else:
+		var target_pos_variant: Variant = command.get("target_pos", null)
+		if target_pos_variant is Vector3:
+			target_pos = target_pos_variant
+		elif _remote_avatar_target_positions.has(peer_id):
+			var sync_pos_variant: Variant = _remote_avatar_target_positions[peer_id]
+			if sync_pos_variant is Vector3:
+				target_pos = sync_pos_variant
+	target_pos.y = fallback.y
+	return target_pos
+
+
+func _resolve_peer_move_speed(peer_id: int) -> float:
+	var speed: float = 360.0
+	if _peer_latest_hero_state.has(peer_id):
+		var state_variant: Variant = _peer_latest_hero_state[peer_id]
+		if state_variant is Dictionary:
+			var state: Dictionary = state_variant as Dictionary
+			speed = _float_from_variant(state.get("move_speed", speed), speed)
+	return clampf(speed, 80.0, 1400.0)
+
+
+func _resolve_peer_attack_range(peer_id: int) -> float:
+	var attack_range: float = 220.0
+	if _peer_latest_hero_state.has(peer_id):
+		var state_variant: Variant = _peer_latest_hero_state[peer_id]
+		if state_variant is Dictionary:
+			var state: Dictionary = state_variant as Dictionary
+			attack_range = _float_from_variant(state.get("attack_range", attack_range), attack_range)
+	return clampf(attack_range, 80.0, 2200.0)
+
+
+func _apply_remote_avatar_command_correction(peer_id: int, avatar: Node3D, delta: float) -> void:
+	if not _remote_avatar_target_positions.has(peer_id):
+		return
+	var sync_pos_variant: Variant = _remote_avatar_target_positions[peer_id]
+	if not (sync_pos_variant is Vector3):
+		return
+	var sync_pos: Vector3 = sync_pos_variant
+	var delta_vec: Vector3 = sync_pos - avatar.global_position
+	delta_vec.y = 0.0
+	var dist: float = delta_vec.length()
+	var soft_distance: float = maxf(remote_command_drive_soft_correction_distance, 0.0)
+	var hard_distance: float = maxf(remote_command_drive_hard_snap_distance, soft_distance + 1.0)
+	if dist >= hard_distance:
+		avatar.global_position = sync_pos
+		_remote_avatar_velocities[peer_id] = Vector3.ZERO
+		return
+	if dist <= soft_distance:
+		return
+	var alpha: float = 1.0 - exp(-maxf(remote_command_drive_correction_speed, 0.01) * maxf(delta, 0.0))
+	avatar.global_position = avatar.global_position.lerp(sync_pos, alpha)
+
+
+func _update_remote_avatar_command_drive(peer_id: int, avatar: Node3D, delta: float, rot_alpha: float) -> bool:
+	if not _is_remote_avatar_command_drive_active(peer_id):
+		return false
+	var command: Dictionary = _get_peer_latest_hero_command(peer_id)
+	if command.is_empty():
+		return false
+	var cmd_type: String = str(command.get("type", "idle")).strip_edges().to_lower()
+	var current_pos: Vector3 = avatar.global_position
+	var target_pos: Vector3 = _resolve_remote_command_target_position(peer_id, command, current_pos)
+	var to_target: Vector3 = target_pos - current_pos
+	to_target.y = 0.0
+	var dist: float = to_target.length()
+	var stop_distance: float = maxf(remote_command_drive_stop_distance, 2.0)
+	if cmd_type == "attack_target":
+		stop_distance = maxf(_resolve_peer_attack_range(peer_id) * 0.88, stop_distance)
+	var speed: float = _resolve_peer_move_speed(peer_id)
+	if dist > stop_distance:
+		var dir: Vector3 = to_target / dist
+		var max_step: float = maxf(speed * maxf(delta, 0.0), 0.0)
+		var step: float = minf(max_step, dist - stop_distance)
+		if step > 0.0:
+			var next_pos: Vector3 = current_pos + dir * step
+			next_pos.y = current_pos.y
+			avatar.global_position = next_pos
+		_remote_avatar_velocities[peer_id] = Vector3(dir.x * speed, 0.0, dir.z * speed)
+	else:
+		_remote_avatar_velocities[peer_id] = Vector3.ZERO
+	var face_dir: Vector3 = target_pos - avatar.global_position
+	face_dir.y = 0.0
+	if face_dir.length() > 0.01:
+		var desired_yaw: float = atan2(face_dir.x, face_dir.z) - PI / 2.0
+		var turn_alpha: float = 1.0 - exp(-maxf(remote_command_drive_turn_speed, 0.01) * maxf(delta, 0.0))
+		turn_alpha = maxf(turn_alpha, rot_alpha)
+		var next_rot: Vector3 = avatar.rotation
+		next_rot.y = lerp_angle(next_rot.y, desired_yaw, turn_alpha)
+		avatar.rotation = next_rot
+		_remote_avatar_target_yaws[peer_id] = desired_yaw
+	_apply_remote_avatar_command_correction(peer_id, avatar, delta)
+	return true
+
+
 func _update_remote_avatar_smoothing(delta: float) -> void:
 	if delta <= 0.0:
 		return
@@ -1945,6 +2119,8 @@ func _update_remote_avatar_smoothing(delta: float) -> void:
 		var peer_id: int = int(key_variant)
 		var avatar: Node3D = _remote_avatars[peer_id] as Node3D
 		if avatar == null or not is_instance_valid(avatar):
+			continue
+		if _update_remote_avatar_command_drive(peer_id, avatar, delta, rot_alpha):
 			continue
 
 		var target_pos: Vector3 = avatar.global_position
@@ -2762,10 +2938,14 @@ func _refresh_status_text() -> void:
 	var peers_count: int = maxi(room_ids.size() - 1, 0)
 	var room_ids_text: String = _format_player_ids(room_ids)
 	var state_text: String = _get_link_state_text(mode_raw, peers_count)
+	var fps_value: int = maxi(Engine.get_frames_per_second(), 0)
+	var sync_delay_text: String = _build_sync_latency_summary(mode_raw, room_ids)
 	var running_text: String = "OFF"
 	if _is_network_running:
 		running_text = "ON"
-	var text: String = "NET[%s] mode=%s state=%s self=%d peers=%d %s:%d\nroom_ids=%s" % [
+	var text: String = "perf=fps:%d sync_delay=%s\nNET[%s] mode=%s state=%s self=%d peers=%d %s:%d\nroom_ids=%s" % [
+		fps_value,
+		sync_delay_text,
 		running_text,
 		mode,
 		state_text,
@@ -2849,6 +3029,38 @@ func _refresh_status_text() -> void:
 	if not _status_event_hint.is_empty():
 		text += "\nevent=%s" % _status_event_hint
 	_set_status_text(text)
+
+
+func _build_sync_latency_summary(mode_raw: String, room_ids: Array[int]) -> String:
+	if mode_raw == "client":
+		if _last_snapshot_latency_ms < 0:
+			return "-"
+		if _avg_snapshot_latency_ms >= 0.0:
+			return "%dms(avg %.0fms)" % [_last_snapshot_latency_ms, _avg_snapshot_latency_ms]
+		return "%dms" % _last_snapshot_latency_ms
+	if mode_raw == "host":
+		var self_id: int = 0
+		if multiplayer.multiplayer_peer != null:
+			self_id = multiplayer.get_unique_id()
+		var parts: Array[String] = []
+		var total_ms: int = 0
+		var count: int = 0
+		for peer_id in room_ids:
+			if peer_id == self_id:
+				continue
+			if not _peer_input_latency_ms.has(peer_id):
+				continue
+			var latency_ms: int = _int_from_variant(_peer_input_latency_ms[peer_id], -1)
+			if latency_ms < 0:
+				continue
+			parts.append("P%d:%dms" % [peer_id, latency_ms])
+			total_ms += latency_ms
+			count += 1
+		if count <= 0:
+			return "-"
+		return "avg %.0fms [%s]" % [float(total_ms) / float(count), ", ".join(parts)]
+	return "-"
+
 
 func _build_hero_summary(room_ids: Array[int]) -> String:
 	var parts: Array[String] = []
