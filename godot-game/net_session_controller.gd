@@ -57,8 +57,6 @@ extends Node
 @export var remote_command_drive_hard_snap_distance: float = 220.0
 @export var remote_command_drive_correction_speed: float = 7.5
 @export var remote_command_drive_turn_speed: float = 20.0
-@export var hero_command_commit_enabled: bool = true
-@export var hero_command_commit_max_target_distance: float = 12000.0
 @export var remote_select_screen_radius: float = 72.0
 @export var sync_skill_effects: bool = true
 @export var remote_flash_effect_scene: PackedScene = preload("res://effects/HeroWarden/FanOfKnivesCaster/FanOfKnivesCaster.glb")
@@ -112,12 +110,10 @@ var _remote_last_skill_event_seq: Dictionary = {}
 
 var _peer_latest_hero_state: Dictionary = {}
 var _peer_latest_hero_command: Dictionary = {}
-var _peer_committed_hero_command: Dictionary = {}
 var _peer_latest_equipment_state: Dictionary = {}
 var _peer_latest_equipment_signatures: Dictionary = {}
 var _peer_last_input_seq: Dictionary = {}
 var _peer_last_hero_command_seq: Dictionary = {}
-var _peer_last_hero_commit_seq: Dictionary = {}
 var _peer_last_damage_request_seq: Dictionary = {}
 var _peer_last_damage_request_ms: Dictionary = {}
 var _peer_last_hero_positions: Dictionary = {}
@@ -133,12 +129,9 @@ var _peer_damage_breaker_blocked_until_ms: Dictionary = {}
 var _peer_input_latency_ms: Dictionary = {}
 var _host_hero_snapshot_seq: int = 0
 var _last_applied_hero_snapshot_seq: int = -1
-var _host_hero_command_commit_seq: int = 0
-var _host_sim_tick: int = 0
 var _client_input_seq: int = 0
 var _client_recent_input_frames: Array = []
 var _local_last_sent_hero_command_seq: int = -1
-var _local_last_applied_command_commit_seq: int = -1
 var _client_enemy_damage_request_seq: int = 0
 var _last_sent_equipment_signature: String = ""
 var _last_ack_input_seq_from_host: int = -1
@@ -225,7 +218,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _tick_host(delta: float) -> void:
 	var safe_delta: float = maxf(delta, 0.0)
-	_host_sim_tick += 1
 	var host_id: int = multiplayer.get_unique_id()
 	if host_id > 0:
 		if sync_hero_state:
@@ -366,22 +358,18 @@ func start_network() -> void:
 	_world_send_elapsed_sec = 0.0
 	_world_reliable_keyframe_elapsed_sec = 0.0
 	_host_hero_snapshot_seq = 0
-	_host_hero_command_commit_seq = 0
-	_host_sim_tick = 0
 	_host_world_snapshot_seq = 0
 	_last_applied_hero_snapshot_seq = -1
 	_last_applied_world_snapshot_seq = -1
 	_client_input_seq = 0
 	_client_recent_input_frames.clear()
 	_local_last_sent_hero_command_seq = -1
-	_local_last_applied_command_commit_seq = -1
 	_client_enemy_damage_request_seq = 0
 	_last_sent_equipment_signature = ""
 	_last_ack_input_seq_from_host = -1
 	_local_equipment_request_seq = 0
 	_peer_last_input_seq.clear()
 	_peer_last_hero_command_seq.clear()
-	_peer_last_hero_commit_seq.clear()
 	_peer_last_damage_request_seq.clear()
 	_peer_last_damage_request_ms.clear()
 	_peer_last_hero_positions.clear()
@@ -396,7 +384,6 @@ func start_network() -> void:
 	_peer_damage_breaker_blocked_until_ms.clear()
 	_peer_input_latency_ms.clear()
 	_peer_latest_hero_command.clear()
-	_peer_committed_hero_command.clear()
 	_peer_latest_equipment_signatures.clear()
 	_last_snapshot_latency_ms = -1
 	_avg_snapshot_latency_ms = -1.0
@@ -412,11 +399,9 @@ func stop_network() -> void:
 	_peer_latest_hero_state.clear()
 	_peer_latest_equipment_state.clear()
 	_peer_latest_hero_command.clear()
-	_peer_committed_hero_command.clear()
 	_peer_latest_equipment_signatures.clear()
 	_peer_last_input_seq.clear()
 	_peer_last_hero_command_seq.clear()
-	_peer_last_hero_commit_seq.clear()
 	_peer_last_damage_request_seq.clear()
 	_peer_last_damage_request_ms.clear()
 	_peer_last_hero_positions.clear()
@@ -441,15 +426,12 @@ func stop_network() -> void:
 	_world_send_elapsed_sec = 0.0
 	_world_reliable_keyframe_elapsed_sec = 0.0
 	_host_hero_snapshot_seq = 0
-	_host_hero_command_commit_seq = 0
-	_host_sim_tick = 0
 	_host_world_snapshot_seq = 0
 	_last_applied_hero_snapshot_seq = -1
 	_last_applied_world_snapshot_seq = -1
 	_client_input_seq = 0
 	_client_recent_input_frames.clear()
 	_local_last_sent_hero_command_seq = -1
-	_local_last_applied_command_commit_seq = -1
 	_client_enemy_damage_request_seq = 0
 	_last_sent_equipment_signature = ""
 	_last_ack_input_seq_from_host = -1
@@ -488,7 +470,6 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	_peer_latest_equipment_signatures.erase(peer_id)
 	_peer_last_input_seq.erase(peer_id)
 	_peer_last_hero_command_seq.erase(peer_id)
-	_peer_last_hero_commit_seq.erase(peer_id)
 	_peer_last_damage_request_seq.erase(peer_id)
 	_peer_last_damage_request_ms.erase(peer_id)
 	_peer_last_hero_positions.erase(peer_id)
@@ -503,7 +484,6 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	_peer_damage_breaker_blocked_until_ms.erase(peer_id)
 	_peer_input_latency_ms.erase(peer_id)
 	_peer_latest_hero_command.erase(peer_id)
-	_peer_committed_hero_command.erase(peer_id)
 	var ui: Node = _get_game_ui()
 	if ui != null and ui.has_method("authority_drop_peer_state"):
 		ui.call("authority_drop_peer_state", peer_id)
@@ -595,13 +575,6 @@ func rpc_apply_equipment_commit_from_authority(commit: Dictionary) -> void:
 	var state_variant: Variant = commit.get("state", null)
 	if state_variant is Dictionary:
 		_last_sent_equipment_signature = _build_state_signature(state_variant)
-
-
-@rpc("authority", "call_remote", "reliable")
-func rpc_apply_hero_command_commit_from_authority(commit: Dictionary) -> void:
-	if network_mode.strip_edges().to_lower() == "host":
-		return
-	_consume_authoritative_hero_command_commit(commit)
 
 @rpc("authority", "reliable")
 func rpc_hero_snapshot(snapshot: Dictionary) -> void:
@@ -706,22 +679,6 @@ func _build_hero_snapshot() -> Dictionary:
 					if cmd_variant is Dictionary:
 						peer_hero_state["command_bus"] = (cmd_variant as Dictionary).duplicate(true)
 				payload["hero"] = peer_hero_state
-		if hero_command_commit_enabled and _peer_committed_hero_command.has(peer_id):
-			var committed_variant: Variant = _peer_committed_hero_command[peer_id]
-			if committed_variant is Dictionary:
-				var committed_command: Dictionary = (committed_variant as Dictionary).duplicate(true)
-				var commit_seq: int = _int_from_variant(committed_command.get("seq", -1), -1)
-				if commit_seq >= 0:
-					payload["hero_command_commit"] = {
-						"peer_id": peer_id,
-						"request_seq": _int_from_variant(committed_command.get("request_seq", -1), -1),
-						"commit_seq": commit_seq,
-						"start_tick": _int_from_variant(committed_command.get("start_tick", _host_sim_tick), _host_sim_tick),
-						"accepted": true,
-						"reason": "ok",
-						"host_t_ms": Time.get_ticks_msec(),
-						"command": committed_command
-					}
 		if sync_equipment_state and _peer_latest_equipment_state.has(peer_id):
 			payload["equipment"] = _peer_latest_equipment_state[peer_id]
 		peers_payload[str(peer_id)] = payload
@@ -806,190 +763,22 @@ func _consume_client_hero_command(sender_id: int, command: Dictionary) -> void:
 	var sanitized: Dictionary = _sanitize_peer_hero_command(command)
 	if sanitized.is_empty():
 		return
-	var request_seq: int = _int_from_variant(sanitized.get("seq", -1), -1)
+	var command_seq: int = _int_from_variant(sanitized.get("seq", -1), -1)
 	var last_seq: int = _int_from_variant(_peer_last_hero_command_seq.get(sender_id, -1), -1)
-	if request_seq <= last_seq:
+	if command_seq <= last_seq:
 		return
-	_peer_last_hero_command_seq[sender_id] = request_seq
-	if not hero_command_commit_enabled:
-		_peer_latest_hero_command[sender_id] = sanitized
-		if _peer_latest_hero_state.has(sender_id):
-			var state_variant: Variant = _peer_latest_hero_state[sender_id]
-			if state_variant is Dictionary:
-				var state: Dictionary = (state_variant as Dictionary).duplicate(true)
-				state["command_bus"] = sanitized.duplicate(true)
-				_peer_latest_hero_state[sender_id] = state
-		return
-	var commit: Dictionary = _build_hero_command_commit(sender_id, request_seq, sanitized)
-	if _bool_from_variant(commit.get("accepted", false), false):
-		_apply_peer_hero_command_commit(sender_id, commit)
-	rpc_id(sender_id, "rpc_apply_hero_command_commit_from_authority", commit)
-
-
-func _next_hero_command_commit_seq() -> int:
-	_host_hero_command_commit_seq += 1
-	return _host_hero_command_commit_seq
-
-
-func _resolve_peer_authoritative_position(peer_id: int) -> Vector3:
-	if _peer_latest_hero_state.has(peer_id):
-		var state_variant: Variant = _peer_latest_hero_state[peer_id]
-		if state_variant is Dictionary:
-			var state: Dictionary = state_variant as Dictionary
-			var pos_variant: Variant = state.get("pos", null)
-			if pos_variant is Vector3:
-				return pos_variant
-	var avatar: Node3D = _get_remote_avatar_for_peer(peer_id)
-	if avatar != null and is_instance_valid(avatar):
-		return avatar.global_position
-	if _remote_avatar_target_positions.has(peer_id):
-		var cached_pos_variant: Variant = _remote_avatar_target_positions[peer_id]
-		if cached_pos_variant is Vector3:
-			return cached_pos_variant
-	return Vector3.ZERO
-
-
-func _build_hero_command_commit(sender_id: int, request_seq: int, command: Dictionary) -> Dictionary:
-	var commit_seq: int = _next_hero_command_commit_seq()
-	var start_tick: int = _host_sim_tick + 1
-	var now_ms: int = Time.get_ticks_msec()
-	var accepted: bool = true
-	var reason: String = "ok"
-	var command_type: String = str(command.get("type", "idle")).strip_edges().to_lower()
-	var current_pos: Vector3 = _resolve_peer_authoritative_position(sender_id)
-	var canonical_command: Dictionary = command.duplicate(true)
-	canonical_command["seq"] = commit_seq
-	canonical_command["t_ms"] = now_ms
-	canonical_command["start_tick"] = start_tick
-	canonical_command["request_seq"] = request_seq
-	var resolved_target_pos: Vector3 = current_pos
-	var has_target_pos: bool = false
-	var resolved_target_path: String = str(command.get("target_path", "")).strip_edges()
-	var resolved_target_node: Node3D = _resolve_remote_command_target_node(command)
-	match command_type:
-		"move_to":
-			var move_target_variant: Variant = command.get("target_pos", null)
-			if move_target_variant is Vector3:
-				resolved_target_pos = move_target_variant
-				has_target_pos = true
-			elif resolved_target_node != null and is_instance_valid(resolved_target_node):
-				resolved_target_pos = resolved_target_node.global_position
-				resolved_target_path = str(resolved_target_node.get_path())
-				has_target_pos = true
-			else:
-				accepted = false
-				reason = "missing_move_target"
-		"chase_target", "attack_target":
-			if resolved_target_node != null and is_instance_valid(resolved_target_node):
-				resolved_target_pos = resolved_target_node.global_position
-				resolved_target_path = str(resolved_target_node.get_path())
-				has_target_pos = true
-			else:
-				var chase_target_variant: Variant = command.get("target_pos", null)
-				if chase_target_variant is Vector3:
-					resolved_target_pos = chase_target_variant
-					has_target_pos = true
-				else:
-					accepted = false
-					reason = "missing_chase_target"
-		"cast_skill":
-			var skill_id: int = _int_from_variant(command.get("skill_id", -1), -1)
-			if skill_id < 0:
-				accepted = false
-				reason = "missing_skill_id"
-			var cast_target_variant: Variant = command.get("target_pos", null)
-			if cast_target_variant is Vector3:
-				resolved_target_pos = cast_target_variant
-				has_target_pos = true
-		"idle", "dead":
-			resolved_target_pos = current_pos
-			has_target_pos = true
-		_:
-			accepted = false
-			reason = "unsupported_command"
-	if has_target_pos:
-		resolved_target_pos.y = current_pos.y
-		var max_target_distance: float = maxf(hero_command_commit_max_target_distance, 64.0)
-		var to_target: Vector3 = resolved_target_pos - current_pos
-		to_target.y = 0.0
-		var target_distance: float = to_target.length()
-		if target_distance > max_target_distance and target_distance > 0.01:
-			resolved_target_pos = current_pos + to_target / target_distance * max_target_distance
-			resolved_target_pos.y = current_pos.y
-		canonical_command["target_pos"] = resolved_target_pos
-	if not resolved_target_path.is_empty():
-		canonical_command["target_path"] = resolved_target_path
-	elif canonical_command.has("target_path"):
-		canonical_command.erase("target_path")
-	if not accepted:
-		canonical_command["type"] = "idle"
-		canonical_command["target_pos"] = current_pos
-	return {
-		"peer_id": sender_id,
-		"request_seq": request_seq,
-		"commit_seq": commit_seq,
-		"start_tick": start_tick,
-		"accepted": accepted,
-		"reason": reason,
-		"host_t_ms": now_ms,
-		"command": canonical_command
-	}
-
-
-func _apply_peer_hero_command_commit(peer_id: int, commit: Dictionary) -> void:
-	if peer_id <= 0:
-		return
-	var commit_seq: int = _int_from_variant(commit.get("commit_seq", -1), -1)
-	if commit_seq < 0:
-		return
-	var last_commit_seq: int = _int_from_variant(_peer_last_hero_commit_seq.get(peer_id, -1), -1)
-	if commit_seq <= last_commit_seq:
-		return
-	_peer_last_hero_commit_seq[peer_id] = commit_seq
-	if not _bool_from_variant(commit.get("accepted", false), false):
-		return
-	var command_variant: Variant = commit.get("command", null)
-	if not (command_variant is Dictionary):
-		return
-	var command: Dictionary = _sanitize_peer_hero_command(command_variant as Dictionary)
-	if command.is_empty():
-		return
-	command["seq"] = commit_seq
-	command["start_tick"] = _int_from_variant(commit.get("start_tick", _host_sim_tick), _host_sim_tick)
-	var request_seq: int = _int_from_variant(commit.get("request_seq", -1), -1)
-	if request_seq >= 0:
-		command["request_seq"] = request_seq
-	_peer_committed_hero_command[peer_id] = command.duplicate(true)
-	_peer_latest_hero_command[peer_id] = command.duplicate(true)
-	if _peer_latest_hero_state.has(peer_id):
-		var state_variant: Variant = _peer_latest_hero_state[peer_id]
+	_peer_last_hero_command_seq[sender_id] = command_seq
+	_peer_latest_hero_command[sender_id] = sanitized
+	if _peer_latest_hero_state.has(sender_id):
+		var state_variant: Variant = _peer_latest_hero_state[sender_id]
 		if state_variant is Dictionary:
 			var state: Dictionary = (state_variant as Dictionary).duplicate(true)
-			state["command_bus"] = command.duplicate(true)
-			_peer_latest_hero_state[peer_id] = state
-
-
-func _consume_authoritative_hero_command_commit(commit: Dictionary) -> void:
-	var peer_id: int = _int_from_variant(commit.get("peer_id", 0), 0)
-	if peer_id <= 0:
-		return
-	if multiplayer.multiplayer_peer != null:
-		var self_id: int = multiplayer.get_unique_id()
-		if self_id > 0 and peer_id != self_id:
-			return
-	var request_seq: int = _int_from_variant(commit.get("request_seq", -1), -1)
-	if request_seq > _local_last_applied_command_commit_seq:
-		_local_last_applied_command_commit_seq = request_seq
-	_apply_peer_hero_command_commit(peer_id, commit)
+			state["command_bus"] = sanitized.duplicate(true)
+			_peer_latest_hero_state[sender_id] = state
 
 
 func _consume_peer_hero_command_from_state(peer_id: int, hero_state: Dictionary) -> void:
 	if peer_id <= 0:
-		return
-	if hero_command_commit_enabled and _peer_committed_hero_command.has(peer_id):
-		var committed_variant: Variant = _peer_committed_hero_command[peer_id]
-		if committed_variant is Dictionary:
-			hero_state["command_bus"] = (committed_variant as Dictionary).duplicate(true)
 		return
 	var command_variant: Variant = hero_state.get("command_bus", null)
 	if not (command_variant is Dictionary):
@@ -1227,10 +1016,6 @@ func _apply_world_snapshot(snapshot: Dictionary) -> void:
 			if not (payload_variant is Dictionary):
 				continue
 			var payload: Dictionary = payload_variant
-			if hero_command_commit_enabled and payload.has("hero_command_commit"):
-				var commit_variant: Variant = payload["hero_command_commit"]
-				if commit_variant is Dictionary:
-					_apply_peer_hero_command_commit(peer_id, commit_variant as Dictionary)
 			if sync_hero_state and payload.has("hero"):
 				var hero_variant: Variant = payload["hero"]
 				if hero_variant is Dictionary:
@@ -2183,10 +1968,6 @@ func _upsert_remote_avatar(peer_id: int, position: Vector3, yaw: float, model_ke
 
 
 func _get_peer_latest_hero_command(peer_id: int) -> Dictionary:
-	if hero_command_commit_enabled and _peer_committed_hero_command.has(peer_id):
-		var committed_variant: Variant = _peer_committed_hero_command[peer_id]
-		if committed_variant is Dictionary:
-			return committed_variant as Dictionary
 	if not _peer_latest_hero_command.has(peer_id):
 		return {}
 	var command_variant: Variant = _peer_latest_hero_command[peer_id]
@@ -2671,8 +2452,6 @@ func _remove_remote_avatar(peer_id: int) -> void:
 	_remote_last_flash_cd.erase(peer_id)
 	_remote_last_haste_active.erase(peer_id)
 	_remote_last_skill_event_seq.erase(peer_id)
-	_peer_committed_hero_command.erase(peer_id)
-	_peer_last_hero_commit_seq.erase(peer_id)
 	if avatar != null and is_instance_valid(avatar):
 		avatar.queue_free()
 
