@@ -42,15 +42,16 @@ signal host_migration_state_changed(in_progress: bool, local_is_host: bool, targ
 @export var steam_stub_default_remote_port: int = 19090
 @export var steam_stub_endpoint_map_csv: String = ""
 @export var send_interval_sec: float = 0.05
-@export var hero_sync_interval_sec: float = 0.05
+@export var hero_sync_interval_sec: float = 0.08
 @export var equipment_sync_interval_sec: float = 0.30
 @export var client_input_redundancy_count: int = 1
 @export var client_input_packet_budget_bytes: int = 1050
 @export var client_input_unreliable_max_bytes: int = 1300
 @export var client_initial_hero_state_resend_interval_sec: float = 0.25
-@export var world_sync_interval_sec: float = 0.05
-@export var world_reliable_keyframe_interval_sec: float = 0.35
-@export var adaptive_world_sync_enabled: bool = false
+@export var world_sync_interval_sec: float = 0.08
+@export var hero_reliable_keyframe_interval_sec: float = 0.75
+@export var world_reliable_keyframe_interval_sec: float = 0.75
+@export var adaptive_world_sync_enabled: bool = true
 @export var keep_host_active_in_background: bool = true
 @export var world_sync_interval_min_sec: float = 0.05
 @export var world_sync_interval_max_sec: float = 0.12
@@ -136,6 +137,7 @@ var _is_network_running: bool = false
 var _send_elapsed_sec: float = 0.0
 var _equipment_send_elapsed_sec: float = 0.0
 var _hero_send_elapsed_sec: float = 0.0
+var _hero_reliable_keyframe_elapsed_sec: float = 0.0
 var _world_send_elapsed_sec: float = 0.0
 var _world_reliable_keyframe_elapsed_sec: float = 0.0
 var _dynamic_world_sync_interval_sec: float = 0.08
@@ -966,9 +968,20 @@ func _tick_host(delta: float) -> void:
 	_hero_send_elapsed_sec = float(host_plan.get("hero_send_elapsed_sec", _hero_send_elapsed_sec))
 	_world_send_elapsed_sec = float(host_plan.get("world_send_elapsed_sec", _world_send_elapsed_sec))
 	_world_reliable_keyframe_elapsed_sec = float(host_plan.get("world_reliable_keyframe_elapsed_sec", _world_reliable_keyframe_elapsed_sec))
+	_equipment_send_elapsed_sec += safe_delta
+	_hero_reliable_keyframe_elapsed_sec += safe_delta
 	if bool(host_plan.get("send_hero_snapshot", false)):
-		var hero_snapshot: Dictionary = _build_hero_snapshot()
+		var hero_snapshot: Dictionary = _build_hero_snapshot(false)
 		rpc("rpc_hero_snapshot", hero_snapshot)
+	if sync_equipment_state and _hero_reliable_keyframe_elapsed_sec >= maxf(hero_reliable_keyframe_interval_sec, 0.2):
+		_hero_reliable_keyframe_elapsed_sec = fmod(_hero_reliable_keyframe_elapsed_sec, maxf(hero_reliable_keyframe_interval_sec, 0.2))
+		_equipment_send_elapsed_sec = 0.0
+		var hero_keyframe_snapshot: Dictionary = _build_hero_snapshot(true)
+		rpc("rpc_hero_snapshot_keyframe", hero_keyframe_snapshot)
+	elif sync_equipment_state and _equipment_send_elapsed_sec >= maxf(equipment_sync_interval_sec, 0.15):
+		_equipment_send_elapsed_sec = fmod(_equipment_send_elapsed_sec, maxf(equipment_sync_interval_sec, 0.15))
+		var equipment_snapshot: Dictionary = _build_equipment_snapshot()
+		rpc("rpc_equipment_snapshot", equipment_snapshot)
 
 	if bool(host_plan.get("send_world_snapshot", false)):
 		var world_snapshot: Dictionary = _build_world_snapshot(false)
@@ -981,6 +994,7 @@ func _tick_host(delta: float) -> void:
 	if bool(host_plan.get("send_world_keyframe", false)):
 		var keyframe_snapshot: Dictionary = _build_world_snapshot(true)
 		keyframe_snapshot["keyframe"] = true
+		keyframe_snapshot = _trim_unreliable_world_snapshot_to_mtu(keyframe_snapshot, world_packet_budget_bytes)
 		rpc("rpc_world_snapshot_keyframe", keyframe_snapshot)
 
 func _tick_client(delta: float) -> void:
@@ -1127,6 +1141,7 @@ func start_network() -> void:
 	_send_elapsed_sec = 0.0
 	_equipment_send_elapsed_sec = 0.0
 	_hero_send_elapsed_sec = 0.0
+	_hero_reliable_keyframe_elapsed_sec = maxf(hero_reliable_keyframe_interval_sec, 0.2)
 	_world_send_elapsed_sec = 0.0
 	_world_reliable_keyframe_elapsed_sec = 0.0
 	_host_hero_snapshot_seq = 0
@@ -1226,6 +1241,7 @@ func stop_network() -> void:
 	_send_elapsed_sec = 0.0
 	_equipment_send_elapsed_sec = 0.0
 	_hero_send_elapsed_sec = 0.0
+	_hero_reliable_keyframe_elapsed_sec = 0.0
 	_world_send_elapsed_sec = 0.0
 	_world_reliable_keyframe_elapsed_sec = 0.0
 	_host_hero_snapshot_seq = 0
@@ -1534,8 +1550,14 @@ func rpc_apply_equipment_commit_from_authority(commit: Dictionary) -> void:
 				_peer_latest_equipment_state[self_id] = state
 				_peer_latest_equipment_signatures[self_id] = _last_sent_equipment_signature
 
-@rpc("authority", "reliable")
+@rpc("authority", "unreliable_ordered")
 func rpc_hero_snapshot(snapshot: Dictionary) -> void:
+	if network_mode.strip_edges().to_lower() == "host":
+		return
+	_apply_world_snapshot(snapshot)
+
+@rpc("authority", "reliable")
+func rpc_hero_snapshot_keyframe(snapshot: Dictionary) -> void:
 	if network_mode.strip_edges().to_lower() == "host":
 		return
 	_apply_world_snapshot(snapshot)
@@ -1559,6 +1581,12 @@ func rpc_world_snapshot_keyframe(snapshot: Dictionary) -> void:
 	if network_mode.strip_edges().to_lower() == "host":
 		return
 	_apply_world_snapshot(snapshot)
+
+@rpc("authority", "reliable")
+func rpc_equipment_snapshot(snapshot: Dictionary) -> void:
+	if network_mode.strip_edges().to_lower() == "host":
+		return
+	_apply_equipment_snapshot(snapshot)
 
 @rpc("authority", "call_remote", "reliable")
 func rpc_apply_hero_damage_from_authority(amount: int, ignore_armor: bool = false, damage_type: String = "physical") -> void:
@@ -1637,7 +1665,7 @@ func _trim_unreliable_world_snapshot_to_mtu(snapshot: Dictionary, mtu_budget_byt
 	return _get_snapshot_serialization_service().trim_unreliable_world_snapshot_to_mtu(snapshot, mtu_budget_bytes)
 
 
-func _build_hero_snapshot() -> Dictionary:
+func _build_hero_snapshot(include_equipment_state: bool = false) -> Dictionary:
 	var host_peer_id: int = multiplayer.get_unique_id()
 	var host_hero_state: Dictionary = {}
 	if sync_hero_state:
@@ -1650,6 +1678,7 @@ func _build_hero_snapshot() -> Dictionary:
 		"ack_input_seq": _peer_last_input_seq,
 		"sync_hero_state": sync_hero_state,
 		"host_hero_state": host_hero_state,
+		"include_equipment_state": include_equipment_state,
 		"sync_equipment_state": sync_equipment_state,
 		"host_equipment_state": _collect_local_equipment_state() if sync_equipment_state else {},
 		"peer_latest_hero_state": _peer_latest_hero_state,
@@ -1658,6 +1687,16 @@ func _build_hero_snapshot() -> Dictionary:
 	})
 	_host_hero_snapshot_seq = int(result.get("next_hero_seq", _host_hero_snapshot_seq))
 	return result.get("snapshot", {})
+
+
+func _build_equipment_snapshot() -> Dictionary:
+	return _get_snapshot_serialization_service().build_equipment_snapshot({
+		"timestamp_ms": Time.get_ticks_msec(),
+		"host_peer_id": multiplayer.get_unique_id(),
+		"sync_equipment_state": sync_equipment_state,
+		"host_equipment_state": _collect_local_equipment_state() if sync_equipment_state else {},
+		"peer_latest_equipment_state": _peer_latest_equipment_state,
+	})
 
 
 func _build_network_hero_state(full_state: Dictionary) -> Dictionary:
@@ -2165,6 +2204,28 @@ func _apply_world_snapshot(snapshot: Dictionary) -> void:
 
 	if has_hero_payload:
 		_remove_absent_remote_avatars(valid_remote_ids)
+	_refresh_status_text()
+
+
+func _apply_equipment_snapshot(snapshot: Dictionary) -> void:
+	if not sync_equipment_state:
+		return
+	var host_id: int = int(snapshot.get("host_peer_id", 1))
+	var host_eq_variant: Variant = snapshot.get("host_equipment", null)
+	if host_eq_variant is Dictionary:
+		_peer_latest_equipment_state[host_id] = (host_eq_variant as Dictionary).duplicate(true)
+	var peers_variant: Variant = snapshot.get("peers", null)
+	if peers_variant is Dictionary:
+		var peers_payload: Dictionary = peers_variant
+		for key_variant in peers_payload.keys():
+			var peer_id: int = int(str(key_variant))
+			var payload_variant: Variant = peers_payload[key_variant]
+			if not (payload_variant is Dictionary):
+				continue
+			var payload: Dictionary = payload_variant
+			var eq_variant: Variant = payload.get("equipment", null)
+			if eq_variant is Dictionary:
+				_peer_latest_equipment_state[peer_id] = (eq_variant as Dictionary).duplicate(true)
 	_refresh_status_text()
 
 

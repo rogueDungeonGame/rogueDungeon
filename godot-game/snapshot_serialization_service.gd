@@ -166,13 +166,14 @@ func build_hero_snapshot(input: Dictionary) -> Dictionary:
 	var snapshot: Dictionary = {}
 	var next_hero_seq: int = int(input.get("current_hero_seq", 0)) + 1
 	var host_peer_id: int = int(input.get("host_peer_id", 0))
+	var include_equipment_state: bool = bool(input.get("include_equipment_state", false))
 	snapshot["hero_seq"] = next_hero_seq
 	snapshot["timestamp_ms"] = int(input.get("timestamp_ms", 0))
 	snapshot["host_peer_id"] = host_peer_id
 	snapshot["ack_input_seq"] = _dict_copy(input.get("ack_input_seq", {}))
 	if bool(input.get("sync_hero_state", false)):
 		snapshot["host_hero"] = _dict_copy(input.get("host_hero_state", {}))
-	if bool(input.get("sync_equipment_state", false)):
+	if include_equipment_state and bool(input.get("sync_equipment_state", false)):
 		snapshot["host_equipment"] = _dict_copy(input.get("host_equipment_state", {}))
 
 	var peer_latest_hero_state: Dictionary = _dict_copy(input.get("peer_latest_hero_state", {}))
@@ -191,7 +192,7 @@ func build_hero_snapshot(input: Dictionary) -> Dictionary:
 				if cmd_variant is Dictionary:
 					peer_hero_state["command_bus"] = (cmd_variant as Dictionary).duplicate(true)
 			payload["hero"] = peer_hero_state
-		if bool(input.get("sync_equipment_state", false)) and peer_latest_equipment_state.has(peer_id):
+		if include_equipment_state and bool(input.get("sync_equipment_state", false)) and peer_latest_equipment_state.has(peer_id):
 			payload["equipment"] = _dict_copy(peer_latest_equipment_state[peer_id])
 		peers_payload[str(peer_id)] = payload
 	snapshot["peers"] = peers_payload
@@ -199,6 +200,26 @@ func build_hero_snapshot(input: Dictionary) -> Dictionary:
 		"snapshot": snapshot,
 		"next_hero_seq": next_hero_seq,
 	}
+
+
+func build_equipment_snapshot(input: Dictionary) -> Dictionary:
+	var snapshot: Dictionary = {}
+	var host_peer_id: int = int(input.get("host_peer_id", 0))
+	snapshot["timestamp_ms"] = int(input.get("timestamp_ms", 0))
+	snapshot["host_peer_id"] = host_peer_id
+	if bool(input.get("sync_equipment_state", false)):
+		snapshot["host_equipment"] = _dict_copy(input.get("host_equipment_state", {}))
+	var peer_latest_equipment_state: Dictionary = _dict_copy(input.get("peer_latest_equipment_state", {}))
+	var peers_payload: Dictionary = {}
+	for key_variant in peer_latest_equipment_state.keys():
+		var peer_id: int = int(key_variant)
+		if peer_id == host_peer_id:
+			continue
+		peers_payload[str(peer_id)] = {
+			"equipment": _dict_copy(peer_latest_equipment_state[peer_id])
+		}
+	snapshot["peers"] = peers_payload
+	return snapshot
 
 
 func build_network_hero_state(full_state: Dictionary) -> Dictionary:
