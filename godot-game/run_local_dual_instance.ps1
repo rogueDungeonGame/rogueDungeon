@@ -2,7 +2,7 @@ param(
     [string]$GodotExe = "godot4",
     [string]$ProjectPath = $PSScriptRoot,
     [ValidateSet("enet", "sdr", "enet_direct", "steam_stub", "steam_relay")]
-    [string]$Transport = "sdr",
+    [string]$Transport = "enet",
     [string]$HostAddress = "127.0.0.1",
     [ValidateRange(1, 65535)]
     [int]$Port = 19090,

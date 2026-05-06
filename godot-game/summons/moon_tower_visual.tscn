@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_base"]
+top_radius = 36.0
+bottom_radius = 48.0
+height = 120.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_base"]
+albedo_color = Color(0.4, 0.62, 0.92, 1)
+roughness = 0.35
+emission_enabled = true
+emission = Color(0.15, 0.35, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_head"]
+size = Vector3(96, 24, 96)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_head"]
+albedo_color = Color(0.75, 0.9, 1, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.4, 0.7, 1, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_crystal"]
+radius = 18.0
+height = 36.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_crystal"]
+albedo_color = Color(0.85, 1, 1, 0.95)
+emission_enabled = true
+emission = Color(0.55, 0.95, 1, 1)
+transparency = 1
+
+[node name="MoonTowerVisual" type="Node3D"]
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 60, 0)
+mesh = SubResource("CylinderMesh_base")
+material_override = SubResource("StandardMaterial3D_base")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 132, 0)
+mesh = SubResource("BoxMesh_head")
+material_override = SubResource("StandardMaterial3D_head")
+
+[node name="Crystal" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 170, 0)
+mesh = SubResource("SphereMesh_crystal")
+material_override = SubResource("StandardMaterial3D_crystal")

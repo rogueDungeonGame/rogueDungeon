@@ -1,0 +1,51 @@
+[gd_scene format=3]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_body"]
+top_radius = 14.0
+bottom_radius = 22.0
+height = 90.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.18, 0.72, 0.38, 1)
+roughness = 0.35
+emission_enabled = true
+emission = Color(0.08, 0.55, 0.22, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 20.0
+height = 40.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_head"]
+albedo_color = Color(0.42, 0.95, 0.58, 0.96)
+emission_enabled = true
+emission = Color(0.2, 0.9, 0.4, 1)
+transparency = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_fang"]
+size = Vector3(6, 18, 6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fang"]
+albedo_color = Color(0.92, 1, 0.94, 1)
+roughness = 0.15
+
+[node name="SerpentWardVisual" type="Node3D"]
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 45, 0)
+mesh = SubResource("CylinderMesh_body")
+material_override = SubResource("StandardMaterial3D_body")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 12)
+mesh = SubResource("SphereMesh_head")
+material_override = SubResource("StandardMaterial3D_head")
+
+[node name="LeftFang" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 82, 28)
+mesh = SubResource("BoxMesh_fang")
+material_override = SubResource("StandardMaterial3D_fang")
+
+[node name="RightFang" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 82, 28)
+mesh = SubResource("BoxMesh_fang")
+material_override = SubResource("StandardMaterial3D_fang")

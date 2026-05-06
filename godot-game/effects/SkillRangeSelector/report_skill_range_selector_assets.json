@@ -1,0 +1,104 @@
+{
+  "source": "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish",
+  "archives": [
+    "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\War3Patch.mpq",
+    "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\War3x.mpq",
+    "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\war3.mpq"
+  ],
+  "outRoot": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector",
+  "models": {
+    "total": 3,
+    "success": 3,
+    "failed": 0,
+    "items": [
+      {
+        "name": "Radius1",
+        "sourceModel": "UI\\Feedback\\Radius1\\Radius1.mdx",
+        "archive": "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\war3.mpq",
+        "ok": true,
+        "mdx": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\Radius1\\Radius1.mdx",
+        "glb": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\Radius1\\Radius1.glb",
+        "texturesExtracted": 1
+      },
+      {
+        "name": "Target",
+        "sourceModel": "UI\\Feedback\\Target\\Target.mdx",
+        "archive": "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\war3.mpq",
+        "ok": true,
+        "mdx": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\Target\\Target.mdx",
+        "glb": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\Target\\Target.glb",
+        "texturesExtracted": 1
+      },
+      {
+        "name": "TargetPreSelected",
+        "sourceModel": "UI\\Feedback\\TargetPreSelected\\TargetPreSelected.mdx",
+        "archive": "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\war3.mpq",
+        "ok": true,
+        "mdx": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\TargetPreSelected\\TargetPreSelected.mdx",
+        "glb": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\TargetPreSelected\\TargetPreSelected.glb",
+        "texturesExtracted": 1
+      }
+    ]
+  },
+  "extraTextures": {
+    "total": 9,
+    "success": 9,
+    "failed": 0,
+    "items": [
+      {
+        "ok": true,
+        "texPath": "ReplaceableTextures\\Selection\\SpellAreaOfEffect.blp",
+        "blp": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect.blp",
+        "png": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect.png"
+      },
+      {
+        "ok": true,
+        "texPath": "ReplaceableTextures\\Selection\\SpellAreaOfEffect_basic.blp",
+        "blp": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect_basic.blp",
+        "png": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect_basic.png"
+      },
+      {
+        "ok": true,
+        "texPath": "ReplaceableTextures\\Selection\\SpellAreaOfEffect512.blp",
+        "blp": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect512.blp",
+        "png": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect512.png"
+      },
+      {
+        "ok": true,
+        "texPath": "ReplaceableTextures\\Selection\\SpellAreaOfEffect_NE.blp",
+        "blp": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect_NE.blp",
+        "png": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect_NE.png"
+      },
+      {
+        "ok": true,
+        "texPath": "ReplaceableTextures\\Selection\\SpellAreaOfEffect_Orc.blp",
+        "blp": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect_Orc.blp",
+        "png": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect_Orc.png"
+      },
+      {
+        "ok": true,
+        "texPath": "ReplaceableTextures\\Selection\\SpellAreaOfEffect_Undead.blp",
+        "blp": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect_Undead.blp",
+        "png": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SpellAreaOfEffect_Undead.png"
+      },
+      {
+        "ok": true,
+        "texPath": "ReplaceableTextures\\Selection\\SelectionCircleSmall.blp",
+        "blp": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SelectionCircleSmall.blp",
+        "png": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SelectionCircleSmall.png"
+      },
+      {
+        "ok": true,
+        "texPath": "ReplaceableTextures\\Selection\\SelectionCircleMed.blp",
+        "blp": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SelectionCircleMed.blp",
+        "png": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SelectionCircleMed.png"
+      },
+      {
+        "ok": true,
+        "texPath": "ReplaceableTextures\\Selection\\SelectionCircleLarge.blp",
+        "blp": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SelectionCircleLarge.blp",
+        "png": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\SkillRangeSelector\\ExtraTextures\\SelectionCircleLarge.png"
+      }
+    ]
+  }
+}

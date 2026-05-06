@@ -1,0 +1,28 @@
+{
+  "targetDir": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\HeroTinker",
+  "totalFiles": 2,
+  "totalBefore": 4,
+  "totalAfter": 4,
+  "items": [
+    {
+      "file": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\HeroTinker\\ClusterRocketsWeaponMissile\\RocketMissile.glb",
+      "before": 2,
+      "after": 2,
+      "kept": [
+        "Death",
+        "Stand"
+      ],
+      "removed": []
+    },
+    {
+      "file": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\HeroTinker\\ClusterRocketsMissile\\TinkerRocketMissile.glb",
+      "before": 2,
+      "after": 2,
+      "kept": [
+        "Birth",
+        "Death"
+      ],
+      "removed": []
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "targetDir": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\FlyingMachineWeapons",
+  "totalFiles": 2,
+  "totalChangedInfos": 5,
+  "items": [
+    {
+      "file": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\FlyingMachineWeapons\\ScatterRockets\\RocketMissile.glb",
+      "changedTextureInfoCount": 2
+    },
+    {
+      "file": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\FlyingMachineWeapons\\Missile\\FlyingMachineMissile.glb",
+      "changedTextureInfoCount": 3
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "search_dirs": [
+    "icons/skills",
+    "icons/passives"
+  ],
+  "total_items": 299,
+  "matched_icons_before": 299,
+  "missing_before": 0,
+  "temp_icons_before": 16,
+  "changed_count": 16,
+  "matched_icons_after": 299,
+  "missing_after": 0,
+  "temp_icons_after": 0,
+  "changed_items": [
+    {
+      "name": "加速手套",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNGlove.png",
+      "new_icon_resolved_path": "icons/skills/BTNGlove.png"
+    },
+    {
+      "name": "力量拳套",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNGauntletsOfOgrePower.png",
+      "new_icon_resolved_path": "icons/skills/BTNGauntletsOfOgrePower.png"
+    },
+    {
+      "name": "恢复指环",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNRingSkull.png",
+      "new_icon_resolved_path": "icons/skills/BTNRingSkull.png"
+    },
+    {
+      "name": "敏捷便鞋",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNSlippersOfAgility.png",
+      "new_icon_resolved_path": "icons/skills/BTNSlippersOfAgility.png"
+    },
+    {
+      "name": "升级护符",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNAmulet.png",
+      "new_icon_resolved_path": "icons/skills/BTNAmulet.png"
+    },
+    {
+      "name": "速度之靴",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNBootsOfSpeed.png",
+      "new_icon_resolved_path": "icons/skills/BTNBootsOfSpeed.png"
+    },
+    {
+      "name": "医疗权杖",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNWand.png",
+      "new_icon_resolved_path": "icons/skills/BTNWand.png"
+    },
+    {
+      "name": "艺人面罩",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNSobiMask.png",
+      "new_icon_resolved_path": "icons/skills/BTNSobiMask.png"
+    },
+    {
+      "name": "æå½±ä¹ç",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNOrbOfDarkness.png",
+      "new_icon_resolved_path": "icons/skills/BTNOrbOfDarkness.png"
+    },
+    {
+      "name": "金色勋章",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNMedalionOfCourage.png",
+      "new_icon_resolved_path": "icons/skills/BTNMedalionOfCourage.png"
+    },
+    {
+      "name": "奎尔萨拉斯之靴",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNBoots.png",
+      "new_icon_resolved_path": "icons/skills/BTNBoots.png"
+    },
+    {
+      "name": "水晶球",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNCrystalBall.png",
+      "new_icon_resolved_path": "icons/skills/BTNCrystalBall.png"
+    },
+    {
+      "name": "流星法杖",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNStarWand.png",
+      "new_icon_resolved_path": "icons/skills/BTNStarWand.png"
+    },
+    {
+      "name": "咒文师的通灵长袍",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNRobeOfTheMagi.png",
+      "new_icon_resolved_path": "icons/skills/BTNRobeOfTheMagi.png"
+    },
+    {
+      "name": "炼金罐",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNPipeOfInsight.png",
+      "new_icon_resolved_path": "icons/skills/BTNPipeOfInsight.png"
+    },
+    {
+      "name": "挑战头巾",
+      "old_icon": "BTNTemp.png",
+      "new_icon": "BTNHelmOfValor.png",
+      "new_icon_resolved_path": "icons/skills/BTNHelmOfValor.png"
+    }
+  ],
+  "still_missing_items": [],
+  "still_temp_items": []
+}

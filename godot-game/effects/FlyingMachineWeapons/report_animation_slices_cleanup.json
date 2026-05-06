@@ -1,0 +1,60 @@
+{
+  "targetDir": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\FlyingMachineWeapons",
+  "totalFiles": 2,
+  "totalBefore": 34,
+  "totalAfter": 5,
+  "items": [
+    {
+      "file": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\FlyingMachineWeapons\\ScatterRockets\\RocketMissile.glb",
+      "before": 13,
+      "after": 2,
+      "kept": [
+        "Death",
+        "Stand"
+      ],
+      "removed": [
+        "#UNANIMATED RocketMissile.001_GLTF",
+        "#UNANIMATED RocketMissile.002_GLTF",
+        "#UNANIMATED RocketMissile_GLTF",
+        "#UNANIMATED_GLTF",
+        "all sequences_GLTF",
+        "Death RocketMissile.001_GLTF",
+        "Death RocketMissile.002_GLTF",
+        "Death RocketMissile_GLTF",
+        "Stand RocketMissile.001_GLTF",
+        "Stand RocketMissile.002_GLTF",
+        "Stand RocketMissile_GLTF"
+      ]
+    },
+    {
+      "file": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\FlyingMachineWeapons\\Missile\\FlyingMachineMissile.glb",
+      "before": 21,
+      "after": 3,
+      "kept": [
+        "Birth",
+        "Death",
+        "Stand"
+      ],
+      "removed": [
+        "#UNANIMATED GyroCopterMissile.001_GLTF",
+        "#UNANIMATED GyroCopterMissile.002_GLTF",
+        "#UNANIMATED GyroCopterMissile.003_GLTF",
+        "#UNANIMATED GyroCopterMissile_GLTF",
+        "#UNANIMATED_GLTF",
+        "all sequences_GLTF",
+        "Birth GyroCopterMissile.001_GLTF",
+        "Birth GyroCopterMissile.002_GLTF",
+        "Birth GyroCopterMissile.003_GLTF",
+        "Birth GyroCopterMissile_GLTF",
+        "Death GyroCopterMissile.001_GLTF",
+        "Death GyroCopterMissile.002_GLTF",
+        "Death GyroCopterMissile.003_GLTF",
+        "Death GyroCopterMissile_GLTF",
+        "Stand GyroCopterMissile.001_GLTF",
+        "Stand GyroCopterMissile.002_GLTF",
+        "Stand GyroCopterMissile.003_GLTF",
+        "Stand GyroCopterMissile_GLTF"
+      ]
+    }
+  ]
+}

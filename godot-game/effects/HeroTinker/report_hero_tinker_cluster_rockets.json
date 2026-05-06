@@ -1,0 +1,32 @@
+{
+  "source": "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish",
+  "archives": [
+    "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\War3Patch.mpq",
+    "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\War3x.mpq",
+    "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\war3.mpq"
+  ],
+  "outRoot": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\HeroTinker",
+  "total": 2,
+  "success": 2,
+  "failed": 0,
+  "items": [
+    {
+      "name": "ClusterRocketsMissile",
+      "sourceModel": "Abilities\\Spells\\Other\\TinkerRocket\\TinkerRocketMissile.mdx",
+      "archive": "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\War3Patch.mpq",
+      "ok": true,
+      "mdx": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\HeroTinker\\ClusterRocketsMissile\\TinkerRocketMissile.mdx",
+      "glb": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\HeroTinker\\ClusterRocketsMissile\\TinkerRocketMissile.glb",
+      "texturesExtracted": 9
+    },
+    {
+      "name": "ClusterRocketsWeaponMissile",
+      "sourceModel": "Abilities\\Weapons\\RocketMissile\\RocketMissile.mdx",
+      "archive": "C:\\Users\\LENOVO\\Desktop\\download\\Warcraft III Frozen Throne 1.27a publish\\War3x.mpq",
+      "ok": true,
+      "mdx": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\HeroTinker\\ClusterRocketsWeaponMissile\\RocketMissile.mdx",
+      "glb": "C:\\Users\\LENOVO\\Desktop\\personal\\rogueDungeon\\godot-game\\effects\\HeroTinker\\ClusterRocketsWeaponMissile\\RocketMissile.glb",
+      "texturesExtracted": 5
+    }
+  ]
+}
