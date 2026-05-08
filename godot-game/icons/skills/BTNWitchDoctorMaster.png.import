@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://j0al3mtoed1c"
-path="res://.godot/imported/BTNWitchDoctorMaster.png-25c55d109a5d9aed2749dcea3e07bdd3.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNWitchDoctorMaster.png"
-dest_files=["res://.godot/imported/BTNWitchDoctorMaster.png-25c55d109a5d9aed2749dcea3e07bdd3.ctex"]
 
 [params]
 

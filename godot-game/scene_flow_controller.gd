@@ -2,7 +2,7 @@ extends Node3D
 
 const GATE_SCRIPT := preload("res://boss_gate.gd")
 const FLOOR_BALANCE_SCRIPT := preload("res://rogue_floor_balance.gd")
-const BATTLE_FENCE_SCENE := preload("res://effects/ground/Village_FenceshortAngled.glb")
+const BATTLE_FENCE_SCENE := preload("res://placeholders/fence_2d.tscn")
 const DEFAULT_CAMERA_OFFSET := Vector3(0.0, 1700.0, 1050.0)
 const SHOP_OWNER_META_KEY := "shop_owner_peer_id"
 const SHOP_SLOT_META_KEY := "shop_slot_index"
@@ -95,12 +95,12 @@ const SHOP_INTERACTION_ONLY_LAYER: int = 1 << 1
 @export var camera_height_anim_duration: float = 0.18
 @export var camera_refocus_double_tap_ms: int = 320
 
-@export var gate_scene: PackedScene = preload("res://modles/CityEnteranceGate.glb")
+@export var gate_scene: PackedScene = preload("res://placeholders/gate_2d.tscn")
 @export var gate_model_scale: Vector3 = Vector3(1.3333334, 1.3333334, 1.3333334)
 @export var gate_collider_size: Vector3 = Vector3(173.33334, 146.66667, 80.0)
 @export var gate_max_hp: int = 100
-@export var melee_hero_scene: PackedScene = preload("res://modles/herowarden.glb")
-@export var ranged_hero_scene: PackedScene = preload("res://modles/Rifleman.glb")
+@export var melee_hero_scene: PackedScene = preload("res://placeholders/hero_melee_2d.tscn")
+@export var ranged_hero_scene: PackedScene = preload("res://placeholders/hero_ranged_2d.tscn")
 @export var melee_hero_name: String = "守望者"
 @export var ranged_hero_name: String = "火枪手"
 

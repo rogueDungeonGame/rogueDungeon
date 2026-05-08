@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://mhonfggaap0s"
-path="res://.godot/imported/BTNOrcMeleeUpOne.png-c4e0a192f51055377c79f19d058a46e9.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNOrcMeleeUpOne.png"
-dest_files=["res://.godot/imported/BTNOrcMeleeUpOne.png-c4e0a192f51055377c79f19d058a46e9.ctex"]
 
 [params]
 

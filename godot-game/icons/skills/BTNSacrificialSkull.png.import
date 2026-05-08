@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkox221pc56ut"
-path="res://.godot/imported/BTNSacrificialSkull.png-3cf8b9b45634dcaf9023ce08ac81e183.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSacrificialSkull.png"
-dest_files=["res://.godot/imported/BTNSacrificialSkull.png-3cf8b9b45634dcaf9023ce08ac81e183.ctex"]
 
 [params]
 

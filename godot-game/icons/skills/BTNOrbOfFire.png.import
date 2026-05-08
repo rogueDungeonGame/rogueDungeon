@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bp4gd7vsh2u6b"
-path="res://.godot/imported/BTNOrbOfFire.png-c3e195ae4167ecf5373b7dcc7e0094eb.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNOrbOfFire.png"
-dest_files=["res://.godot/imported/BTNOrbOfFire.png-c3e195ae4167ecf5373b7dcc7e0094eb.ctex"]
 
 [params]
 

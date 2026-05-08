@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkk6m77obg6xj"
-path="res://.godot/imported/BTNNightElfCaptureFlag.png-9d8319bb73f4292327d2c5851c18787f.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNNightElfCaptureFlag.png"
-dest_files=["res://.godot/imported/BTNNightElfCaptureFlag.png-9d8319bb73f4292327d2c5851c18787f.ctex"]
 
 [params]
 

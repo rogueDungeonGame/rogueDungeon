@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cvrs5j15rpt2p"
-path="res://.godot/imported/BTNAmuletOftheWild.png-b52a0fbfac0ea184c6cadd3fb72290d4.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNAmuletOftheWild.png"
-dest_files=["res://.godot/imported/BTNAmuletOftheWild.png-b52a0fbfac0ea184c6cadd3fb72290d4.ctex"]
 
 [params]
 

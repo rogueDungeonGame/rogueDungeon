@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bhqwrmq4m6r78"
-path="res://.godot/imported/BTNRunedBracers.png-2c36052441ddea71f48c357df875a59f.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNRunedBracers.png"
-dest_files=["res://.godot/imported/BTNRunedBracers.png-2c36052441ddea71f48c357df875a59f.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bqp4vnkfvgw3y"
-path="res://.godot/imported/BTNAntiMagicShell.png-cce2eac33b443a6397bc9300da112296.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNAntiMagicShell.png"
-dest_files=["res://.godot/imported/BTNAntiMagicShell.png-cce2eac33b443a6397bc9300da112296.ctex"]
 
 [params]
 

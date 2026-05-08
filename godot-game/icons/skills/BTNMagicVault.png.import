@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bft15jjyqfnwu"
-path="res://.godot/imported/BTNMagicVault.png-12f8b23a026ec71af2317a6f36b41604.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNMagicVault.png"
-dest_files=["res://.godot/imported/BTNMagicVault.png-12f8b23a026ec71af2317a6f36b41604.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkmg4wae23qed"
-path="res://.godot/imported/BTNHoodOfCunning.png-f37cae9ce973311abb94c8cb28fed57f.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHoodOfCunning.png"
-dest_files=["res://.godot/imported/BTNHoodOfCunning.png-f37cae9ce973311abb94c8cb28fed57f.ctex"]
 
 [params]
 

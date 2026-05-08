@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dqdsmnhqopgsd"
-path="res://.godot/imported/BTNBoneChimes.png-513acd49bf966b85aad119d235ba2b65.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNBoneChimes.png"
-dest_files=["res://.godot/imported/BTNBoneChimes.png-513acd49bf966b85aad119d235ba2b65.ctex"]
 
 [params]
 

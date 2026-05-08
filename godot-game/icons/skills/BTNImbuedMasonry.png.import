@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbdtsyb4lx3qh"
-path="res://.godot/imported/BTNImbuedMasonry.png-03b1cbe3259024104ce9d1d127a63943.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNImbuedMasonry.png"
-dest_files=["res://.godot/imported/BTNImbuedMasonry.png-03b1cbe3259024104ce9d1d127a63943.ctex"]
 
 [params]
 

@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://prop_sprite_2d.gd" id="1_script"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_shadow"]
+size = Vector2(520, 180)
+
+[node name="Shop2D" type="Node3D"]
+script = ExtResource("1_script")
+texture_path = "res://placeholders/props_2d/shop.png"
+pixel_size = 0.33
+vertical_offset = 0.0
+auto_align_to_bottom = true
+alpha_occlusion_enabled = true
+occlusion_alpha = 0.45
+occlusion_margin_y = 40.0
+occlusion_margin_x = 140.0
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="Sprite3D" type="Sprite3D" parent="VisualRoot"]
+axis = 1
+double_sided = true
+
+[node name="Shadow" type="MeshInstance3D" parent="VisualRoot"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 2, 0)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_shadow")

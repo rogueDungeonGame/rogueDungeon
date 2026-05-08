@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddgfx0xtmca3s"
-path="res://.godot/imported/BTNSnazzyPotion.png-336be4be51c05c8695f2694d5ac95957.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSnazzyPotion.png"
-dest_files=["res://.godot/imported/BTNSnazzyPotion.png-336be4be51c05c8695f2694d5ac95957.ctex"]
 
 [params]
 

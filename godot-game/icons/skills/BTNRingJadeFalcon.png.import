@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://begdnbgc65leq"
-path="res://.godot/imported/BTNRingJadeFalcon.png-1751e180ffdf31b280188eeb90b35fc0.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNRingJadeFalcon.png"
-dest_files=["res://.godot/imported/BTNRingJadeFalcon.png-1751e180ffdf31b280188eeb90b35fc0.ctex"]
 
 [params]
 

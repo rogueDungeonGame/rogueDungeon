@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bevn3gb8730rn"
-path="res://.godot/imported/BTNSoulGem.png-1be0bdc38002d02b2ce975807e343c1c.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSoulGem.png"
-dest_files=["res://.godot/imported/BTNSoulGem.png-1be0bdc38002d02b2ce975807e343c1c.ctex"]
 
 [params]
 

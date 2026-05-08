@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cp0mino5svalg"
-path="res://.godot/imported/BTNBloodLust.png-9f1f9303af72e2328c993e1b973c5558.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNBloodLust.png"
-dest_files=["res://.godot/imported/BTNBloodLust.png-9f1f9303af72e2328c993e1b973c5558.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b67amaxh2exhw"
-path="res://.godot/imported/BTNStormHammer.png-cc8df2eba430535a607eedb36dec92a9.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNStormHammer.png"
-dest_files=["res://.godot/imported/BTNStormHammer.png-cc8df2eba430535a607eedb36dec92a9.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dkt1g5tlbkuqm"
-path="res://.godot/imported/BTNHornOfCenarius.png-0a5bf875f66cda23ac5d59875625bbaa.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHornOfCenarius.png"
-dest_files=["res://.godot/imported/BTNHornOfCenarius.png-0a5bf875f66cda23ac5d59875625bbaa.ctex"]
 
 [params]
 

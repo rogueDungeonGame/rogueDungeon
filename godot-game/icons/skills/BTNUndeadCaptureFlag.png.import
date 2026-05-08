@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cg0qiogypr5u0"
-path="res://.godot/imported/BTNUndeadCaptureFlag.png-39c46fa22768800e41e47608a9cd8883.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNUndeadCaptureFlag.png"
-dest_files=["res://.godot/imported/BTNUndeadCaptureFlag.png-39c46fa22768800e41e47608a9cd8883.ctex"]
 
 [params]
 

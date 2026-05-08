@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddowpv4bu22gq"
-path="res://.godot/imported/BTNWandOfNeutralization.png-8442413be1e30ddd0454cb11bff9a0a6.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNWandOfNeutralization.png"
-dest_files=["res://.godot/imported/BTNWandOfNeutralization.png-8442413be1e30ddd0454cb11bff9a0a6.ctex"]
 
 [params]
 

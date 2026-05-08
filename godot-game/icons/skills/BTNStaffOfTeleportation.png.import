@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://gsvqmk05p57o"
-path="res://.godot/imported/BTNStaffOfTeleportation.png-9d8eda5b147ab21678e41bafba170aa6.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNStaffOfTeleportation.png"
-dest_files=["res://.godot/imported/BTNStaffOfTeleportation.png-9d8eda5b147ab21678e41bafba170aa6.ctex"]
 
 [params]
 

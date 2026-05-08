@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bwgh80r2a4br8"
-path="res://.godot/imported/BTNAlleriaFlute.png-9b0c3109a85b144d83b19d2abf716d2e.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNAlleriaFlute.png"
-dest_files=["res://.godot/imported/BTNAlleriaFlute.png-9b0c3109a85b144d83b19d2abf716d2e.ctex"]
 
 [params]
 

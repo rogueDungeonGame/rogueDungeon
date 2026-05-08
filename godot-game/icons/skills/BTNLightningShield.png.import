@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bvvgevmlcv4sg"
-path="res://.godot/imported/BTNLightningShield.png-49f30feb9a256e088adc927fb350a12d.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNLightningShield.png"
-dest_files=["res://.godot/imported/BTNLightningShield.png-49f30feb9a256e088adc927fb350a12d.ctex"]
 
 [params]
 

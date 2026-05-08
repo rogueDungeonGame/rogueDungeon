@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cl61q81hjicuh"
-path="res://.godot/imported/BTNDeathAndDecay.png-b52255459bf2a6c288925821c112bf4e.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNDeathAndDecay.png"
-dest_files=["res://.godot/imported/BTNDeathAndDecay.png-b52255459bf2a6c288925821c112bf4e.ctex"]
 
 [params]
 

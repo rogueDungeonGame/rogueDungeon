@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dym06e45tav62"
-path="res://.godot/imported/BTNAmulet.png-417db64c1278a90093b76a16035a77a5.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNAmulet.png"
-dest_files=["res://.godot/imported/BTNAmulet.png-417db64c1278a90093b76a16035a77a5.ctex"]
 
 [params]
 

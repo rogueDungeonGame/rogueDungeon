@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ce07r7loh3tsh"
-path="res://.godot/imported/BTNOrcCaptureFlag.png-5ffae738c3bb6f14e03003b32ea71f4e.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNOrcCaptureFlag.png"
-dest_files=["res://.godot/imported/BTNOrcCaptureFlag.png-5ffae738c3bb6f14e03003b32ea71f4e.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://3el5ucnbfthy"
-path="res://.godot/imported/BTNGlove.png-182df0762ff405e7f9231fe43ee44c12.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNGlove.png"
-dest_files=["res://.godot/imported/BTNGlove.png-182df0762ff405e7f9231fe43ee44c12.ctex"]
 
 [params]
 

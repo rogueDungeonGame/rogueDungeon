@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://df5ng0bd53j8o"
-path="res://.godot/imported/BTNImpalingBolt.png-9b74c6601887c95f165abb5681085c23.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNImpalingBolt.png"
-dest_files=["res://.godot/imported/BTNImpalingBolt.png-9b74c6601887c95f165abb5681085c23.ctex"]
 
 [params]
 

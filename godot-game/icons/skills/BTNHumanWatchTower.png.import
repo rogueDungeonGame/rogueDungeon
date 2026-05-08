@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dd0876ulcuan"
-path="res://.godot/imported/BTNHumanWatchTower.png-78709a7487dc528406a873a6cea701ee.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHumanWatchTower.png"
-dest_files=["res://.godot/imported/BTNHumanWatchTower.png-78709a7487dc528406a873a6cea701ee.ctex"]
 
 [params]
 

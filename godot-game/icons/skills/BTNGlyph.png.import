@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgv8bh3n54ksg"
-path="res://.godot/imported/BTNGlyph.png-b021bb07f236721ec3171f672222072c.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNGlyph.png"
-dest_files=["res://.godot/imported/BTNGlyph.png-b021bb07f236721ec3171f672222072c.ctex"]
 
 [params]
 

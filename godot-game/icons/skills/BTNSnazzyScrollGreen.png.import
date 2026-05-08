@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://kq78r31drixr"
-path="res://.godot/imported/BTNSnazzyScrollGreen.png-246de9a28f17c5d02b61a3f25da24857.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSnazzyScrollGreen.png"
-dest_files=["res://.godot/imported/BTNSnazzyScrollGreen.png-246de9a28f17c5d02b61a3f25da24857.ctex"]
 
 [params]
 

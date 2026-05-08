@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://str1u87yf31q"
-path="res://.godot/imported/BTNScrollOfRegenerationGreen.png-9899c629cbfad9458ffba557d3502e84.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNScrollOfRegenerationGreen.png"
-dest_files=["res://.godot/imported/BTNScrollOfRegenerationGreen.png-9899c629cbfad9458ffba557d3502e84.ctex"]
 
 [params]
 

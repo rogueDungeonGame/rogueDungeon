@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bncajvtdduyfg"
-path="res://.godot/imported/BTNPendantOfEnergy.png-441dc62d02490da36bddbff30178bc9b.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNPendantOfEnergy.png"
-dest_files=["res://.godot/imported/BTNPendantOfEnergy.png-441dc62d02490da36bddbff30178bc9b.ctex"]
 
 [params]
 

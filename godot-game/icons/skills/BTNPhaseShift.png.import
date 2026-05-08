@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://2owavxl6vpdb"
-path="res://.godot/imported/BTNPhaseShift.png-d84e1534a03a293260be528dfbcc59de.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNPhaseShift.png"
-dest_files=["res://.godot/imported/BTNPhaseShift.png-d84e1534a03a293260be528dfbcc59de.ctex"]
 
 [params]
 

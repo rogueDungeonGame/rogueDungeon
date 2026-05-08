@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cd82vbqeclnaq"
-path="res://.godot/imported/BTNSacrifice.png-a329185e010e56e7db185d51aeee9ac9.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSacrifice.png"
-dest_files=["res://.godot/imported/BTNSacrifice.png-a329185e010e56e7db185d51aeee9ac9.ctex"]
 
 [params]
 

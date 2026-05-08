@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bw6sdofenrxfo"
-path="res://.godot/imported/BTNOrbOfCorruption.png-096ed6bc286c428cd1fd28eaa26b83a3.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNOrbOfCorruption.png"
-dest_files=["res://.godot/imported/BTNOrbOfCorruption.png-096ed6bc286c428cd1fd28eaa26b83a3.ctex"]
 
 [params]
 

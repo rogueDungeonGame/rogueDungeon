@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c4ibk03gq5b4m"
-path="res://.godot/imported/BTN3M3.png-acbf6b91e0c5e2ade265f69958a8f928.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTN3M3.png"
-dest_files=["res://.godot/imported/BTN3M3.png-acbf6b91e0c5e2ade265f69958a8f928.ctex"]
 
 [params]
 

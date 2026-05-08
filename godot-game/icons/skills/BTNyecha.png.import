@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://blsnrw4cv051m"
-path="res://.godot/imported/BTNyecha.png-3ea3928b123491d4c8ac96a2116a7759.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNyecha.png"
-dest_files=["res://.godot/imported/BTNyecha.png-3ea3928b123491d4c8ac96a2116a7759.ctex"]
 
 [params]
 

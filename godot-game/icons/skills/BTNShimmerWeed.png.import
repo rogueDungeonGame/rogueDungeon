@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://wmmh63qc3hir"
-path="res://.godot/imported/BTNShimmerWeed.png-173dfde5ccb9b8131bedff653774d35d.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNShimmerWeed.png"
-dest_files=["res://.godot/imported/BTNShimmerWeed.png-173dfde5ccb9b8131bedff653774d35d.ctex"]
 
 [params]
 

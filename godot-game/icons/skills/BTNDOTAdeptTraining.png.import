@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bygq4cksbohpj"
-path="res://.godot/imported/BTNDOTAdeptTraining.png-ba7f4bc3014db4556621ec7747f9be15.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNDOTAdeptTraining.png"
-dest_files=["res://.godot/imported/BTNDOTAdeptTraining.png-ba7f4bc3014db4556621ec7747f9be15.ctex"]
 
 [params]
 

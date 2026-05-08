@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bgv3ot3g2ispj"
-path="res://.godot/imported/BTNLesserInvulneralbility.png-1ff53d57529ded7c4c6abb66147bd5aa.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNLesserInvulneralbility.png"
-dest_files=["res://.godot/imported/BTNLesserInvulneralbility.png-1ff53d57529ded7c4c6abb66147bd5aa.ctex"]
 
 [params]
 

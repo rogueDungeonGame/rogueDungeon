@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://vfu8nl4f3w0s"
-path="res://.godot/imported/BTNStaffOfSanctuary.png-2cb0e109a55a9809e55470fb32545a61.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNStaffOfSanctuary.png"
-dest_files=["res://.godot/imported/BTNStaffOfSanctuary.png-2cb0e109a55a9809e55470fb32545a61.ctex"]
 
 [params]
 

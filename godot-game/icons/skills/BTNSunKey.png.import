@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dfi3c2ioa2wxs"
-path="res://.godot/imported/BTNSunKey.png-4800b0d6d049a48e2e1244423abafb36.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSunKey.png"
-dest_files=["res://.godot/imported/BTNSunKey.png-4800b0d6d049a48e2e1244423abafb36.ctex"]
 
 [params]
 

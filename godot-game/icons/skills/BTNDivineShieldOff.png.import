@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bal7ftejl2kkg"
-path="res://.godot/imported/BTNDivineShieldOff.png-08ca35383ef092b5711903caea75120e.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNDivineShieldOff.png"
-dest_files=["res://.godot/imported/BTNDivineShieldOff.png-08ca35383ef092b5711903caea75120e.ctex"]
 
 [params]
 

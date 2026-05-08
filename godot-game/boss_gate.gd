@@ -102,10 +102,27 @@ func _refresh_hp_bar_anchor_position() -> void:
 
 
 func _resolve_hp_bar_anchor_height() -> float:
+	var explicit_anchor_height: float = _resolve_explicit_hp_bar_anchor_height()
+	if explicit_anchor_height > 0.0:
+		return explicit_anchor_height
 	var model_height: float = _compute_node_mesh_height(self)
 	if model_height > 0.0:
 		return model_height + HP_BAR_HEIGHT_OFFSET
 	return HP_BAR_HEIGHT_OFFSET
+
+
+func _resolve_explicit_hp_bar_anchor_height() -> float:
+	var anchor_root := get_node_or_null("GateBody/Model/AnchorRoot") as Node3D
+	if anchor_root == null:
+		anchor_root = find_child("AnchorRoot", true, false) as Node3D
+	if anchor_root == null:
+		return -1.0
+	var anchor_node := anchor_root.get_node_or_null("HpBarAnchor") as Node3D
+	if anchor_node == null:
+		anchor_node = anchor_root.find_child("HpBarAnchor", true, false) as Node3D
+	if anchor_node == null or not is_instance_valid(anchor_node):
+		return -1.0
+	return maxf(anchor_node.global_position.y - global_position.y, 0.0)
 
 
 func _compute_node_mesh_height(root_node: Node3D) -> float:

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgqavjas28rcj"
-path="res://.godot/imported/BTNSobiMask.png-1829a589e0256933d139308a0e24b4a8.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSobiMask.png"
-dest_files=["res://.godot/imported/BTNSobiMask.png-1829a589e0256933d139308a0e24b4a8.ctex"]
 
 [params]
 

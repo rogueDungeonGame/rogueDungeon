@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dflbnk7134p30"
-path="res://.godot/imported/BTNNecromancerAdept.png-d3aa895b07f493313000df01559f36ec.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNNecromancerAdept.png"
-dest_files=["res://.godot/imported/BTNNecromancerAdept.png-d3aa895b07f493313000df01559f36ec.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://qshkbmvlicbe"
-path="res://.godot/imported/BTNOrbOfFrost.png-a18f5ceb7bc876901aeb04f826069714.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNOrbOfFrost.png"
-dest_files=["res://.godot/imported/BTNOrbOfFrost.png-a18f5ceb7bc876901aeb04f826069714.ctex"]
 
 [params]
 

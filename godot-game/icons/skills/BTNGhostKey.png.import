@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cctjajxaq7i8u"
-path="res://.godot/imported/BTNGhostKey.png-f02793f9652d949460a6222695392b0b.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNGhostKey.png"
-dest_files=["res://.godot/imported/BTNGhostKey.png-f02793f9652d949460a6222695392b0b.ctex"]
 
 [params]
 

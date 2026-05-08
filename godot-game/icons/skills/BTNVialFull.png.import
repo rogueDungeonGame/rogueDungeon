@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbfen75kyadka"
-path="res://.godot/imported/BTNVialFull.png-0f75a27b604fd15e997e90dac35b75b6.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNVialFull.png"
-dest_files=["res://.godot/imported/BTNVialFull.png-0f75a27b604fd15e997e90dac35b75b6.ctex"]
 
 [params]
 

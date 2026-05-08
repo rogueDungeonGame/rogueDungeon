@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dps1v0k73kiv7"
-path="res://.godot/imported/BTNFlakCannons.png-63a1dbb5a1c692b9d2cf358e31b05f3b.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNFlakCannons.png"
-dest_files=["res://.godot/imported/BTNFlakCannons.png-63a1dbb5a1c692b9d2cf358e31b05f3b.ctex"]
 
 [params]
 

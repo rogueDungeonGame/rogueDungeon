@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cb7k1mwvvpg0k"
-path="res://.godot/imported/BTNHeartOfSearinox.png-16f291d35966d3b7c8aba18f09b1153a.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHeartOfSearinox.png"
-dest_files=["res://.godot/imported/BTNHeartOfSearinox.png-16f291d35966d3b7c8aba18f09b1153a.ctex"]
 
 [params]
 

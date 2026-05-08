@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c40caqt3x2hd"
-path="res://.godot/imported/BTNChestOfGold.png-68cad25f4dbe9aa23e8d4e1e92ea109a.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNChestOfGold.png"
-dest_files=["res://.godot/imported/BTNChestOfGold.png-68cad25f4dbe9aa23e8d4e1e92ea109a.ctex"]
 
 [params]
 

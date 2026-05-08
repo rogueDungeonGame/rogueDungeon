@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://prop_sprite_2d.gd" id="1_script"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_shadow"]
+size = Vector2(560, 180)
+
+[node name="Gate2D" type="Node3D"]
+script = ExtResource("1_script")
+texture_path = "res://placeholders/props_2d/gate.png"
+pixel_size = 0.28
+vertical_offset = 0.0
+auto_align_to_bottom = true
+alpha_occlusion_enabled = true
+occlusion_alpha = 0.4
+occlusion_margin_y = 36.0
+occlusion_margin_x = 170.0
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="Sprite3D" type="Sprite3D" parent="VisualRoot"]
+axis = 1
+double_sided = true
+
+[node name="Shadow" type="MeshInstance3D" parent="VisualRoot"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 2, 0)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_shadow")
+
+[node name="AnchorRoot" type="Node3D" parent="."]
+
+[node name="HpBarAnchor" type="Node3D" parent="AnchorRoot"]
+position = Vector3(0, 420, 0)

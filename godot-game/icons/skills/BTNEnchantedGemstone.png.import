@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c4kx4t76p3xg0"
-path="res://.godot/imported/BTNEnchantedGemstone.png-998d8cb18f5a0b0efea3927bff9e2b6a.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNEnchantedGemstone.png"
-dest_files=["res://.godot/imported/BTNEnchantedGemstone.png-998d8cb18f5a0b0efea3927bff9e2b6a.ctex"]
 
 [params]
 

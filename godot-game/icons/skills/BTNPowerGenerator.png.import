@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c3o3mkjmcn33e"
-path="res://.godot/imported/BTNPowerGenerator.png-f47ca90897d3d8358873703ea97f5b62.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNPowerGenerator.png"
-dest_files=["res://.godot/imported/BTNPowerGenerator.png-f47ca90897d3d8358873703ea97f5b62.ctex"]
 
 [params]
 

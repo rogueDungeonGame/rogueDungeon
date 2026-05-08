@@ -1,8 +1,8 @@
 extends Node3D
 
 @export var unit_count: int = 20
-@export var tauren_scene_path: String = "res://modles/Tauren.glb"
-@export var fallback_tauren_scene: PackedScene = preload("res://modles/HeroTaurenChieftain.glb")
+@export var tauren_scene_path: String = "res://placeholders/enemy_tauren_2d.tscn"
+@export var fallback_tauren_scene: PackedScene = preload("res://placeholders/enemy_tauren_2d.tscn")
 @export var unit_scale: Vector3 = Vector3(1.6, 1.6, 1.6)
 @export var spawn_radius: float = 900.0
 @export var spawn_radius_jitter: float = 700.0

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dircqimuvuub4"
-path="res://.godot/imported/BTNBansheeMaster.png-9918a5c1e2232c6a7ad3eb33e631a18f.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNBansheeMaster.png"
-dest_files=["res://.godot/imported/BTNBansheeMaster.png-9918a5c1e2232c6a7ad3eb33e631a18f.ctex"]
 
 [params]
 

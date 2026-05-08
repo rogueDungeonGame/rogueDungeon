@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bdbe5idsk1jpr"
-path="res://.godot/imported/BTNTransmute.png-133d537b01e91ae3bfed7c78b14a14dd.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNTransmute.png"
-dest_files=["res://.godot/imported/BTNTransmute.png-133d537b01e91ae3bfed7c78b14a14dd.ctex"]
 
 [params]
 

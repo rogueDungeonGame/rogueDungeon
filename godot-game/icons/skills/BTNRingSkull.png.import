@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dris37dq5fgfr"
-path="res://.godot/imported/BTNRingSkull.png-7b9b640c28b85e488c6a30be0bf2b8a5.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNRingSkull.png"
-dest_files=["res://.godot/imported/BTNRingSkull.png-7b9b640c28b85e488c6a30be0bf2b8a5.ctex"]
 
 [params]
 

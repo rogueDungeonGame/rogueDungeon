@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://brbewvv14qtdj"
-path="res://.godot/imported/BTNNatureTouchGrow.png-b929a5730557fb5a5efc21214645534e.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNNatureTouchGrow.png"
-dest_files=["res://.godot/imported/BTNNatureTouchGrow.png-b929a5730557fb5a5efc21214645534e.ctex"]
 
 [params]
 

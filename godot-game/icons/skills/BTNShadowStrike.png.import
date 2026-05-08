@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dtf8el827thqk"
-path="res://.godot/imported/BTNShadowStrike.png-41ac15abec54f740bf9da8918503efa3.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNShadowStrike.png"
-dest_files=["res://.godot/imported/BTNShadowStrike.png-41ac15abec54f740bf9da8918503efa3.ctex"]
 
 [params]
 

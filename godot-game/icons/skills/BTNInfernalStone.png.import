@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bj7spnwta82og"
-path="res://.godot/imported/BTNInfernalStone.png-091e5068b72c92d525c2b24cdc08e0ee.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNInfernalStone.png"
-dest_files=["res://.godot/imported/BTNInfernalStone.png-091e5068b72c92d525c2b24cdc08e0ee.ctex"]
 
 [params]
 

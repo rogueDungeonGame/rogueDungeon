@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://6lo34tmugl1v"
-path="res://.godot/imported/BTNRingLionHead.png-9f14f4aeab98da6c360baa568a69a36a.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNRingLionHead.png"
-dest_files=["res://.godot/imported/BTNRingLionHead.png-9f14f4aeab98da6c360baa568a69a36a.ctex"]
 
 [params]
 

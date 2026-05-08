@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cg3xi6p1crkfc"
-path="res://.godot/imported/BTNScrollOfTownPortal.png-a9608d0cf112577a77701aa9959155d0.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNScrollOfTownPortal.png"
-dest_files=["res://.godot/imported/BTNScrollOfTownPortal.png-a9608d0cf112577a77701aa9959155d0.ctex"]
 
 [params]
 

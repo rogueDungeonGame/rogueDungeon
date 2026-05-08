@@ -55,6 +55,12 @@ func collect_local_hero_base_state(
 		state["hero_selected"] = _call_bool(bool_from_variant_fn, [hero_controller.get("hero_selection_confirmed"), false], false)
 		if hero_controller.has_method("get_hp_bar_anchor_height"):
 			state["hp_bar_anchor_height"] = _call_float(float_from_variant_fn, [hero_controller.call("get_hp_bar_anchor_height"), 0.0], 0.0)
+		if hero_controller.has_method("get_collision_profile_id"):
+			state["collision_profile_id"] = str(hero_controller.call("get_collision_profile_id"))
+		if hero_controller.has_method("get_projectile_origin_global_position"):
+			var projectile_origin_variant: Variant = hero_controller.call("get_projectile_origin_global_position")
+			if projectile_origin_variant is Vector3:
+				state["projectile_origin_pos"] = projectile_origin_variant
 		state["is_transformed"] = _call_bool(bool_from_variant_fn, [hero_controller.get("_is_transformed"), false], false)
 		state["transform_left"] = _call_float(float_from_variant_fn, [hero_controller.get("_transform_time_left"), 0.0], 0.0)
 		state["damage"] = _call_int(int_from_variant_fn, [hero_controller.get("damage_per_hit"), 0], 0)

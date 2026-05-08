@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://doifsbuvgytbg"
-path="res://.godot/imported/BTNRallyPoint.png-1a91a8ea2a4f352b654281e9ce9a2102.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNRallyPoint.png"
-dest_files=["res://.godot/imported/BTNRallyPoint.png-1a91a8ea2a4f352b654281e9ce9a2102.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d1antgvv0mb0p"
-path="res://.godot/imported/BTNStaffOfPurification.png-cedfaae84440827d99540ae27e977962.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNStaffOfPurification.png"
-dest_files=["res://.godot/imported/BTNStaffOfPurification.png-cedfaae84440827d99540ae27e977962.ctex"]
 
 [params]
 

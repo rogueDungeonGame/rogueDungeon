@@ -1,0 +1,37 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://hero_sprite_8dir.gd" id="1_script"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_shadow"]
+size = Vector2(176, 60)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shadow"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.08, 0.1, 0.14, 0.5)
+vertex_color_use_as_albedo = true
+
+[node name="EnemyBoss2D" type="Node3D"]
+script = ExtResource("1_script")
+texture_base_path = "res://placeholders/hero_8dir"
+sprite_pixel_size = 0.92
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="Sprite3D" type="Sprite3D" parent="VisualRoot"]
+position = Vector3(0, 112, 0)
+axis = 1
+billboard = 1
+pixel_size = 0.92
+double_sided = true
+modulate = Color(1, 0.82, 0.82, 1)
+scale = Vector3(1.2, 1.2, 1.2)
+
+[node name="Shadow" type="MeshInstance3D" parent="VisualRoot"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 2, 0)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_shadow")
+material_override = SubResource("StandardMaterial3D_shadow")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+

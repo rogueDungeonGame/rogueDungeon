@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c5css3ylvkh7"
-path="res://.godot/imported/BTNImmolationOff.png-b20317f7300fd6f61f46f4c53c246c67.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNImmolationOff.png"
-dest_files=["res://.godot/imported/BTNImmolationOff.png-b20317f7300fd6f61f46f4c53c246c67.ctex"]
 
 [params]
 

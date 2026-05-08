@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ceq1l5oafc6fc"
-path="res://.godot/imported/BTNSpiritWalkerAdeptTraining.png-bbddada6b6f85b7471cebc40e12a40d8.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSpiritWalkerAdeptTraining.png"
-dest_files=["res://.godot/imported/BTNSpiritWalkerAdeptTraining.png-bbddada6b6f85b7471cebc40e12a40d8.ctex"]
 
 [params]
 

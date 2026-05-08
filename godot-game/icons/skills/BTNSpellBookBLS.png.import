@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://5ut6luwn1pen"
-path="res://.godot/imported/BTNSpellBookBLS.png-158f3e62363a3462fe9bb0536b05326a.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSpellBookBLS.png"
-dest_files=["res://.godot/imported/BTNSpellBookBLS.png-158f3e62363a3462fe9bb0536b05326a.ctex"]
 
 [params]
 

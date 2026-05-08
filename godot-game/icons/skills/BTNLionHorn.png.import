@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b446wufwldq8k"
-path="res://.godot/imported/BTNLionHorn.png-ce230aa93d31ddecfe4a097a624fbff5.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNLionHorn.png"
-dest_files=["res://.godot/imported/BTNLionHorn.png-ce230aa93d31ddecfe4a097a624fbff5.ctex"]
 
 [params]
 

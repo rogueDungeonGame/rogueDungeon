@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cu0l3d04v762y"
-path="res://.godot/imported/BTNScrollOfProtection.png-4c750a083d986c2474f557cb0d0158e5.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNScrollOfProtection.png"
-dest_files=["res://.godot/imported/BTNScrollOfProtection.png-4c750a083d986c2474f557cb0d0158e5.ctex"]
 
 [params]
 

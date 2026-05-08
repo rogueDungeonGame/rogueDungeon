@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cmhhni44e3arj"
-path="res://.godot/imported/BTNArcaniteMelee.png-e3f28545b0c983329d44efceb10a5f27.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNArcaniteMelee.png"
-dest_files=["res://.godot/imported/BTNArcaniteMelee.png-e3f28545b0c983329d44efceb10a5f27.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bteuslxl5ywt0"
-path="res://.godot/imported/BTNEntrapmentWard.png-cc7c89942360ddcfaf1cb56f3224cbf2.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNEntrapmentWard.png"
-dest_files=["res://.godot/imported/BTNEntrapmentWard.png-cc7c89942360ddcfaf1cb56f3224cbf2.ctex"]
 
 [params]
 

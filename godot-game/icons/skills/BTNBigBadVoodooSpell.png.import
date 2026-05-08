@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dmq2g7vqcgbhq"
-path="res://.godot/imported/BTNBigBadVoodooSpell.png-17c50357bd1666f97931894d094095b8.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNBigBadVoodooSpell.png"
-dest_files=["res://.godot/imported/BTNBigBadVoodooSpell.png-17c50357bd1666f97931894d094095b8.ctex"]
 
 [params]
 

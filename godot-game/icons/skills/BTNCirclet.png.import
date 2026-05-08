@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d2u0oqklys068"
-path="res://.godot/imported/BTNCirclet.png-446b7c8a8beef4d94022cf06e2c5ace2.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNCirclet.png"
-dest_files=["res://.godot/imported/BTNCirclet.png-446b7c8a8beef4d94022cf06e2c5ace2.ctex"]
 
 [params]
 

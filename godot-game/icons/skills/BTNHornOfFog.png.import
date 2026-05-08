@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://doa5msjcfgqlx"
-path="res://.godot/imported/BTNHornOfFog.png-0922d0dd7b14d2658b7a3600feab2b9b.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHornOfFog.png"
-dest_files=["res://.godot/imported/BTNHornOfFog.png-0922d0dd7b14d2658b7a3600feab2b9b.ctex"]
 
 [params]
 

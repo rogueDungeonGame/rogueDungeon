@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwsvpyo2uvi6p"
-path="res://.godot/imported/BTNImprovedUnholyStrength.png-5a682e8d9eb4cac205e19f2dfac7e1ed.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNImprovedUnholyStrength.png"
-dest_files=["res://.godot/imported/BTNImprovedUnholyStrength.png-5a682e8d9eb4cac205e19f2dfac7e1ed.ctex"]
 
 [params]
 

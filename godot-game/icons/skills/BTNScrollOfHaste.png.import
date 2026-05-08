@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bigno32oyplwo"
-path="res://.godot/imported/BTNScrollOfHaste.png-7058dc44e6ed1d3e18e2858125d26808.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNScrollOfHaste.png"
-dest_files=["res://.godot/imported/BTNScrollOfHaste.png-7058dc44e6ed1d3e18e2858125d26808.ctex"]
 
 [params]
 

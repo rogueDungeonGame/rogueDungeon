@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c7eeiga3lrr6b"
-path="res://.godot/imported/BTNHornOfDoom.png-a0bbf53a380d13302d5b7f8e7335016f.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHornOfDoom.png"
-dest_files=["res://.godot/imported/BTNHornOfDoom.png-a0bbf53a380d13302d5b7f8e7335016f.ctex"]
 
 [params]
 

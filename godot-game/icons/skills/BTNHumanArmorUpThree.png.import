@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://8432c6c0oooj"
-path="res://.godot/imported/BTNHumanArmorUpThree.png-55929fce557de1621e684dd0fe445565.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHumanArmorUpThree.png"
-dest_files=["res://.godot/imported/BTNHumanArmorUpThree.png-55929fce557de1621e684dd0fe445565.ctex"]
 
 [params]
 

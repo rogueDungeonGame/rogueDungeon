@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b60vp2h8nil6i"
-path="res://.godot/imported/BTNRegenerationAura.png-50920d9b64bdcb12fc4dcecf0538c408.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNRegenerationAura.png"
-dest_files=["res://.godot/imported/BTNRegenerationAura.png-50920d9b64bdcb12fc4dcecf0538c408.ctex"]
 
 [params]
 

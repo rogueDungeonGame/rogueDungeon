@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnic26ggcbhx2"
-path="res://.godot/imported/BTNRingVioletSpider.png-f71827a75c6dfd6556eea394ff5b5c9a.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNRingVioletSpider.png"
-dest_files=["res://.godot/imported/BTNRingVioletSpider.png-f71827a75c6dfd6556eea394ff5b5c9a.ctex"]
 
 [params]
 

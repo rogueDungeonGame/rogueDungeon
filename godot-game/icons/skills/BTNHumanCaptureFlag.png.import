@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://couw886x52f08"
-path="res://.godot/imported/BTNHumanCaptureFlag.png-be8fb1968a98176c2f9ec9fa25da43b2.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHumanCaptureFlag.png"
-dest_files=["res://.godot/imported/BTNHumanCaptureFlag.png-be8fb1968a98176c2f9ec9fa25da43b2.ctex"]
 
 [params]
 

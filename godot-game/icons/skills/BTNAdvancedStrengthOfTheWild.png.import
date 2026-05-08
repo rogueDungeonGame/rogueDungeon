@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkik2bu2vycka"
-path="res://.godot/imported/BTNAdvancedStrengthOfTheWild.png-c4f10affd6718171dc4854d4f9b1ecd4.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNAdvancedStrengthOfTheWild.png"
-dest_files=["res://.godot/imported/BTNAdvancedStrengthOfTheWild.png-c4f10affd6718171dc4854d4f9b1ecd4.ctex"]
 
 [params]
 

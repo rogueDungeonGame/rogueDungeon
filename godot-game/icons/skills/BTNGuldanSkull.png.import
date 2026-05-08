@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ba0xl066f0gnr"
-path="res://.godot/imported/BTNGuldanSkull.png-c95ee0c193f6f6226bfda24a26cb901b.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNGuldanSkull.png"
-dest_files=["res://.godot/imported/BTNGuldanSkull.png-c95ee0c193f6f6226bfda24a26cb901b.ctex"]
 
 [params]
 

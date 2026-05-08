@@ -65,7 +65,7 @@ const HeroStatsService := preload("res://hero_stats_service.gd")
 @export var transformed_attack_speed_multiplier: float = 2.0
 @export var transformed_attack_animation_1: String = "Attack - 1_GLTF"
 @export var transformed_attack_animation_2: String = "Attack - 2_GLTF"
-@export var transformed_model_scene: PackedScene = preload("res://modles/SpiritOfVengeance.before_trim.glb")
+@export var transformed_model_scene: PackedScene = preload("res://placeholders/hero_transformed_2d.tscn")
 @export var flash_effect_scene: PackedScene = preload("res://effects/HeroWarden/FanOfKnivesCaster/FanOfKnivesCaster.glb")
 @export var move_confirmation_scene: PackedScene = preload("res://modles/Confirmation.glb")
 @export var move_confirmation_scale: Vector3 = Vector3.ONE
@@ -147,6 +147,23 @@ const HeroStatsService := preload("res://hero_stats_service.gd")
 @export var dynamic_blocker_avoid_radius: float = 88.0
 @export var start_area_full_recovery_enabled: bool = true
 @export var start_area_full_recovery_radius_fallback: float = 1200.0
+@export var melee_body_radius: float = 50.0
+@export var melee_body_height: float = 150.0
+@export var melee_body_offset_y: float = 75.0
+@export var melee_head_anchor_height: float = 200.0
+@export var melee_projectile_origin_offset: Vector3 = Vector3(0.0, 100.0, 16.0)
+@export var ranged_body_radius: float = 50.0
+@export var ranged_body_height: float = 150.0
+@export var ranged_body_offset_y: float = 75.0
+@export var ranged_head_anchor_height: float = 200.0
+@export var ranged_projectile_origin_offset: Vector3 = Vector3(0.0, 95.0, 22.0)
+@export var transformed_body_radius: float = 50.0
+@export var transformed_body_height: float = 150.0
+@export var transformed_body_offset_y: float = 75.0
+@export var transformed_head_anchor_height: float = 220.0
+@export var transformed_projectile_origin_offset: Vector3 = Vector3(0.0, 120.0, 20.0)
+@export var selection_anchor_height: float = 0.0
+@export var shadow_anchor_height: float = 0.0
 
 var _hero: Node3D
 var _animation_player: AnimationPlayer
@@ -311,6 +328,8 @@ var skill_r_active: bool = false
 var _warden_ring_attacks_left: int = 0
 var _rifleman_precision_counter: int = 0
 var _melee_profile_cache: Dictionary = {}
+var _current_collision_profile: Dictionary = {}
+var _current_collision_profile_id: String = ""
 var _ranged_q_backstep_tween: Tween
 var _ranged_q_backstep_active: bool = false
 var _ranged_q_backstep_time_left: float = 0.0
@@ -350,6 +369,16 @@ const ARMOR_K_MELEE_DEFAULT: float = 0.06
 const NEGATIVE_ARMOR_BASE_MELEE_DEFAULT: float = 0.94
 const HERO_ID_MELEE: int = 1
 const HERO_ID_RANGED: int = 2
+const COLLISION_PROFILE_MELEE: String = "hero_melee"
+const COLLISION_PROFILE_RANGED: String = "hero_ranged"
+const COLLISION_PROFILE_TRANSFORMED: String = "hero_transformed"
+const COLLISION_PROFILE_ID_META_KEY: String = "collision_profile_id"
+const ANCHOR_ROOT_NODE_NAME: String = "AnchorRoot"
+const HEAD_ANCHOR_NODE_NAME: String = "HeadAnchor"
+const PROJECTILE_ORIGIN_NODE_NAME: String = "ProjectileOrigin"
+const SHADOW_ANCHOR_NODE_NAME: String = "ShadowAnchor"
+const SELECTION_ANCHOR_NODE_NAME: String = "SelectionAnchor"
+const AUTO_GENERATED_ANCHOR_META_KEY: String = "auto_generated_anchor"
 const MAP_WARDEN_MAX_HP: int = 550
 const MAP_WARDEN_MAX_MANA: int = 270
 const MAP_WARDEN_MOVE_SPEED: float = 335.0
@@ -1085,6 +1114,7 @@ func apply_hero_profile(profile_name: String) -> void:
 	_update_attack_count_label()
 	if _hero != null and is_instance_valid(_hero):
 		_recalculate_war3_stats(false)
+		apply_collision_profile("", _hero)
 		_update_hp_bar()
 	_play_idle_animation()
 
@@ -1153,6 +1183,7 @@ func select_hero_model(model_scene: PackedScene, hero_name: String = "SelectedHe
 	old_hero.queue_free()
 
 	_hero = new_hero
+	apply_collision_profile("", _hero)
 	_refresh_hp_bar_anchor_height_and_positions()
 	_original_hero = _hero
 	_transformed_hero = null
@@ -1170,6 +1201,98 @@ func select_hero_model(model_scene: PackedScene, hero_name: String = "SelectedHe
 func _ensure_hero_collision_body(target_hero: Node3D) -> void:
 	if target_hero == null:
 		return
+	var profile_id: String = get_collision_profile_id()
+	if target_hero != _hero:
+		profile_id = _resolve_current_collision_profile_id()
+	apply_collision_profile(profile_id, target_hero)
+
+
+func get_collision_profile_id() -> String:
+	var resolved_profile_id: String = _resolve_current_collision_profile_id()
+	if _current_collision_profile_id.is_empty():
+		return resolved_profile_id
+	if _current_collision_profile_id != resolved_profile_id and not _current_collision_profile.is_empty():
+		return resolved_profile_id
+	return _current_collision_profile_id
+
+
+func get_collision_profile() -> Dictionary:
+	var resolved_profile_id: String = _resolve_current_collision_profile_id()
+	if _current_collision_profile.is_empty() or _current_collision_profile_id != resolved_profile_id:
+		_current_collision_profile = _build_collision_profile(resolved_profile_id)
+		_current_collision_profile_id = str(_current_collision_profile.get("profile_id", resolved_profile_id))
+	return _current_collision_profile.duplicate(true)
+
+
+func apply_collision_profile(profile_id: String = "", target_hero: Node3D = null) -> void:
+	var safe_target: Node3D = target_hero if target_hero != null else _hero
+	if safe_target == null or not is_instance_valid(safe_target):
+		return
+	var resolved_profile_id: String = profile_id.strip_edges()
+	if resolved_profile_id.is_empty():
+		resolved_profile_id = _resolve_current_collision_profile_id()
+	resolved_profile_id = _normalize_collision_profile_id(resolved_profile_id)
+	var profile: Dictionary = _build_collision_profile(resolved_profile_id)
+	_apply_collision_profile_to_hero(safe_target, profile)
+
+
+func _resolve_current_collision_profile_id() -> String:
+	if _is_transformed:
+		return COLLISION_PROFILE_TRANSFORMED
+	if _is_ranged_hero():
+		return COLLISION_PROFILE_RANGED
+	return COLLISION_PROFILE_MELEE
+
+
+func _normalize_collision_profile_id(profile_id: String) -> String:
+	var normalized_profile_id: String = profile_id.strip_edges().to_lower()
+	match normalized_profile_id:
+		"melee", "hero_melee":
+			return COLLISION_PROFILE_MELEE
+		"ranged", "hero_ranged":
+			return COLLISION_PROFILE_RANGED
+		"transformed", "hero_transformed":
+			return COLLISION_PROFILE_TRANSFORMED
+	return COLLISION_PROFILE_MELEE
+
+
+func _build_collision_profile(profile_id: String) -> Dictionary:
+	match _normalize_collision_profile_id(profile_id):
+		COLLISION_PROFILE_RANGED:
+			return {
+				"profile_id": COLLISION_PROFILE_RANGED,
+				"body_shape": "capsule",
+				"body_radius": ranged_body_radius,
+				"body_height": ranged_body_height,
+				"body_offset_y": ranged_body_offset_y,
+				"head_anchor_height": ranged_head_anchor_height,
+				"projectile_origin_offset": ranged_projectile_origin_offset
+			}
+		COLLISION_PROFILE_TRANSFORMED:
+			return {
+				"profile_id": COLLISION_PROFILE_TRANSFORMED,
+				"body_shape": "capsule",
+				"body_radius": transformed_body_radius,
+				"body_height": transformed_body_height,
+				"body_offset_y": transformed_body_offset_y,
+				"head_anchor_height": transformed_head_anchor_height,
+				"projectile_origin_offset": transformed_projectile_origin_offset
+			}
+		_:
+			return {
+				"profile_id": COLLISION_PROFILE_MELEE,
+				"body_shape": "capsule",
+				"body_radius": melee_body_radius,
+				"body_height": melee_body_height,
+				"body_offset_y": melee_body_offset_y,
+				"head_anchor_height": melee_head_anchor_height,
+				"projectile_origin_offset": melee_projectile_origin_offset
+			}
+
+
+func _apply_collision_profile_to_hero(target_hero: Node3D, profile: Dictionary) -> void:
+	if target_hero == null or not is_instance_valid(target_hero):
+		return
 	var collision_body := target_hero.get_node_or_null("CollisionBody") as StaticBody3D
 	if collision_body == null:
 		collision_body = StaticBody3D.new()
@@ -1180,13 +1303,113 @@ func _ensure_hero_collision_body(target_hero: Node3D) -> void:
 		collision_shape = CollisionShape3D.new()
 		collision_shape.name = "CollisionShape3D"
 		collision_body.add_child(collision_shape)
-	var capsule := collision_shape.shape as CapsuleShape3D
-	if capsule == null:
-		capsule = CapsuleShape3D.new()
-		capsule.radius = 50.0
-		capsule.height = 150.0
-		collision_shape.shape = capsule
-	collision_shape.position = Vector3(0.0, 75.0, 0.0)
+	var shape_kind: String = str(profile.get("body_shape", "capsule")).strip_edges().to_lower()
+	match shape_kind:
+		"box":
+			var box := collision_shape.shape as BoxShape3D
+			if box == null:
+				box = BoxShape3D.new()
+				collision_shape.shape = box
+			var box_size_variant: Variant = profile.get("body_size", Vector3.ONE * 100.0)
+			if box_size_variant is Vector3:
+				box.size = box_size_variant
+		"cylinder":
+			var cylinder := collision_shape.shape as CylinderShape3D
+			if cylinder == null:
+				cylinder = CylinderShape3D.new()
+				collision_shape.shape = cylinder
+			cylinder.radius = maxf(float(profile.get("body_radius", melee_body_radius)), 0.0)
+			cylinder.height = maxf(float(profile.get("body_height", melee_body_height)), 0.0)
+		_:
+			var capsule := collision_shape.shape as CapsuleShape3D
+			if capsule == null:
+				capsule = CapsuleShape3D.new()
+				collision_shape.shape = capsule
+			capsule.radius = maxf(float(profile.get("body_radius", melee_body_radius)), 0.0)
+			capsule.height = maxf(float(profile.get("body_height", melee_body_height)), 0.0)
+	collision_shape.position = Vector3(0.0, float(profile.get("body_offset_y", melee_body_offset_y)), 0.0)
+	var profile_name: String = str(profile.get("profile_id", COLLISION_PROFILE_MELEE))
+	target_hero.set_meta(COLLISION_PROFILE_ID_META_KEY, profile_name)
+	collision_body.set_meta(COLLISION_PROFILE_ID_META_KEY, profile_name)
+	_ensure_hero_anchor_nodes(target_hero, profile)
+	if target_hero == _hero:
+		_current_collision_profile = profile.duplicate(true)
+		_current_collision_profile_id = profile_name
+		if _hp_bar != null or _attack_count_label != null:
+			_refresh_hp_bar_anchor_height_and_positions()
+
+
+func _ensure_hero_anchor_nodes(target_hero: Node3D, profile: Dictionary = {}) -> void:
+	if target_hero == null or not is_instance_valid(target_hero):
+		return
+	var anchor_root := target_hero.get_node_or_null(ANCHOR_ROOT_NODE_NAME) as Node3D
+	if anchor_root == null:
+		anchor_root = Node3D.new()
+		anchor_root.name = ANCHOR_ROOT_NODE_NAME
+		target_hero.add_child(anchor_root)
+	var head_height: float = float(profile.get("head_anchor_height", hp_bar_height))
+	var projectile_origin_variant: Variant = profile.get("projectile_origin_offset", Vector3(0.0, head_height * 0.5, 0.0))
+	var projectile_origin_offset: Vector3 = projectile_origin_variant as Vector3 if projectile_origin_variant is Vector3 else Vector3(0.0, head_height * 0.5, 0.0)
+	_ensure_anchor_node(anchor_root, HEAD_ANCHOR_NODE_NAME, Vector3(0.0, head_height, 0.0))
+	_ensure_anchor_node(anchor_root, PROJECTILE_ORIGIN_NODE_NAME, projectile_origin_offset)
+	_ensure_anchor_node(anchor_root, SHADOW_ANCHOR_NODE_NAME, Vector3(0.0, shadow_anchor_height, 0.0))
+	_ensure_anchor_node(anchor_root, SELECTION_ANCHOR_NODE_NAME, Vector3(0.0, selection_anchor_height, 0.0))
+
+
+func _ensure_anchor_node(anchor_root: Node3D, anchor_name: String, default_position: Vector3) -> Node3D:
+	if anchor_root == null or not is_instance_valid(anchor_root):
+		return null
+	var anchor_node := anchor_root.get_node_or_null(anchor_name) as Node3D
+	if anchor_node == null:
+		anchor_node = Node3D.new()
+		anchor_node.name = anchor_name
+		anchor_node.position = default_position
+		anchor_node.set_meta(AUTO_GENERATED_ANCHOR_META_KEY, true)
+		anchor_root.add_child(anchor_node)
+	elif bool(anchor_node.get_meta(AUTO_GENERATED_ANCHOR_META_KEY, false)):
+		anchor_node.position = default_position
+	return anchor_node
+
+
+func _get_anchor_node(target_hero: Node3D, anchor_name: String) -> Node3D:
+	if target_hero == null or not is_instance_valid(target_hero):
+		return null
+	var anchor_root := target_hero.get_node_or_null(ANCHOR_ROOT_NODE_NAME) as Node3D
+	if anchor_root != null and is_instance_valid(anchor_root):
+		var direct_anchor := anchor_root.get_node_or_null(anchor_name) as Node3D
+		if direct_anchor != null:
+			return direct_anchor
+	return target_hero.find_child(anchor_name, true, false) as Node3D
+
+
+func _resolve_anchor_height_from_hero(target_hero: Node3D, anchor_name: String) -> float:
+	var anchor_node := _get_anchor_node(target_hero, anchor_name)
+	if anchor_node == null or not is_instance_valid(anchor_node):
+		return -1.0
+	return maxf(anchor_node.global_position.y - target_hero.global_position.y, 0.0)
+
+
+func _resolve_anchor_local_y(target_hero: Node3D, anchor_name: String) -> float:
+	var anchor_node := _get_anchor_node(target_hero, anchor_name)
+	if anchor_node == null or not is_instance_valid(anchor_node):
+		return -1.0
+	return anchor_node.position.y
+
+
+func get_anchor_global_position(anchor_name: String = HEAD_ANCHOR_NODE_NAME) -> Vector3:
+	if _hero == null or not is_instance_valid(_hero):
+		return Vector3.ZERO
+	var anchor_node := _get_anchor_node(_hero, anchor_name)
+	if anchor_node != null and is_instance_valid(anchor_node):
+		return anchor_node.global_position
+	var fallback_height: float = _resolve_anchor_height_from_hero(_hero, HEAD_ANCHOR_NODE_NAME)
+	if fallback_height < 0.0:
+		fallback_height = get_hp_bar_anchor_height()
+	return _hero.global_position + Vector3(0.0, fallback_height, 0.0)
+
+
+func get_projectile_origin_global_position() -> Vector3:
+	return get_anchor_global_position(PROJECTILE_ORIGIN_NODE_NAME)
 
 
 func set_destroy_cursor_mode(enabled: bool) -> void:
@@ -3369,6 +3592,9 @@ func _transform_model() -> void:
 		_hp_bar.reparent(transformed_hero)
 	if _attack_count_label != null and _attack_count_label.get_parent() != null:
 		_attack_count_label.reparent(transformed_hero)
+	var base_collision_body := base_hero.get_node_or_null("CollisionBody") as Node3D
+	if base_collision_body != null and base_collision_body.get_parent() != null:
+		base_collision_body.reparent(transformed_hero)
 	if base_hero.is_in_group("hero"):
 		base_hero.remove_from_group("hero")
 	transformed_hero.add_to_group("hero")
@@ -3377,11 +3603,12 @@ func _transform_model() -> void:
 	_original_hero = base_hero
 	_transformed_hero = transformed_hero
 	_hero = transformed_hero
+	_is_transformed = true
+	_transform_time_left = transform_duration + _talent_float("transform_duration_bonus_sec", 0.0)
+	apply_collision_profile("", _hero)
 	_refresh_hp_bar_anchor_height_and_positions()
 	_animation_player = _hero.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	_refresh_motion_animation_aliases()
-	_is_transformed = true
-	_transform_time_left = transform_duration + _talent_float("transform_duration_bonus_sec", 0.0)
 	var transform_heal: int = _talent_int("transform_enter_heal_flat", 0)
 	if transform_heal > 0:
 		transform_heal += int(round(float(maxi(max_hp - _current_hp, 0)) * _talent_float("transform_enter_missing_hp_heal_ratio", 0.0)))
@@ -3415,6 +3642,10 @@ func _revert_transform_model() -> void:
 		_hp_bar.reparent(_original_hero)
 	if _attack_count_label != null and _attack_count_label.get_parent() != null:
 		_attack_count_label.reparent(_original_hero)
+	if current_hero != null and is_instance_valid(current_hero):
+		var transformed_collision_body := current_hero.get_node_or_null("CollisionBody") as Node3D
+		if transformed_collision_body != null and transformed_collision_body.get_parent() != null:
+			transformed_collision_body.reparent(_original_hero)
 
 	_original_hero.visible = true
 	_original_hero.add_to_group("hero")
@@ -3432,11 +3663,12 @@ func _revert_transform_model() -> void:
 
 	_transformed_hero = null
 	_hero = _original_hero
+	_is_transformed = false
+	_transform_time_left = 0.0
+	apply_collision_profile("", _hero)
 	_refresh_hp_bar_anchor_height_and_positions()
 	_animation_player = _hero.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	_refresh_motion_animation_aliases()
-	_is_transformed = false
-	_transform_time_left = 0.0
 	_update_attack_count_label()
 	_refresh_attack_animations()
 	_notify_network_local_hero_ready()
@@ -4726,19 +4958,33 @@ func get_hp_bar_anchor_height() -> float:
 
 
 func _refresh_hp_bar_anchor_height_and_positions() -> void:
-	var extra_offset: float = HP_BAR_HEIGHT_OFFSET
-	var model_height: float = _compute_node_mesh_height(_hero)
-	if model_height > 0.0:
-		_hp_bar_anchor_height = model_height + extra_offset
+	if _hero == null or not is_instance_valid(_hero):
+		return
+	var anchor_height: float = _resolve_anchor_height_from_hero(_hero, HEAD_ANCHOR_NODE_NAME)
+	if anchor_height > 0.0:
+		_hp_bar_anchor_height = anchor_height
 	else:
-		_hp_bar_anchor_height = extra_offset
+		var extra_offset: float = HP_BAR_HEIGHT_OFFSET
+		var model_height: float = _compute_node_mesh_height(_hero)
+		if model_height > 0.0:
+			_hp_bar_anchor_height = model_height + extra_offset
+		else:
+			_hp_bar_anchor_height = extra_offset
 	if _hp_bar != null and is_instance_valid(_hp_bar):
 		_sync_hp_bar_follow_and_facing()
 	if _attack_count_label != null and is_instance_valid(_attack_count_label):
-		_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
+		var attack_label_anchor_y: float = _resolve_anchor_local_y(_hero, HEAD_ANCHOR_NODE_NAME)
+		if attack_label_anchor_y > 0.0:
+			_attack_count_label.position = Vector3(0.0, attack_label_anchor_y + attack_count_label_height_offset, 0.0)
+		else:
+			_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
 
 
 func _sync_hp_bar_follow_and_facing() -> void:
+	var head_anchor := _get_anchor_node(_hero, HEAD_ANCHOR_NODE_NAME)
+	if head_anchor != null and is_instance_valid(head_anchor):
+		CombatSceneUtils.sync_top_level_billboard_to_camera(_hp_bar, head_anchor, 0.0, get_viewport())
+		return
 	CombatSceneUtils.sync_top_level_billboard_to_camera(_hp_bar, _hero, _hp_bar_anchor_height, get_viewport())
 
 
@@ -4770,7 +5016,11 @@ func _create_attack_count_label() -> void:
 	_attack_count_label.outline_size = 2
 	_attack_count_label.outline_modulate = Color(0.0, 0.0, 0.0, 0.9)
 	_attack_count_label.visible = _should_show_attack_count_label()
-	_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
+	var attack_label_anchor_y: float = _resolve_anchor_local_y(_hero, HEAD_ANCHOR_NODE_NAME)
+	if attack_label_anchor_y > 0.0:
+		_attack_count_label.position = Vector3(0.0, attack_label_anchor_y + attack_count_label_height_offset, 0.0)
+	else:
+		_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
 	_hero.add_child(_attack_count_label)
 	_update_attack_count_label()
 
@@ -4788,7 +5038,11 @@ func _update_attack_count_label() -> void:
 	else:
 		var current_count: int = maxi(_attack_count, 0)
 		_attack_count_label.text = "%d" % current_count
-	_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
+	var attack_label_anchor_y: float = _resolve_anchor_local_y(_hero, HEAD_ANCHOR_NODE_NAME)
+	if attack_label_anchor_y > 0.0:
+		_attack_count_label.position = Vector3(0.0, attack_label_anchor_y + attack_count_label_height_offset, 0.0)
+	else:
+		_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
 
 
 func _is_enemy_dead(enemy: Node3D) -> bool:

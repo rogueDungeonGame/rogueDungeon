@@ -28,12 +28,12 @@ signal host_migration_state_changed(in_progress: bool, local_is_host: bool, targ
 @export var steam_target_host_id: String = ""
 @export_enum("disabled", "create", "join") var steam_lobby_action: String = "disabled"
 @export_enum("private", "friends_only", "public", "invisible") var steam_lobby_visibility: String = "friends_only"
-@export var steam_lobby_enabled: bool = true
+@export var steam_lobby_enabled: bool = false
 @export var steam_lobby_max_members: int = 4
 @export var steam_lobby_id_text: String = ""
 @export var steam_lobby_name: String = "RogueDungeon"
 @export var steam_lobby_connect_on_join_requested: bool = true
-@export var host_migration_enabled: bool = true
+@export var host_migration_enabled: bool = false
 @export var host_migration_owner_poll_interval_sec: float = 0.50
 @export var host_migration_takeover_delay_sec: float = 0.60
 @export var host_migration_reconnect_delay_sec: float = 0.85
@@ -71,10 +71,10 @@ signal host_migration_state_changed(in_progress: bool, local_is_host: bool, targ
 @export var tauren_spawner_path: NodePath = NodePath("../TaurenSpawner")
 @export var summon_manager_path: NodePath = NodePath("../SummonManager")
 @export var remote_players_root_path: NodePath = NodePath("../NetworkPlayers")
-@export var remote_melee_player_scene: PackedScene = preload("res://modles/herowarden.glb")
-@export var remote_ranged_player_scene: PackedScene = preload("res://modles/Rifleman.glb")
-@export var remote_transformed_player_scene: PackedScene = preload("res://modles/SpiritOfVengeance.before_trim.glb")
-@export var remote_player_scene: PackedScene = preload("res://modles/herowarden.glb")
+@export var remote_melee_player_scene: PackedScene = preload("res://placeholders/hero_melee_2d.tscn")
+@export var remote_ranged_player_scene: PackedScene = preload("res://placeholders/hero_ranged_2d.tscn")
+@export var remote_transformed_player_scene: PackedScene = preload("res://placeholders/hero_transformed_2d.tscn")
+@export var remote_player_scene: PackedScene = preload("res://placeholders/hero_melee_2d.tscn")
 @export var remote_player_scale: Vector3 = Vector3.ONE
 @export var remote_position_smooth_speed: float = 16.0
 @export var remote_rotation_smooth_speed: float = 14.0
@@ -1812,7 +1812,7 @@ func _apply_client_hero_state_from_sender(sender_id: int, hero_state: Dictionary
 				"spell_crit_chance", "spell_crit_multiplier",
 				"strength", "agility", "intelligence",
 				"hp_regen_per_second", "mana_regen_per_second",
-				"hero_id", "hero_profile", "hero_selected", "hp_bar_anchor_height"
+				"hero_id", "hero_profile", "hero_selected", "hp_bar_anchor_height", "collision_profile_id", "projectile_origin_pos"
 			])
 			for key_variant in sticky_stat_keys:
 				var key: String = String(key_variant)

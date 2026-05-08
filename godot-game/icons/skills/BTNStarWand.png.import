@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://vpmyytx0tbyt"
-path="res://.godot/imported/BTNStarWand.png-0867012137deddf85b64c2dedd9ecaaf.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNStarWand.png"
-dest_files=["res://.godot/imported/BTNStarWand.png-0867012137deddf85b64c2dedd9ecaaf.ctex"]
 
 [params]
 

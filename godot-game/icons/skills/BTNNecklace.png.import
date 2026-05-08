@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c8fhjpwatenib"
-path="res://.godot/imported/BTNNecklace.png-e3b2cdf756265f50a27d790ba4da8421.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNNecklace.png"
-dest_files=["res://.godot/imported/BTNNecklace.png-e3b2cdf756265f50a27d790ba4da8421.ctex"]
 
 [params]
 

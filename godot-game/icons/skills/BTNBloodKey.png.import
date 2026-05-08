@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2x0ksogaaqwi"
-path="res://.godot/imported/BTNBloodKey.png-d54572a81b2b5c730b59dbde4e35da4a.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNBloodKey.png"
-dest_files=["res://.godot/imported/BTNBloodKey.png-d54572a81b2b5c730b59dbde4e35da4a.ctex"]
 
 [params]
 

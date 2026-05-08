@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b6h2rkky35wqy"
-path="res://.godot/imported/BTNFaerieFire.png-c4b29dcc7e773dd22521e8380063fd54.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNFaerieFire.png"
-dest_files=["res://.godot/imported/BTNFaerieFire.png-c4b29dcc7e773dd22521e8380063fd54.ctex"]
 
 [params]
 

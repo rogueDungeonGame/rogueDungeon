@@ -80,8 +80,13 @@ func ensure_remote_avatar_hp_bar(
 
 
 func resolve_remote_avatar_hp_bar_height(hero_state: Dictionary, avatar: Node3D, remote_hp_bar_height: float) -> float:
+	if hero_state.has("hp_bar_anchor_height"):
+		return maxf(float(hero_state.get("hp_bar_anchor_height", remote_hp_bar_height)), 0.0)
 	if hero_state.has("hp_bar_height"):
 		return maxf(float(hero_state.get("hp_bar_height", remote_hp_bar_height)), 0.0)
+	var anchor_height: float = resolve_avatar_anchor_height(avatar, "HeadAnchor")
+	if anchor_height > 0.0:
+		return anchor_height
 	var computed_height: float = compute_node_mesh_height(avatar, "RemoteHPBar")
 	if computed_height > 0.0:
 		return computed_height + 20.0
@@ -105,6 +110,26 @@ func sync_remote_avatar_hp_bar_transform(avatar: Node3D, hp_bar: MeshInstance3D,
 	bar_transform.basis = camera.global_transform.basis.orthonormalized()
 	hp_bar.global_transform = bar_transform
 	hp_bar.scale = bar_scale
+
+
+func resolve_avatar_anchor_height(avatar: Node3D, anchor_name: String) -> float:
+	if avatar == null or not is_instance_valid(avatar):
+		return -1.0
+	var anchor_node := find_avatar_anchor_node(avatar, anchor_name)
+	if anchor_node == null or not is_instance_valid(anchor_node):
+		return -1.0
+	return maxf(anchor_node.global_position.y - avatar.global_position.y, 0.0)
+
+
+func find_avatar_anchor_node(avatar: Node3D, anchor_name: String) -> Node3D:
+	if avatar == null or not is_instance_valid(avatar):
+		return null
+	var anchor_root := avatar.get_node_or_null("AnchorRoot") as Node3D
+	if anchor_root != null and is_instance_valid(anchor_root):
+		var direct_anchor := anchor_root.get_node_or_null(anchor_name) as Node3D
+		if direct_anchor != null:
+			return direct_anchor
+	return avatar.find_child(anchor_name, true, false) as Node3D
 
 
 func compute_node_mesh_height(root_node: Node3D, ignored_mesh_name: String = "") -> float:

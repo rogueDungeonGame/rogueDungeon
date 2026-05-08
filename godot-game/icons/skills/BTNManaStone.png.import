@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://gplnxueq8vot"
-path="res://.godot/imported/BTNManaStone.png-9c579384ed73f5d585799064012f8288.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNManaStone.png"
-dest_files=["res://.godot/imported/BTNManaStone.png-9c579384ed73f5d585799064012f8288.ctex"]
 
 [params]
 

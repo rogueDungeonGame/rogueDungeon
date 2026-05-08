@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cvl3q4tk0xuch"
-path="res://.godot/imported/BTNStaffOfNegation.png-abac08dc4248ebd0d6a8a318105f4f25.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNStaffOfNegation.png"
-dest_files=["res://.godot/imported/BTNStaffOfNegation.png-abac08dc4248ebd0d6a8a318105f4f25.ctex"]
 
 [params]
 

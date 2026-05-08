@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbv8n31h50tn"
-path="res://.godot/imported/BTNSpellSteal.png-b2193181c5b505c8d2d2a15740e21757.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSpellSteal.png"
-dest_files=["res://.godot/imported/BTNSpellSteal.png-b2193181c5b505c8d2d2a15740e21757.ctex"]
 
 [params]
 

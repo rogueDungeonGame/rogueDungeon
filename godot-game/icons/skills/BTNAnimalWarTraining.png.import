@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://duyu1ad58wfdj"
-path="res://.godot/imported/BTNAnimalWarTraining.png-3b845a8406afbe575a5320998d101849.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNAnimalWarTraining.png"
-dest_files=["res://.godot/imported/BTNAnimalWarTraining.png-3b845a8406afbe575a5320998d101849.ctex"]
 
 [params]
 

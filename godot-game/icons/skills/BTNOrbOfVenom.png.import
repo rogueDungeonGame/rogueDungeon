@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c62gra6trr3mv"
-path="res://.godot/imported/BTNOrbOfVenom.png-9c4df9cec47c6832c0195266bcf4db14.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNOrbOfVenom.png"
-dest_files=["res://.godot/imported/BTNOrbOfVenom.png-9c4df9cec47c6832c0195266bcf4db14.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwm0s1ecd85q0"
-path="res://.godot/imported/BTNWandOfManaSteal.png-4a3a6fd8f7112a551318a48845a174c6.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNWandOfManaSteal.png"
-dest_files=["res://.godot/imported/BTNWandOfManaSteal.png-4a3a6fd8f7112a551318a48845a174c6.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cs36lx7hslsfi"
-path="res://.godot/imported/BTNChemicalRage.png-87a7f1253ab156844780dc9f8e3ab6d5.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNChemicalRage.png"
-dest_files=["res://.godot/imported/BTNChemicalRage.png-87a7f1253ab156844780dc9f8e3ab6d5.ctex"]
 
 [params]
 

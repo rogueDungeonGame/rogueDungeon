@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://clttmqg6qvhx1"
-path="res://.godot/imported/BTNInfernalCannon.png-a6453fa949c0a420f2ecfe8a80921bb9.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNInfernalCannon.png"
-dest_files=["res://.godot/imported/BTNInfernalCannon.png-a6453fa949c0a420f2ecfe8a80921bb9.ctex"]
 
 [params]
 

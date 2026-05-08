@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwwe7lw0ipar2"
-path="res://.godot/imported/BTNNagaWeaponUp2.png-a94154035941a0b83769cba12d9f91d2.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNNagaWeaponUp2.png"
-dest_files=["res://.godot/imported/BTNNagaWeaponUp2.png-a94154035941a0b83769cba12d9f91d2.ctex"]
 
 [params]
 

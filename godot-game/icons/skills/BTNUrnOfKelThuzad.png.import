@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://duo4m8lwfbw64"
-path="res://.godot/imported/BTNUrnOfKelThuzad.png-16a524cb39f23ef3002113d6fcdb0b10.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNUrnOfKelThuzad.png"
-dest_files=["res://.godot/imported/BTNUrnOfKelThuzad.png-16a524cb39f23ef3002113d6fcdb0b10.ctex"]
 
 [params]
 

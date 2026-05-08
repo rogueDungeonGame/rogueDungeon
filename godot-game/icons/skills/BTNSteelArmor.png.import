@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://caagfubhmkv2a"
-path="res://.godot/imported/BTNSteelArmor.png-0d87388ebdb3132e0ddf3556ae6dd2bb.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSteelArmor.png"
-dest_files=["res://.godot/imported/BTNSteelArmor.png-0d87388ebdb3132e0ddf3556ae6dd2bb.ctex"]
 
 [params]
 

@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d08hqire0x8pe"
-path="res://.godot/imported/BTNMedalionOfCourage.png-f952fa3d655ae0888ad8eb4ad3052936.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNMedalionOfCourage.png"
-dest_files=["res://.godot/imported/BTNMedalionOfCourage.png-f952fa3d655ae0888ad8eb4ad3052936.ctex"]
 
 [params]
 

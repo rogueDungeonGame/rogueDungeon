@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cahnf6vi6conw"
-path="res://.godot/imported/BTNUnholyAura.png-313043b42a5786444cb8cd8c102ef4e5.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNUnholyAura.png"
-dest_files=["res://.godot/imported/BTNUnholyAura.png-313043b42a5786444cb8cd8c102ef4e5.ctex"]
 
 [params]
 

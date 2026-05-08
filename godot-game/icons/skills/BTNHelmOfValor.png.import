@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://tcxdrh7j0bb3"
-path="res://.godot/imported/BTNHelmOfValor.png-29f454656b6bcdf3a2bcb9138bc2a8a8.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHelmOfValor.png"
-dest_files=["res://.godot/imported/BTNHelmOfValor.png-29f454656b6bcdf3a2bcb9138bc2a8a8.ctex"]
 
 [params]
 

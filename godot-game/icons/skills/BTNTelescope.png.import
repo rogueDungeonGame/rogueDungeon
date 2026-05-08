@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://l2hmpxfbnpsc"
-path="res://.godot/imported/BTNTelescope.png-5a12ba0135c70a0a5481109196e84a84.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNTelescope.png"
-dest_files=["res://.godot/imported/BTNTelescope.png-5a12ba0135c70a0a5481109196e84a84.ctex"]
 
 [params]
 

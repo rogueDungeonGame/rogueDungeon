@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dg3c5cyj4xfvt"
-path="res://.godot/imported/BTNSentryWard.png-035f5444667de2890662726a0e450da0.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSentryWard.png"
-dest_files=["res://.godot/imported/BTNSentryWard.png-035f5444667de2890662726a0e450da0.ctex"]
 
 [params]
 

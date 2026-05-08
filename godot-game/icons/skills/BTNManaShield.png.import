@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cxfpjrr626hta"
-path="res://.godot/imported/BTNManaShield.png-5edd566fae03de949ffaf5a435c8db84.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNManaShield.png"
-dest_files=["res://.godot/imported/BTNManaShield.png-5edd566fae03de949ffaf5a435c8db84.ctex"]
 
 [params]
 

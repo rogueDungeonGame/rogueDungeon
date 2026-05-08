@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cb14afwt5vx05"
-path="res://.godot/imported/BTNHealingWard.png-6ff99c81b71e3f56a773afa6ebaae710.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHealingWard.png"
-dest_files=["res://.godot/imported/BTNHealingWard.png-6ff99c81b71e3f56a773afa6ebaae710.ctex"]
 
 [params]
 

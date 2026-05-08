@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ijxip7yluhwu"
-path="res://.godot/imported/BTNCrate.png-c245e2c903d636b8073c8eb92b63fa06.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNCrate.png"
-dest_files=["res://.godot/imported/BTNCrate.png-c245e2c903d636b8073c8eb92b63fa06.ctex"]
 
 [params]
 

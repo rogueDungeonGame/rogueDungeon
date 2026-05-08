@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cts2ouh2l5p0s"
-path="res://.godot/imported/BTNRallyPointNightElf.png-0653c0ec2c8afc5dd3ed396a905f2483.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNRallyPointNightElf.png"
-dest_files=["res://.godot/imported/BTNRallyPointNightElf.png-0653c0ec2c8afc5dd3ed396a905f2483.ctex"]
 
 [params]
 

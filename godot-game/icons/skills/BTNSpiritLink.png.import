@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ckdp340xsjsmo"
-path="res://.godot/imported/BTNSpiritLink.png-71018f5fc76dff3804b332e6c94e942c.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNSpiritLink.png"
-dest_files=["res://.godot/imported/BTNSpiritLink.png-71018f5fc76dff3804b332e6c94e942c.ctex"]
 
 [params]
 

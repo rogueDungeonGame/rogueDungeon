@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwk2nr4224g8m"
-path="res://.godot/imported/BTNOrcBattleStandard.png-495c5ea3499659c763ae45413f799691.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNOrcBattleStandard.png"
-dest_files=["res://.godot/imported/BTNOrcBattleStandard.png-495c5ea3499659c763ae45413f799691.ctex"]
 
 [params]
 

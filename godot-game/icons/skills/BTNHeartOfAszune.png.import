@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://rlx71t5xberi"
-path="res://.godot/imported/BTNHeartOfAszune.png-7badad2f85cf5d31e5b9cb0bf49f4c44.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNHeartOfAszune.png"
-dest_files=["res://.godot/imported/BTNHeartOfAszune.png-7badad2f85cf5d31e5b9cb0bf49f4c44.ctex"]
 
 [params]
 

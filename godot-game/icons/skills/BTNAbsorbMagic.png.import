@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://delc6x0myccr1"
-path="res://.godot/imported/BTNAbsorbMagic.png-e435a26683d2b56233db569530549331.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNAbsorbMagic.png"
-dest_files=["res://.godot/imported/BTNAbsorbMagic.png-e435a26683d2b56233db569530549331.ctex"]
 
 [params]
 

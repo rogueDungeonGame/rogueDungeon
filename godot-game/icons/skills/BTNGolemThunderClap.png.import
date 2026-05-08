@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://btx5orrk2wcwe"
-path="res://.godot/imported/BTNGolemThunderClap.png-e25ab0081ca85bc1adb47b1900e903aa.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNGolemThunderClap.png"
-dest_files=["res://.godot/imported/BTNGolemThunderClap.png-e25ab0081ca85bc1adb47b1900e903aa.ctex"]
 
 [params]
 

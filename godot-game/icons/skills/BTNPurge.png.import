@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnf400wqyrtq1"
-path="res://.godot/imported/BTNPurge.png-a630c447be48a483765ad26244c821d2.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNPurge.png"
-dest_files=["res://.godot/imported/BTNPurge.png-a630c447be48a483765ad26244c821d2.ctex"]
 
 [params]
 

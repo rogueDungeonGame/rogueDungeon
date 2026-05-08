@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cqh7puosvadw1"
-path="res://.godot/imported/BTNShadowPact.png-4b6145aae1754e55298c817c26691365.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://icons/skills/BTNShadowPact.png"
-dest_files=["res://.godot/imported/BTNShadowPact.png-4b6145aae1754e55298c817c26691365.ctex"]
 
 [params]
 
