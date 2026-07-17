@@ -1,4 +1,5 @@
 extends Node3D
+class_name HeroSprite8Dir
 
 @export var texture_base_path: String = "res://placeholders/hero_8dir"
 @export var idle_suffix: String = "_idle"

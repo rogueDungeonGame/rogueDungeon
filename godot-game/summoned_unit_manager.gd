@@ -1,4 +1,5 @@
 extends Node3D
+class_name SummonedUnitManager
 
 @export var hero_controller_path: NodePath = NodePath("../HeroController")
 @export var net_session_controller_path: NodePath = NodePath("../NetSessionController")

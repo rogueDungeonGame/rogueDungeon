@@ -1,4 +1,5 @@
 extends NavigationRegion3D
+class_name NavSetup
 
 
 func _ready() -> void:

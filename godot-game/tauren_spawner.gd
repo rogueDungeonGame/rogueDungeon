@@ -1,4 +1,5 @@
 extends Node3D
+class_name TaurenSpawner
 
 @export var unit_count: int = 20
 @export var tauren_scene_path: String = "res://placeholders/enemy_tauren_2d.tscn"

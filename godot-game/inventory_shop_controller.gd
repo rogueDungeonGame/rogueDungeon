@@ -15,8 +15,8 @@ const HUD_SKILL_BUTTON_TEXTURE := preload(
 )
 
 var _owner: Node = null
-var _hero_ctrl: Node = null
-var _net_ctrl: Node = null
+var _hero_ctrl: HeroController = null
+var _net_ctrl: NetSessionController = null
 var _ui_state: Object = null
 var _resolve_net_ctrl_callback: Callable = Callable()
 var _set_observed_peer_callback: Callable = Callable()
@@ -544,8 +544,8 @@ const SKILL_CD_MASK_SHADER_CODE := "shader_type canvas_item;\nuniform float prog
 
 func configure(
 	owner: Node,
-	hero_ctrl: Node,
-	net_ctrl: Node,
+	hero_ctrl: HeroController,
+	net_ctrl: NetSessionController,
 	ui_state: Object,
 	resolve_net_ctrl_callback: Callable,
 	set_observed_peer_callback: Callable,
@@ -587,8 +587,8 @@ func initialize() -> void:
 
 func initialize_after_ui_ready() -> void:
 	_apply_inventory_bonuses_to_hero()
-	if _hero_ctrl != null and _hero_ctrl.has_method("set_destroy_cursor_mode"):
-		_hero_ctrl.call("set_destroy_cursor_mode", false)
+	if _hero_ctrl != null:
+		_hero_ctrl.set_destroy_cursor_mode(false)
 	_sync_destroy_hover_cursor()
 	_refresh_inventory()
 
@@ -630,8 +630,8 @@ func on_observe_state_changed(reset_local_destroy_mode: bool) -> void:
 	if reset_local_destroy_mode:
 		_destroy_mode = false
 		_destroy_hover_index = -1
-		if _hero_ctrl != null and _hero_ctrl.has_method("set_destroy_cursor_mode"):
-			_hero_ctrl.call("set_destroy_cursor_mode", false)
+		if _hero_ctrl != null:
+			_hero_ctrl.set_destroy_cursor_mode(false)
 	_sync_destroy_hover_cursor()
 	_update_destroy_visual()
 	_update_shop_info()
@@ -679,8 +679,8 @@ func is_local_equipment_state_synced(authority_state: Dictionary) -> bool:
 func _resolve_net_ctrl() -> void:
 	if _resolve_net_ctrl_callback.is_valid():
 		var resolved_variant: Variant = _resolve_net_ctrl_callback.call()
-		if resolved_variant is Node:
-			_net_ctrl = resolved_variant as Node
+		if resolved_variant is NetSessionController:
+			_net_ctrl = resolved_variant as NetSessionController
 
 
 func _notify_input_lock_changed() -> void:
@@ -1293,12 +1293,12 @@ func _update_shop_debug_overlay() -> void:
 		self_peer_id = local_owner_peer_id
 	var net_mode_debug: String = ""
 	if _net_ctrl != null:
-		net_mode_debug = str(_net_ctrl.get("network_mode")).strip_edges().to_lower()
+		net_mode_debug = str(_net_ctrl.network_mode).strip_edges().to_lower()
 	var owners_text: String = "-"
 	var right_top_owner: int = -1
-	var scene_root: Node = _owner.get_parent() if _owner != null else null
-	if scene_root != null and scene_root.has_method("debug_get_shop_owner_peer_ids"):
-		var owners_variant: Variant = scene_root.call("debug_get_shop_owner_peer_ids")
+	var scene_root := (_owner.get_parent() if _owner != null else null) as SceneFlowController
+	if scene_root != null:
+		var owners_variant: Variant = scene_root.debug_get_shop_owner_peer_ids()
 		if owners_variant is Array:
 			var owners: Array = owners_variant
 			owners_text = str(owners)
@@ -1431,7 +1431,7 @@ func _check_shop_click() -> void:
 				self_peer_id_debug = local_owner_peer_id
 			var net_mode_debug: String = ""
 			if _net_ctrl != null:
-				net_mode_debug = str(_net_ctrl.get("network_mode")).strip_edges().to_lower()
+				net_mode_debug = str(_net_ctrl.network_mode).strip_edges().to_lower()
 			print(
 				(
 					"[shop-click] self=%d local_owner=%d clicked_owner=%d allow=%s mode=%s"
@@ -1552,14 +1552,14 @@ func _get_local_shop_owner_peer_id() -> int:
 	if self_peer_id > 0:
 		return self_peer_id
 	_resolve_net_ctrl()
-	if _net_ctrl != null and _net_ctrl.has_method("get_ui_self_peer_id"):
-		var peer_id_variant: Variant = _net_ctrl.call("get_ui_self_peer_id")
+	if _net_ctrl != null:
+		var peer_id_variant: Variant = _net_ctrl.get_ui_self_peer_id()
 		var peer_id: int = int(peer_id_variant)
 		if peer_id > 0:
 			return peer_id
 	var net_mode: String = ""
 	if _net_ctrl != null:
-		net_mode = str(_net_ctrl.get("network_mode")).strip_edges().to_lower()
+		net_mode = str(_net_ctrl.network_mode).strip_edges().to_lower()
 	if net_mode == "host":
 		return 1
 	if net_mode == "client":
@@ -1633,8 +1633,8 @@ func _get_shop_state_for_owner(owner_peer_id: int) -> Dictionary:
 		if not observed_state.is_empty():
 			return observed_state
 	_resolve_net_ctrl()
-	if _net_ctrl != null and _net_ctrl.has_method("get_ui_peer_equipment_state"):
-		var state_variant: Variant = _net_ctrl.call("get_ui_peer_equipment_state", owner_peer_id)
+	if _net_ctrl != null:
+		var state_variant: Variant = _net_ctrl.get_ui_peer_equipment_state(owner_peer_id)
 		if state_variant is Dictionary:
 			return state_variant as Dictionary
 	return {}
@@ -1663,7 +1663,7 @@ func _should_sync_local_shop_offers_from_authority() -> bool:
 	_resolve_net_ctrl()
 	if _net_ctrl == null:
 		return false
-	var net_mode: String = str(_net_ctrl.get("network_mode")).strip_edges().to_lower()
+	var net_mode: String = str(_net_ctrl.network_mode).strip_edges().to_lower()
 	return net_mode == "client"
 
 
@@ -1671,15 +1671,10 @@ func _get_local_authority_shop_state() -> Dictionary:
 	_resolve_net_ctrl()
 	if _net_ctrl == null:
 		return {}
-	if (
-		not _net_ctrl.has_method("get_ui_self_peer_id")
-		or not _net_ctrl.has_method("get_ui_peer_equipment_state")
-	):
-		return {}
-	var self_peer_id: int = int(_net_ctrl.call("get_ui_self_peer_id"))
+	var self_peer_id: int = int(_net_ctrl.get_ui_self_peer_id())
 	if self_peer_id <= 0:
 		return {}
-	var state_variant: Variant = _net_ctrl.call("get_ui_peer_equipment_state", self_peer_id)
+	var state_variant: Variant = _net_ctrl.get_ui_peer_equipment_state(self_peer_id)
 	if state_variant is Dictionary:
 		return state_variant as Dictionary
 	return {}
@@ -1841,14 +1836,14 @@ func _request_authority_equipment_action(action: String, payload: Dictionary = {
 		return false
 	var normalized_action: String = action.strip_edges().to_lower()
 	var is_shop_action_request: bool = _is_shop_action(normalized_action)
-	var net_mode: String = str(_net_ctrl.get("network_mode")).strip_edges().to_lower()
+	var net_mode: String = str(_net_ctrl.network_mode).strip_edges().to_lower()
 	if net_mode == "client":
 		if is_shop_action_request and _is_shop_action_pending():
 			return true
-		if _net_ctrl.has_method("request_equipment_action"):
+		if _net_ctrl != null:
 			var request_payload_client: Dictionary = payload.duplicate(true)
-			var sent_variant: Variant = _net_ctrl.call(
-				"request_equipment_action", normalized_action, request_payload_client
+			var sent_variant: Variant = _net_ctrl.request_equipment_action(
+				normalized_action, request_payload_client
 			)
 			var sent_ok: bool = _variant_to_bool(sent_variant, false)
 			if sent_ok and is_shop_action_request:
@@ -2065,8 +2060,8 @@ func apply_authoritative_equipment_commit(commit: Dictionary) -> void:
 	)
 	if _hero_ctrl != null:
 		_hero_ctrl.set("inventory", inv)
-		if _hero_ctrl.has_method("set_destroy_cursor_mode"):
-			_hero_ctrl.call("set_destroy_cursor_mode", next_destroy_mode)
+		if _hero_ctrl != null:
+			_hero_ctrl.set_destroy_cursor_mode(next_destroy_mode)
 	_gold = int(state.get("gold", _gold))
 	_shop_level = clampi(int(state.get("shop_level", _shop_level)), 1, 7)
 	_set_shop_offered_from_variant(state.get("shop_offer_ids", _shop_offered))
@@ -2908,8 +2903,8 @@ func _apply_inventory_bonuses_to_hero() -> void:
 		return
 	var inv: Array = inv_variant
 	var total_bonus: Dictionary = _calculate_inventory_bonuses(inv)
-	if _hero_ctrl.has_method("apply_equipment_bonuses"):
-		_hero_ctrl.call("apply_equipment_bonuses", total_bonus)
+	if _hero_ctrl != null:
+		_hero_ctrl.apply_equipment_bonuses(total_bonus)
 
 
 func notify_local_battle_phase_started() -> void:
@@ -2940,7 +2935,7 @@ func notify_local_battle_phase_ended() -> void:
 	var net_mode: String = ""
 	_resolve_net_ctrl()
 	if _net_ctrl != null:
-		net_mode = str(_net_ctrl.get("network_mode")).strip_edges().to_lower()
+		net_mode = str(_net_ctrl.network_mode).strip_edges().to_lower()
 	var sent_to_authority: bool = _request_authority_equipment_action("battle_phase_ended")
 	if sent_to_authority:
 		if net_mode != "client":
@@ -3551,20 +3546,20 @@ func _find_hovered_inventory_index() -> int:
 
 
 func _sync_destroy_hover_cursor() -> void:
-	if _hero_ctrl == null or not _hero_ctrl.has_method("set_destroy_cursor_item_hover"):
+	if _hero_ctrl == null:
 		return
 	if _is_observing_remote() or _is_observing_boss() or _is_observing_enemy():
 		_destroy_hover_index = -1
-		_hero_ctrl.call("set_destroy_cursor_item_hover", false)
+		_hero_ctrl.set_destroy_cursor_item_hover(false)
 		return
 	if not _destroy_mode:
 		_destroy_hover_index = -1
-		_hero_ctrl.call("set_destroy_cursor_item_hover", false)
+		_hero_ctrl.set_destroy_cursor_item_hover(false)
 		return
 	if _destroy_hover_index < 0:
 		_destroy_hover_index = _find_hovered_inventory_index()
 	var hovering_item: bool = _is_inventory_slot_has_item(_destroy_hover_index)
-	_hero_ctrl.call("set_destroy_cursor_item_hover", hovering_item)
+	_hero_ctrl.set_destroy_cursor_item_hover(hovering_item)
 
 
 func _on_inv_slot_mouse_entered(index: int) -> void:
@@ -3594,8 +3589,8 @@ func _toggle_destroy_mode() -> void:
 	if _request_authority_equipment_action("set_destroy_mode", {"enabled": target_mode}):
 		return
 	_destroy_mode = not _destroy_mode
-	if _hero_ctrl != null and _hero_ctrl.has_method("set_destroy_cursor_mode"):
-		_hero_ctrl.call("set_destroy_cursor_mode", _destroy_mode)
+	if _hero_ctrl != null:
+		_hero_ctrl.set_destroy_cursor_mode(_destroy_mode)
 	_sync_destroy_hover_cursor()
 	_update_destroy_visual()
 
@@ -3703,8 +3698,8 @@ func _use_inventory_item(index: int) -> void:
 		return
 	_destroy_mode = false
 	_destroy_hover_index = -1
-	if _hero_ctrl != null and _hero_ctrl.has_method("set_destroy_cursor_mode"):
-		_hero_ctrl.call("set_destroy_cursor_mode", false)
+	if _hero_ctrl != null:
+		_hero_ctrl.set_destroy_cursor_mode(false)
 	_refresh_inventory()
 	_sync_destroy_hover_cursor()
 	_update_destroy_visual()
@@ -3751,7 +3746,7 @@ func _destroy_item(index: int) -> void:
 	_refresh_inventory()
 	_destroy_mode = false
 	_destroy_hover_index = -1
-	if _hero_ctrl != null and _hero_ctrl.has_method("set_destroy_cursor_mode"):
-		_hero_ctrl.call("set_destroy_cursor_mode", false)
+	if _hero_ctrl != null:
+		_hero_ctrl.set_destroy_cursor_mode(false)
 	_sync_destroy_hover_cursor()
 	_update_destroy_visual()

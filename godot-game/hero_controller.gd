@@ -1,4 +1,5 @@
 extends Node3D
+class_name HeroController
 
 const CombatSceneUtils := preload("res://combat_scene_utils.gd")
 const HeroStatsService := preload("res://hero_stats_service.gd")
@@ -1668,11 +1669,11 @@ func get_coin_sync_state() -> Dictionary:
 	}
 
 
-func _get_game_ui_node() -> Node:
+func _get_game_ui_node() -> GameUI:
 	var parent_node: Node = get_parent()
 	if parent_node == null:
 		return null
-	return parent_node.get_node_or_null("GameUI")
+	return parent_node.get_node_or_null("GameUI") as GameUI
 
 
 func _refresh_local_battle_phase_notifications() -> void:
@@ -1686,15 +1687,13 @@ func _refresh_local_battle_phase_notifications() -> void:
 	if battle_phase_active == _local_battle_phase_active_notified:
 		return
 	_local_battle_phase_active_notified = battle_phase_active
-	var ui: Node = _get_game_ui_node()
+	var ui: GameUI = _get_game_ui_node()
 	if ui == null:
 		return
 	if battle_phase_active:
-		if ui.has_method("notify_local_battle_phase_started"):
-			ui.call("notify_local_battle_phase_started")
+		ui.notify_local_battle_phase_started()
 	else:
-		if ui.has_method("notify_local_battle_phase_ended"):
-			ui.call("notify_local_battle_phase_ended")
+		ui.notify_local_battle_phase_ended()
 
 
 func _get_settlement_crit_rate_multiplier() -> float:
@@ -1874,24 +1873,16 @@ func _refresh_battle_banner_applied_bonuses() -> void:
 	var total_spell_damage_bonus: float = _battle_banner_emitted_spell_damage_percent_bonus
 
 	if _hero != null and is_instance_valid(_hero):
-		var net_ctrl: Node = _get_network_session_controller()
-		if (
-			net_ctrl != null
-			and net_ctrl.has_method("get_synced_peer_ids")
-			and net_ctrl.has_method("get_ui_peer_hero_state")
-		):
-			var self_peer_id: int = 0
-			if net_ctrl.has_method("get_ui_self_peer_id"):
-				self_peer_id = int(net_ctrl.call("get_ui_self_peer_id"))
-			var peer_ids_variant: Variant = net_ctrl.call("get_synced_peer_ids")
+		var net_ctrl: NetSessionController = _get_network_session_controller()
+		if net_ctrl != null:
+			var self_peer_id: int = int(net_ctrl.get_ui_self_peer_id())
+			var peer_ids_variant: Variant = net_ctrl.get_synced_peer_ids()
 			if peer_ids_variant is Array:
 				for peer_id_variant in peer_ids_variant:
 					var peer_id: int = int(peer_id_variant)
 					if peer_id <= 0 or peer_id == self_peer_id:
 						continue
-					var hero_state_variant: Variant = net_ctrl.call(
-						"get_ui_peer_hero_state", peer_id
-					)
+					var hero_state_variant: Variant = net_ctrl.get_ui_peer_hero_state(peer_id)
 					if not (hero_state_variant is Dictionary):
 						continue
 					var hero_state: Dictionary = hero_state_variant as Dictionary
@@ -2205,19 +2196,15 @@ func _refresh_necromancy_battle_phase_state() -> void:
 	if battle_phase_active == _necro_last_battle_phase_active:
 		return
 	_necro_last_battle_phase_active = battle_phase_active
-	var game_ui: Node = _get_game_ui_node()
+	var game_ui: GameUI = _get_game_ui_node()
 	if battle_phase_active:
 		_on_necromancy_battle_phase_started()
-		if game_ui != null and game_ui.has_method("notify_local_battle_phase_started"):
-			game_ui.call("notify_local_battle_phase_started")
+		if game_ui != null:
+			game_ui.notify_local_battle_phase_started()
 	else:
 		_apply_settlement_end_of_battle_effects()
-		if (
-			not _is_dead
-			and game_ui != null
-			and game_ui.has_method("notify_local_battle_phase_ended")
-		):
-			game_ui.call("notify_local_battle_phase_ended")
+		if not _is_dead and game_ui != null:
+			game_ui.notify_local_battle_phase_ended()
 		_necro_charge_stacks = 0
 
 
@@ -2445,19 +2432,14 @@ func _apply_spark_attack_effect_damage(primary_enemy: Node3D) -> void:
 
 
 func _refresh_start_area_recovery_zone() -> void:
-	var owner_node: Node = get_parent()
+	var owner_node := get_parent() as SceneFlowController
 	if owner_node == null:
 		return
-	if owner_node.has_method("get_start_area_center"):
-		var center_variant: Variant = owner_node.call("get_start_area_center")
-		if center_variant is Vector3:
-			_start_area_center = center_variant
-			_has_start_area_recovery_zone = true
-	if owner_node.has_method("get_start_area_full_recovery_radius"):
-		var radius_variant: Variant = owner_node.call("get_start_area_full_recovery_radius")
-		_start_area_full_recovery_radius_runtime = _variant_to_positive_float(
-			radius_variant, _start_area_full_recovery_radius_runtime
-		)
+	_start_area_center = owner_node.get_start_area_center()
+	_has_start_area_recovery_zone = true
+	_start_area_full_recovery_radius_runtime = _variant_to_positive_float(
+		owner_node.get_start_area_full_recovery_radius(), _start_area_full_recovery_radius_runtime
+	)
 	if _start_area_full_recovery_radius_runtime <= 0.0:
 		_start_area_full_recovery_radius_runtime = maxf(
 			start_area_full_recovery_radius_fallback, 0.0
@@ -3253,10 +3235,9 @@ func _apply_q_ray_knockback_local_if_authority(
 ) -> void:
 	if enemy_controller == null:
 		return
-	var net_ctrl: Node = _get_network_session_controller()
-	if net_ctrl != null and net_ctrl.has_method("is_local_world_authority"):
-		if not bool(net_ctrl.call("is_local_world_authority")):
-			return
+	var net_ctrl: NetSessionController = _get_network_session_controller()
+	if net_ctrl != null and not net_ctrl.is_local_world_authority():
+		return
 	if distance <= 0.0:
 		return
 	if not enemy_controller.has_method("apply_knockback"):
@@ -3384,12 +3365,12 @@ func _push_network_control_command(command_type: String, extra: Dictionary = {})
 	for key_variant in extra.keys():
 		payload[key_variant] = extra[key_variant]
 	_network_last_command = payload
-	var net_ctrl: Node = _get_network_session_controller()
+	var net_ctrl: NetSessionController = _get_network_session_controller()
 	if net_ctrl == null:
 		return
-	var mode_text: String = str(net_ctrl.get("network_mode")).strip_edges().to_lower()
-	if mode_text == "client" and net_ctrl.has_method("request_hero_control_command_from_client"):
-		net_ctrl.call("request_hero_control_command_from_client", payload.duplicate(true))
+	var mode_text: String = str(net_ctrl.network_mode).strip_edges().to_lower()
+	if mode_text == "client":
+		net_ctrl.request_hero_control_command_from_client(payload.duplicate(true))
 
 
 func get_network_command_state() -> Dictionary:
@@ -3476,12 +3457,10 @@ func _apply_enemy_damage_with_network(
 	var safe_damage: int = _sanitize_network_damage_amount(enemy, damage)
 	if safe_damage <= 0:
 		return false
-	var net_ctrl: Node = _get_network_session_controller()
+	var net_ctrl: NetSessionController = _get_network_session_controller()
 	if net_ctrl != null:
-		var mode_text: String = str(net_ctrl.get("network_mode")).strip_edges().to_lower()
+		var mode_text: String = str(net_ctrl.network_mode).strip_edges().to_lower()
 		if mode_text == "client":
-			if not net_ctrl.has_method("request_enemy_damage_from_client"):
-				return false
 			var target_path: String = ""
 			if enemy != null and is_instance_valid(enemy):
 				target_path = str(enemy.get_path())
@@ -3538,33 +3517,23 @@ func _submit_enemy_damage_with_confirmation(
 ) -> bool:
 	if enemy_controller == null:
 		return false
-	var net_ctrl: Node = _get_network_session_controller()
+	var net_ctrl: NetSessionController = _get_network_session_controller()
 	if net_ctrl != null:
-		var mode_text: String = str(net_ctrl.get("network_mode")).strip_edges().to_lower()
+		var mode_text: String = str(net_ctrl.network_mode).strip_edges().to_lower()
 		if mode_text == "client":
-			if not net_ctrl.has_method("request_enemy_damage_from_client"):
-				return false
 			var target_path: String = _build_enemy_damage_target_path(enemy_controller, enemy)
 			if target_path.is_empty():
 				return false
 			var safe_damage: int = _sanitize_network_damage_amount(enemy, damage)
 			if safe_damage <= 0:
 				return false
-			var sent_variant: Variant = net_ctrl.call(
-				"request_enemy_damage_from_client",
-				target_path,
-				safe_damage,
-				max_range,
-				source,
-				context
+			var sent_variant: Variant = net_ctrl.request_enemy_damage_from_client(
+				target_path, safe_damage, max_range, source, context
 			)
 			if not bool(sent_variant):
 				return false
-			if (
-				not pending_confirmation.is_empty()
-				and net_ctrl.has_method("get_last_sent_enemy_damage_request_seq")
-			):
-				var request_seq: int = int(net_ctrl.call("get_last_sent_enemy_damage_request_seq"))
+			if not pending_confirmation.is_empty():
+				var request_seq: int = int(net_ctrl.get_last_sent_enemy_damage_request_seq())
 				if request_seq >= 0:
 					var pending_entry: Dictionary = pending_confirmation.duplicate(true)
 					pending_entry["source"] = source.strip_edges().to_lower()
@@ -3712,37 +3681,31 @@ func _apply_confirmed_enemy_armor_shred(target_enemy: Node3D, pending: Dictionar
 	_apply_enemy_damage_bonus(target_enemy, armor_shred_percent, duration_sec, permanent)
 
 
-func _get_network_session_controller() -> Node:
+func _get_network_session_controller() -> NetSessionController:
 	var tree: SceneTree = get_tree()
 	if tree == null:
 		return null
-	return tree.get_first_node_in_group("net_session_controller")
+	return tree.get_first_node_in_group("net_session_controller") as NetSessionController
 
 
 func _notify_network_local_hero_ready() -> void:
-	var net_ctrl: Node = _get_network_session_controller()
+	var net_ctrl: NetSessionController = _get_network_session_controller()
 	if net_ctrl == null:
 		return
-	if net_ctrl.has_method("notify_local_hero_ready"):
-		net_ctrl.call("notify_local_hero_ready")
+	net_ctrl.notify_local_hero_ready()
 
 
 func begin_network_attack_lock_after_reposition(timeout_ms: int = 1200) -> void:
-	var net_ctrl: Node = _get_network_session_controller()
+	var net_ctrl: NetSessionController = _get_network_session_controller()
 	_network_attack_lock_active = false
 	_network_attack_lock_required_ack_seq = -1
 	_network_attack_lock_timeout_at_ms = 0
 	if net_ctrl == null:
 		return
-	if str(net_ctrl.get("network_mode")).strip_edges().to_lower() != "client":
+	if str(net_ctrl.network_mode).strip_edges().to_lower() != "client":
 		return
-	if (
-		not net_ctrl.has_method("get_last_sent_client_input_seq")
-		or not net_ctrl.has_method("get_last_acknowledged_client_input_seq")
-	):
-		return
-	var required_ack_seq: int = int(net_ctrl.call("get_last_sent_client_input_seq"))
-	var current_ack_seq: int = int(net_ctrl.call("get_last_acknowledged_client_input_seq"))
+	var required_ack_seq: int = int(net_ctrl.get_last_sent_client_input_seq())
+	var current_ack_seq: int = int(net_ctrl.get_last_acknowledged_client_input_seq())
 	if required_ack_seq <= current_ack_seq:
 		return
 	_network_attack_lock_active = true
@@ -3757,10 +3720,10 @@ func _update_network_attack_lock_state() -> void:
 	if _network_attack_lock_timeout_at_ms > 0 and now_ms >= _network_attack_lock_timeout_at_ms:
 		_clear_network_attack_lock()
 		return
-	var net_ctrl: Node = _get_network_session_controller()
-	if net_ctrl == null or not net_ctrl.has_method("get_last_acknowledged_client_input_seq"):
+	var net_ctrl: NetSessionController = _get_network_session_controller()
+	if net_ctrl == null:
 		return
-	var current_ack_seq: int = int(net_ctrl.call("get_last_acknowledged_client_input_seq"))
+	var current_ack_seq: int = int(net_ctrl.get_last_acknowledged_client_input_seq())
 	if current_ack_seq >= _network_attack_lock_required_ack_seq:
 		_clear_network_attack_lock()
 

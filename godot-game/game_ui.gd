@@ -1,4 +1,5 @@
 extends CanvasLayer
+class_name GameUI
 
 const HUD_STATUS_PANELS_CONTROLLER_SCRIPT := preload("res://hud_status_panels_controller.gd")
 const COMMAND_SECTION_CONTROLLER_SCRIPT := preload("res://command_section_controller.gd")
@@ -35,9 +36,9 @@ const HERO_PORTRAIT_RANGED_TEXTURE := preload("res://icons/skills/BTNRifleman.pn
 @export var net_session_controller_path: NodePath = NodePath("../NetSessionController")
 @export var debug_shop_click_logs: bool = true
 
-var _hero_ctrl: Node3D
+var _hero_ctrl: HeroController
 var _enemy_ai: Node3D
-var _net_ctrl: Node
+var _net_ctrl: NetSessionController
 var _hero_hp_bar: ProgressBar
 var _hero_hp_label: Label
 var _hero_mp_bar: ProgressBar
@@ -113,9 +114,9 @@ const HUD_MIN_SCALE := 0.5
 
 
 func _ready() -> void:
-	_hero_ctrl = get_node_or_null(hero_controller_path)
+	_hero_ctrl = get_node_or_null(hero_controller_path) as HeroController
 	_enemy_ai = get_node_or_null(enemy_ai_path)
-	_net_ctrl = get_node_or_null(net_session_controller_path)
+	_net_ctrl = get_node_or_null(net_session_controller_path) as NetSessionController
 	_get_talent_selection_controller().randomize_rng()
 	_configure_inventory_shop_controller()
 	_get_inventory_shop_controller().initialize()
@@ -180,7 +181,7 @@ func _get_inventory_shop_controller():
 
 func _resolve_net_ctrl_for_controller() -> Node:
 	if _net_ctrl == null:
-		_net_ctrl = get_node_or_null(net_session_controller_path)
+		_net_ctrl = get_node_or_null(net_session_controller_path) as NetSessionController
 	return _net_ctrl
 
 
@@ -434,13 +435,13 @@ func _update_talent_selection_flow() -> void:
 
 
 func _sync_hero_input_lock_by_ui_state() -> void:
-	if _hero_ctrl == null or not _hero_ctrl.has_method("set_input_locked_by_ui"):
+	if _hero_ctrl == null:
 		return
 	var should_lock_input: bool = (
 		_get_inventory_shop_controller().is_shop_visible()
 		or _get_talent_selection_controller().is_popup_open()
 	)
-	_hero_ctrl.call("set_input_locked_by_ui", should_lock_input)
+	_hero_ctrl.set_input_locked_by_ui(should_lock_input)
 
 
 func _on_talent_option_pressed(option_index: int) -> void:
@@ -679,7 +680,7 @@ func set_observed_enemy(enemy_state_variant: Variant) -> void:
 
 func _update_network_view_state() -> void:
 	if _net_ctrl == null:
-		_net_ctrl = get_node_or_null(net_session_controller_path)
+		_net_ctrl = get_node_or_null(net_session_controller_path) as NetSessionController
 	var result: Dictionary = _get_observe_sync_service().update_network_view_state(
 		_net_ctrl, _build_current_observe_state()
 	)

@@ -1,4 +1,5 @@
 extends Node3D
+class_name SceneFlowController
 
 const GATE_SCRIPT := preload("res://boss_gate.gd")
 const FLOOR_BALANCE_SCRIPT := preload("res://rogue_floor_balance.gd")
@@ -538,13 +539,13 @@ func _refocus_camera_to_hero() -> void:
 
 
 func _reset_ui_observe_to_self() -> void:
-	var net_ctrl := get_node_or_null(net_session_controller_path)
-	if net_ctrl != null and net_ctrl.has_method("focus_ui_on_self"):
-		net_ctrl.call("focus_ui_on_self")
+	var net_ctrl := get_node_or_null(net_session_controller_path) as NetSessionController
+	if net_ctrl != null:
+		net_ctrl.focus_ui_on_self()
 		return
-	var ui := get_node_or_null(game_ui_path)
-	if ui != null and ui.has_method("set_observed_peer"):
-		ui.call("set_observed_peer", 0)
+	var ui := get_node_or_null(game_ui_path) as GameUI
+	if ui != null:
+		ui.set_observed_peer(0)
 
 
 func _adjust_camera_height(delta_y: float) -> void:
@@ -634,8 +635,8 @@ func _process(delta: float) -> void:
 	camera.global_position += move_dir * edge_scroll_speed * intensity * delta
 
 
-func _get_hero_controller() -> Node:
-	return get_node_or_null(hero_controller_path)
+func _get_hero_controller() -> HeroController:
+	return get_node_or_null(hero_controller_path) as HeroController
 
 
 func _get_current_hero() -> Node3D:
@@ -661,11 +662,10 @@ func _set_hero_control_enabled(enabled: bool) -> void:
 
 
 func _notify_network_hero_selection_confirmed(confirmed: bool) -> void:
-	var net_ctrl := get_node_or_null(net_session_controller_path)
+	var net_ctrl := get_node_or_null(net_session_controller_path) as NetSessionController
 	if net_ctrl == null:
 		return
-	if net_ctrl.has_method("notify_local_hero_selection_confirmed"):
-		net_ctrl.call("notify_local_hero_selection_confirmed", bool(confirmed))
+	net_ctrl.notify_local_hero_selection_confirmed(bool(confirmed))
 
 
 func _show_hero_select_ui() -> void:
@@ -755,18 +755,12 @@ func _show_hero_select_ui() -> void:
 
 func _on_hero_selected(use_ranged: bool) -> void:
 	var hero_controller := _get_hero_controller()
-	if hero_controller != null and hero_controller.has_method("apply_hero_profile_by_id"):
-		hero_controller.call("apply_hero_profile_by_id", 2 if use_ranged else 1)
-	elif hero_controller != null and hero_controller.has_method("apply_hero_profile"):
+	if hero_controller != null:
+		hero_controller.apply_hero_profile_by_id(2 if use_ranged else 1)
 		if use_ranged:
-			hero_controller.call("apply_hero_profile", "远程")
+			hero_controller.select_hero_model(ranged_hero_scene, ranged_hero_name)
 		else:
-			hero_controller.call("apply_hero_profile", "近战")
-	if hero_controller != null and hero_controller.has_method("select_hero_model"):
-		if use_ranged:
-			hero_controller.call("select_hero_model", ranged_hero_scene, ranged_hero_name)
-		else:
-			hero_controller.call("select_hero_model", melee_hero_scene, melee_hero_name)
+			hero_controller.select_hero_model(melee_hero_scene, melee_hero_name)
 
 	_move_hero_to_start_point()
 	var camera := get_node_or_null(camera_path) as Camera3D
@@ -897,20 +891,20 @@ func _apply_floor_state_locally(floor_index: int, reset_units: bool) -> void:
 	)
 	if reset_units:
 		_configure_floor_randomized_hostiles(_current_floor_index)
-	var boss_controller: Node = _get_boss_controller_node()
-	if boss_controller != null and boss_controller.has_method("apply_floor_profile"):
-		boss_controller.call("apply_floor_profile", profile, reset_units)
-	var spawner: Node = get_node_or_null(NodePath("TaurenSpawner"))
+	var boss_controller: EnemyAI = _get_boss_controller_node()
+	if boss_controller != null:
+		boss_controller.apply_floor_profile(profile, reset_units)
+	var spawner: TaurenSpawner = get_node_or_null(NodePath("TaurenSpawner")) as TaurenSpawner
 	if spawner != null:
 		var should_spawn_local_mobs: bool = not (
 			_network_role == "client" and multiplayer.multiplayer_peer != null
 		)
-		if reset_units and should_spawn_local_mobs and spawner.has_method("reset_for_floor"):
-			spawner.call("reset_for_floor", profile)
-		elif reset_units and spawner.has_method("clear_units"):
-			spawner.call("clear_units")
-		elif spawner.has_method("apply_floor_profile"):
-			spawner.call("apply_floor_profile", profile)
+		if reset_units and should_spawn_local_mobs:
+			spawner.reset_for_floor(profile)
+		elif reset_units:
+			spawner.clear_units()
+		else:
+			spawner.apply_floor_profile(profile)
 	_apply_shop_availability_for_floor(_current_floor_index)
 	_refresh_floor_overlay()
 
@@ -962,16 +956,12 @@ func _process_floor_clear_resolution() -> void:
 
 
 func _are_all_hostiles_cleared() -> bool:
-	var boss_controller: Node = _get_boss_controller_node()
-	if (
-		boss_controller != null
-		and boss_controller.has_method("is_dead")
-		and not bool(boss_controller.call("is_dead"))
-	):
+	var boss_controller: EnemyAI = _get_boss_controller_node()
+	if boss_controller != null and not bool(boss_controller.is_dead()):
 		return false
-	var spawner: Node = get_node_or_null(NodePath("TaurenSpawner"))
-	if spawner != null and spawner.has_method("has_living_units"):
-		if bool(spawner.call("has_living_units")):
+	var spawner: TaurenSpawner = get_node_or_null(NodePath("TaurenSpawner")) as TaurenSpawner
+	if spawner != null:
+		if bool(spawner.has_living_units()):
 			return false
 	return true
 
@@ -997,59 +987,44 @@ func _finalize_floor_clear() -> void:
 
 
 func _apply_floor_clear_rewards() -> void:
-	var ui := get_node_or_null(game_ui_path)
+	var ui := get_node_or_null(game_ui_path) as GameUI
 	if ui == null:
 		return
-	var net_ctrl := get_node_or_null(net_session_controller_path)
-	if ui.has_method("notify_local_battle_phase_ended"):
-		ui.call("notify_local_battle_phase_ended")
+	var net_ctrl := get_node_or_null(net_session_controller_path) as NetSessionController
+	ui.notify_local_battle_phase_ended()
 	var player_ids: Array[int] = _collect_active_peer_ids_for_boss_entry()
 	for peer_id in player_ids:
 		if peer_id <= 0:
 			continue
-		if (
-			peer_id != _resolve_local_shop_owner_peer_id()
-			and ui.has_method("authority_handle_equipment_action")
-		):
+		if peer_id != _resolve_local_shop_owner_peer_id():
 			var baseline_state: Dictionary = {}
-			if net_ctrl != null and net_ctrl.has_method("get_ui_peer_equipment_state"):
-				var baseline_variant: Variant = net_ctrl.call(
-					"get_ui_peer_equipment_state", peer_id
-				)
+			if net_ctrl != null:
+				var baseline_variant: Variant = net_ctrl.get_ui_peer_equipment_state(peer_id)
 				if baseline_variant is Dictionary:
 					baseline_state = (baseline_variant as Dictionary).duplicate(true)
 			var request: Dictionary = {
 				"action": "battle_phase_ended", "request_seq": -1, "payload": {}
 			}
-			var commit_variant: Variant = ui.call(
-				"authority_handle_equipment_action", peer_id, request, baseline_state
+			var commit_variant: Variant = ui.authority_handle_equipment_action(
+				peer_id, request, baseline_state
 			)
 			if commit_variant is Dictionary:
 				var commit: Dictionary = commit_variant
 				var state_variant: Variant = commit.get("state", null)
-				if (
-					state_variant is Dictionary
-					and net_ctrl != null
-					and net_ctrl.has_method("host_override_peer_equipment_state")
-				):
-					net_ctrl.call(
-						"host_override_peer_equipment_state", peer_id, state_variant as Dictionary
+				if state_variant is Dictionary and net_ctrl != null:
+					net_ctrl.host_override_peer_equipment_state(
+						peer_id, state_variant as Dictionary
 					)
 		var reward_gold: int = _get_floor_clear_gold_reward(peer_id)
 		if reward_gold <= 0:
 			continue
-		var reward_state_variant: Variant = ui.call(
-			"authority_grant_gold_reward", peer_id, reward_gold
-		)
+		var reward_state_variant: Variant = ui.authority_grant_gold_reward(peer_id, reward_gold)
 		if (
 			reward_state_variant is Dictionary
 			and peer_id != _resolve_local_shop_owner_peer_id()
 			and net_ctrl != null
-			and net_ctrl.has_method("host_override_peer_equipment_state")
 		):
-			net_ctrl.call(
-				"host_override_peer_equipment_state", peer_id, reward_state_variant as Dictionary
-			)
+			net_ctrl.host_override_peer_equipment_state(peer_id, reward_state_variant as Dictionary)
 
 
 func _get_floor_clear_gold_reward(peer_id: int) -> int:
@@ -1066,13 +1041,13 @@ func _is_peer_alive_for_floor_reward(peer_id: int) -> bool:
 	if multiplayer.multiplayer_peer != null:
 		var local_peer_id: int = multiplayer.get_unique_id()
 		if peer_id == local_peer_id:
-			var hero_controller: Node = _get_hero_controller()
-			if hero_controller != null and hero_controller.has_method("is_dead"):
-				return not bool(hero_controller.call("is_dead"))
+			var hero_controller: HeroController = _get_hero_controller()
+			if hero_controller != null:
+				return not bool(hero_controller.is_dead())
 			return true
-	var net_ctrl := get_node_or_null(net_session_controller_path)
-	if net_ctrl != null and net_ctrl.has_method("get_ui_peer_hero_state"):
-		var hero_state_variant: Variant = net_ctrl.call("get_ui_peer_hero_state", peer_id)
+	var net_ctrl := get_node_or_null(net_session_controller_path) as NetSessionController
+	if net_ctrl != null:
+		var hero_state_variant: Variant = net_ctrl.get_ui_peer_hero_state(peer_id)
 		if hero_state_variant is Dictionary:
 			var hero_state: Dictionary = hero_state_variant
 			return not bool(hero_state.get("is_dead", false))
@@ -1081,44 +1056,42 @@ func _is_peer_alive_for_floor_reward(peer_id: int) -> bool:
 
 @rpc("authority", "call_remote", "reliable")
 func rpc_floor_clear_local_feedback() -> void:
-	var ui := get_node_or_null(game_ui_path)
-	if ui != null and ui.has_method("apply_local_floor_clear_progression"):
-		ui.call("apply_local_floor_clear_progression")
+	var ui := get_node_or_null(game_ui_path) as GameUI
+	if ui != null:
+		ui.apply_local_floor_clear_progression()
 
 
-func _get_boss_controller_node() -> Node:
+func _get_boss_controller_node() -> EnemyAI:
 	var boss_model := get_node_or_null(boss_path) as Node3D
 	if boss_model == null:
 		return null
-	return boss_model.get_parent()
+	return boss_model.get_parent() as EnemyAI
 
 
 func _configure_floor_randomized_hostiles(floor_index: int) -> void:
 	var boss_rng := RandomNumberGenerator.new()
 	boss_rng.seed = _build_battle_map_spawn_seed(floor_index, 11)
-	var boss_controller: Node = _get_boss_controller_node()
-	if boss_controller != null and boss_controller.has_method("set_spawn_origin"):
+	var boss_controller: EnemyAI = _get_boss_controller_node()
+	if boss_controller != null:
 		var boss_pos := _pick_random_battle_map_position(
 			boss_rng, maxf(battle_map_boss_spawn_margin, 0.0)
 		)
 		var boss_yaw: float = boss_rng.randf_range(-PI, PI)
-		boss_controller.call("set_spawn_origin", boss_pos, boss_yaw, true)
+		boss_controller.set_spawn_origin(boss_pos, boss_yaw, true)
 
-	var spawner := get_node_or_null(NodePath("TaurenSpawner")) as Node3D
+	var spawner := get_node_or_null(NodePath("TaurenSpawner")) as TaurenSpawner
 	if spawner != null:
 		var spawner_rng := RandomNumberGenerator.new()
 		spawner_rng.seed = _build_battle_map_spawn_seed(floor_index, 29)
 		spawner.global_position = _pick_random_battle_map_position(
 			spawner_rng, maxf(battle_map_mob_spawn_margin, 0.0)
 		)
-		if spawner.has_method("configure_spawn_rect"):
-			spawner.call(
-				"configure_spawn_rect",
-				battle_map_origin_xz,
-				_get_battle_map_size(),
-				_build_battle_map_spawn_seed(floor_index, 97),
-				maxf(battle_map_mob_spawn_margin, 0.0)
-			)
+		spawner.configure_spawn_rect(
+			battle_map_origin_xz,
+			_get_battle_map_size(),
+			_build_battle_map_spawn_seed(floor_index, 97),
+			maxf(battle_map_mob_spawn_margin, 0.0)
+		)
 
 
 func _build_battle_map_spawn_seed(floor_index: int, salt: int) -> int:
@@ -1175,9 +1148,9 @@ func _apply_shop_availability_for_floor(floor_index: int) -> void:
 			if enabled:
 				owner_peer_id = _resolve_shop_owner_peer_id_by_slot(slot_index)
 			_apply_shop_root_availability(shop_root, enabled, owner_peer_id, slot_index)
-	var ui := get_node_or_null(game_ui_path)
-	if ui != null and ui.has_method("set_shop_access_enabled"):
-		ui.call("set_shop_access_enabled", enabled)
+	var ui := get_node_or_null(game_ui_path) as GameUI
+	if ui != null:
+		ui.set_shop_access_enabled(enabled)
 
 
 func _apply_shop_root_availability(
@@ -1230,8 +1203,8 @@ func _prepare_next_floor_locally(next_floor_index: int) -> void:
 	_boss_battle_started = false
 	_awaiting_floor_clear = false
 	var hero_controller := _get_hero_controller()
-	if hero_controller != null and hero_controller.has_method("prepare_for_next_floor"):
-		hero_controller.call("prepare_for_next_floor")
+	if hero_controller != null:
+		hero_controller.prepare_for_next_floor()
 	_move_hero_to_start_point()
 	var camera := get_node_or_null(camera_path) as Camera3D
 	var hero := _get_current_hero()
@@ -1247,11 +1220,11 @@ func _complete_run_locally() -> void:
 	_boss_battle_started = false
 	_awaiting_floor_clear = false
 	var hero_controller := _get_hero_controller()
-	if hero_controller != null and hero_controller.has_method("prepare_for_next_floor"):
-		hero_controller.call("prepare_for_next_floor")
-	var spawner := get_node_or_null(NodePath("TaurenSpawner"))
-	if spawner != null and spawner.has_method("clear_units"):
-		spawner.call("clear_units")
+	if hero_controller != null:
+		hero_controller.prepare_for_next_floor()
+	var spawner := get_node_or_null(NodePath("TaurenSpawner")) as TaurenSpawner
+	if spawner != null:
+		spawner.clear_units()
 	_move_hero_to_start_point()
 	var camera := get_node_or_null(camera_path) as Camera3D
 	var hero := _get_current_hero()
@@ -1561,23 +1534,19 @@ func _reset_hero_controller_state(hero_position: Vector3) -> void:
 	if hero_controller == null:
 		return
 
-	hero_controller.set("_target_enemy", null)
-	hero_controller.set("_has_move_target", false)
-	hero_controller.set("_is_moving", false)
-	hero_controller.set("_is_attacking", false)
-	hero_controller.set("_focus_lock", false)
-	hero_controller.set("_flash_mode", false)
-	hero_controller.set("_attack_mode", false)
-	hero_controller.set("_target_position", hero_position)
+	hero_controller._target_enemy = null
+	hero_controller._has_move_target = false
+	hero_controller._is_moving = false
+	hero_controller._is_attacking = false
+	hero_controller._focus_lock = false
+	hero_controller._flash_mode = false
+	hero_controller._attack_mode = false
+	hero_controller._target_position = hero_position
 
-	if hero_controller.has_method("_stop_animation"):
-		hero_controller.call("_stop_animation")
-	if hero_controller.has_method("_push_network_control_command"):
-		hero_controller.call("_push_network_control_command", "idle", {"target_pos": hero_position})
-	if hero_controller.has_method("_notify_network_local_hero_ready"):
-		hero_controller.call("_notify_network_local_hero_ready")
-	if hero_controller.has_method("begin_network_attack_lock_after_reposition"):
-		hero_controller.call("begin_network_attack_lock_after_reposition")
+	hero_controller._stop_animation()
+	hero_controller._push_network_control_command("idle", {"target_pos": hero_position})
+	hero_controller._notify_network_local_hero_ready()
+	hero_controller.begin_network_attack_lock_after_reposition()
 
 
 func _focus_camera_on(hero_position: Vector3, camera: Camera3D) -> void:

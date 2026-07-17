@@ -1,4 +1,5 @@
 extends Node
+class_name NetSessionController
 
 const NetworkStatusDisplayService := preload("res://network_status_display_service.gd")
 const RemoteAvatarMotionService := preload("res://remote_avatar_motion_service.gd")

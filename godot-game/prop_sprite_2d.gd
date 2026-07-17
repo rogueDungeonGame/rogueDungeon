@@ -1,4 +1,5 @@
 extends Node3D
+class_name PropSprite2D
 
 @export var texture_path: String = ""
 @export var sprite_node_path: NodePath = NodePath("VisualRoot/Sprite3D")
