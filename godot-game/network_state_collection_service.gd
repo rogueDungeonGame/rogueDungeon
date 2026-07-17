@@ -19,7 +19,7 @@ func extract_inventory_from_hero_controller(hero_controller: Node) -> Array:
 
 func collect_local_hero_base_state(
 	hero: Node3D,
-	hero_controller: Node,
+	hero_controller: HeroController,
 	int_from_variant_fn: Callable,
 	float_from_variant_fn: Callable,
 	bool_from_variant_fn: Callable,
@@ -75,18 +75,11 @@ func collect_local_hero_base_state(
 		state["hero_selected"] = _call_bool(
 			bool_from_variant_fn, [hero_controller.get("hero_selection_confirmed"), false], false
 		)
-		if hero_controller.has_method("get_hp_bar_anchor_height"):
-			state["hp_bar_anchor_height"] = _call_float(
-				float_from_variant_fn, [hero_controller.call("get_hp_bar_anchor_height"), 0.0], 0.0
-			)
-		if hero_controller.has_method("get_collision_profile_id"):
-			state["collision_profile_id"] = str(hero_controller.call("get_collision_profile_id"))
-		if hero_controller.has_method("get_projectile_origin_global_position"):
-			var projectile_origin_variant: Variant = hero_controller.call(
-				"get_projectile_origin_global_position"
-			)
-			if projectile_origin_variant is Vector3:
-				state["projectile_origin_pos"] = projectile_origin_variant
+		state["hp_bar_anchor_height"] = _call_float(
+			float_from_variant_fn, [hero_controller.get_hp_bar_anchor_height(), 0.0], 0.0
+		)
+		state["collision_profile_id"] = str(hero_controller.get_collision_profile_id())
+		state["projectile_origin_pos"] = hero_controller.get_projectile_origin_global_position()
 		state["is_transformed"] = _call_bool(
 			bool_from_variant_fn, [hero_controller.get("_is_transformed"), false], false
 		)
@@ -171,36 +164,28 @@ func collect_local_hero_base_state(
 		state["mana_regen_per_second"] = _call_float(
 			float_from_variant_fn, [hero_controller.get("mana_regen_per_second"), 0.0], 0.0
 		)
-		if hero_controller.has_method("get_necromancy_sync_state"):
-			var necro_variant: Variant = hero_controller.call("get_necromancy_sync_state")
-			if necro_variant is Dictionary:
-				state["necromancy"] = (necro_variant as Dictionary).duplicate(true)
-		if hero_controller.has_method("get_battle_banner_sync_state"):
-			var banner_variant: Variant = hero_controller.call("get_battle_banner_sync_state")
-			if banner_variant is Dictionary:
-				state["battle_banner"] = (banner_variant as Dictionary).duplicate(true)
-		if hero_controller.has_method("get_battle_prep_sync_state"):
-			var battle_prep_variant: Variant = hero_controller.call("get_battle_prep_sync_state")
-			if battle_prep_variant is Dictionary:
-				state["battle_prep"] = (battle_prep_variant as Dictionary).duplicate(true)
-		if hero_controller.has_method("get_coin_sync_state"):
-			var coin_variant: Variant = hero_controller.call("get_coin_sync_state")
-			if coin_variant is Dictionary:
-				state["coin"] = (coin_variant as Dictionary).duplicate(true)
-		if hero_controller.has_method("is_dead"):
-			state["is_dead"] = bool(hero_controller.call("is_dead"))
-		else:
-			state["is_dead"] = false
-		if hero_controller.has_method("get_network_command_state"):
-			var command_state_variant: Variant = hero_controller.call("get_network_command_state")
-			if (
-				sanitize_peer_hero_command_fn != null
-				and sanitize_peer_hero_command_fn.is_valid()
-				and command_state_variant is Dictionary
-			):
-				state["command_bus"] = sanitize_peer_hero_command_fn.call(
-					command_state_variant as Dictionary
-				)
+		var necro_variant: Variant = hero_controller.get_necromancy_sync_state()
+		if necro_variant is Dictionary:
+			state["necromancy"] = (necro_variant as Dictionary).duplicate(true)
+		var banner_variant: Variant = hero_controller.get_battle_banner_sync_state()
+		if banner_variant is Dictionary:
+			state["battle_banner"] = (banner_variant as Dictionary).duplicate(true)
+		var battle_prep_variant: Variant = hero_controller.get_battle_prep_sync_state()
+		if battle_prep_variant is Dictionary:
+			state["battle_prep"] = (battle_prep_variant as Dictionary).duplicate(true)
+		var coin_variant: Variant = hero_controller.get_coin_sync_state()
+		if coin_variant is Dictionary:
+			state["coin"] = (coin_variant as Dictionary).duplicate(true)
+		state["is_dead"] = bool(hero_controller.is_dead())
+		var command_state_variant: Variant = hero_controller.get_network_command_state()
+		if (
+			sanitize_peer_hero_command_fn != null
+			and sanitize_peer_hero_command_fn.is_valid()
+			and command_state_variant is Dictionary
+		):
+			state["command_bus"] = sanitize_peer_hero_command_fn.call(
+				command_state_variant as Dictionary
+			)
 
 	var anim_player: AnimationPlayer = (
 		hero.find_child("AnimationPlayer", true, false) as AnimationPlayer
@@ -213,7 +198,7 @@ func collect_local_hero_base_state(
 
 
 func collect_local_equipment_state(
-	hero_controller: Node, ui: Node, int_from_variant_fn: Callable
+	hero_controller: HeroController, ui: GameUI, int_from_variant_fn: Callable
 ) -> Dictionary:
 	var state: Dictionary = {}
 	if hero_controller != null:
@@ -226,18 +211,17 @@ func collect_local_equipment_state(
 		state["shop_level"] = _call_int(int_from_variant_fn, [ui.get("_shop_level"), 1], 1)
 		state["shop_offer_ids"] = extract_int_array(ui.get("_shop_offered"))
 		state["destroy_mode"] = bool(ui.get("_destroy_mode"))
-		if ui.has_method("get_local_equipment_runtime_state"):
-			var runtime_variant: Variant = ui.call("get_local_equipment_runtime_state")
-			if runtime_variant is Dictionary:
-				var runtime_state: Dictionary = runtime_variant
-				state["inventory_meta"] = runtime_state.get("inventory_meta", [])
-				state["destroy_faction_state"] = runtime_state.get("destroy_faction_state", {})
-				state["coin_faction_state"] = runtime_state.get("coin_faction_state", {})
+		var runtime_variant: Variant = ui.get_local_equipment_runtime_state()
+		if runtime_variant is Dictionary:
+			var runtime_state: Dictionary = runtime_variant
+			state["inventory_meta"] = runtime_state.get("inventory_meta", [])
+			state["destroy_faction_state"] = runtime_state.get("destroy_faction_state", {})
+			state["coin_faction_state"] = runtime_state.get("coin_faction_state", {})
 	return state
 
 
 func collect_boss_state(
-	boss_controller: Node,
+	boss_controller: EnemyAI,
 	build_network_boss_state_fn: Callable,
 	int_from_variant_fn: Callable,
 	_float_from_variant_fn: Callable,
@@ -245,10 +229,9 @@ func collect_boss_state(
 ) -> Dictionary:
 	if boss_controller == null:
 		return {}
-	if boss_controller.has_method("export_network_state"):
-		var exported_variant: Variant = boss_controller.call("export_network_state")
-		if exported_variant is Dictionary:
-			return _call_dict(build_network_boss_state_fn, [exported_variant])
+	var exported_variant: Variant = boss_controller.export_network_state()
+	if exported_variant is Dictionary:
+		return _call_dict(build_network_boss_state_fn, [exported_variant])
 	var state: Dictionary = {}
 	var boss_model_variant: Variant = boss_controller.get("_enemy")
 	if boss_model_variant is Node3D:
@@ -267,9 +250,10 @@ func collect_boss_state(
 func collect_mob_states_from_node(node: Node, build_network_mob_state_fn: Callable) -> Array:
 	if node == null:
 		return []
+	# ponytail: node 是 TaurenSpawner 或 SummonedUnitManager，二型多态，保留动态探测
 	if not node.has_method("collect_network_states"):
 		return []
-	var states_variant: Variant = node.call("collect_network_states")
+	var states_variant: Variant = node.collect_network_states()
 	if not (states_variant is Array):
 		return []
 	var filtered_states: Array = []
@@ -298,7 +282,7 @@ func collect_breakable_states(
 		if breakable_node == null:
 			continue
 		if breakable_node.has_method("export_network_state"):
-			var exported_variant: Variant = breakable_node.call("export_network_state")
+			var exported_variant: Variant = breakable_node.export_network_state()
 			if exported_variant is Dictionary:
 				var exported_state: Dictionary = (exported_variant as Dictionary).duplicate(true)
 				if not exported_state.has("id"):
@@ -321,7 +305,7 @@ func build_breakable_fallback_state(
 	var state: Dictionary = {}
 	var has_syncable_field: bool = false
 	if node.has_method("is_dead"):
-		state["dead"] = bool(node.call("is_dead"))
+		state["dead"] = bool(node.is_dead())
 		has_syncable_field = true
 	if _call_bool(object_has_property_fn, [node, "current_hp"], false):
 		state["hp"] = _call_int(int_from_variant_fn, [node.get("current_hp"), 0], 0)

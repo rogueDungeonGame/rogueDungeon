@@ -108,8 +108,7 @@ func _spawn_units(
 		_apply_profile_to_unit(unit)
 		unit.setup_unit(model_scene, spawn_pos, unit_scale)
 		add_child(unit)
-		if unit.has_method("set_network_authority"):
-			unit.call("set_network_authority", _network_authority_enabled)
+		unit.set_network_authority(_network_authority_enabled)
 
 
 func _pick_spawn_position_deterministic(
@@ -229,8 +228,7 @@ func set_network_authority(enabled: bool) -> void:
 		var unit: TaurenUnitAI = child as TaurenUnitAI
 		if unit == null:
 			continue
-		if unit.has_method("set_network_authority"):
-			unit.call("set_network_authority", enabled)
+		unit.set_network_authority(enabled)
 
 
 func configure_spawn_rect(
@@ -249,8 +247,7 @@ func apply_floor_profile(profile: Dictionary) -> void:
 		var unit: TaurenUnitAI = child as TaurenUnitAI
 		if unit == null:
 			continue
-		if unit.has_method("apply_floor_profile"):
-			unit.call("apply_floor_profile", _floor_profile)
+		unit.apply_floor_profile(_floor_profile)
 
 
 func reset_for_floor(profile: Dictionary) -> void:
@@ -273,7 +270,7 @@ func has_living_units() -> bool:
 		var unit: TaurenUnitAI = child as TaurenUnitAI
 		if unit == null:
 			continue
-		if unit.has_method("is_dead") and not bool(unit.call("is_dead")):
+		if not unit.is_dead():
 			return true
 	return false
 
@@ -284,7 +281,7 @@ func get_living_unit_count() -> int:
 		var unit: TaurenUnitAI = child as TaurenUnitAI
 		if unit == null:
 			continue
-		if unit.has_method("is_dead") and not bool(unit.call("is_dead")):
+		if not unit.is_dead():
 			count += 1
 	return count
 
@@ -295,10 +292,9 @@ func collect_network_states() -> Array:
 		var unit: TaurenUnitAI = child as TaurenUnitAI
 		if unit == null:
 			continue
-		if unit.has_method("export_network_state"):
-			var state_variant: Variant = unit.call("export_network_state")
-			if state_variant is Dictionary:
-				states.append(state_variant)
+		var state_variant: Variant = unit.export_network_state()
+		if state_variant is Dictionary:
+			states.append(state_variant)
 	return states
 
 
@@ -332,14 +328,12 @@ func apply_network_states(states: Array, is_partial: bool = false) -> void:
 				spawned.name = unit_id
 				spawned.setup_unit(_loaded_model_scene, spawn_pos, unit_scale)
 				add_child(spawned)
-				if spawned.has_method("set_network_authority"):
-					spawned.call("set_network_authority", _network_authority_enabled)
+				spawned.set_network_authority(_network_authority_enabled)
 				unit_ref = spawned
 				units_by_id[unit_id] = spawned
 		if unit_ref == null:
 			continue
-		if unit_ref.has_method("apply_network_state"):
-			unit_ref.call("apply_network_state", state)
+		unit_ref.apply_network_state(state)
 	_sync_spawn_serial_from_existing_units()
 
 	# 仅在完整快照时清理残留单位，避免分片快照误删。

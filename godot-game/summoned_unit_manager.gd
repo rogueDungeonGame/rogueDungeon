@@ -45,9 +45,7 @@ func collect_network_states() -> Array:
 		var unit: TaurenUnitAI = _summoned_units[summon_id] as TaurenUnitAI
 		if unit == null or not is_instance_valid(unit):
 			continue
-		if not unit.has_method("export_network_state"):
-			continue
-		var state_variant: Variant = unit.call("export_network_state")
+		var state_variant: Variant = unit.export_network_state()
 		if not (state_variant is Dictionary):
 			continue
 		var state: Dictionary = (state_variant as Dictionary).duplicate(true)
@@ -72,8 +70,7 @@ func apply_network_states(states: Array, is_partial: bool = false) -> void:
 			unit = _instantiate_client_summon(summon_id, summon_kind, state)
 			if unit == null:
 				continue
-		if unit.has_method("apply_network_state"):
-			unit.call("apply_network_state", state)
+		unit.apply_network_state(state)
 	if is_partial:
 		return
 	for summon_id_variant in _summoned_units.keys():
@@ -87,9 +84,9 @@ func apply_network_states(states: Array, is_partial: bool = false) -> void:
 
 
 func _is_authoritative() -> bool:
-	var net_ctrl: Node = get_node_or_null(net_session_controller_path)
-	if net_ctrl != null and net_ctrl.has_method("is_local_world_authority"):
-		return bool(net_ctrl.call("is_local_world_authority"))
+	var net_ctrl := get_node_or_null(net_session_controller_path) as NetSessionController
+	if net_ctrl != null:
+		return bool(net_ctrl.is_local_world_authority())
 	if multiplayer.multiplayer_peer == null:
 		return true
 	return multiplayer.is_server()
@@ -197,24 +194,19 @@ func _collect_authoritative_sources() -> Array:
 	var local_source: Dictionary = _build_local_source()
 	if not local_source.is_empty():
 		sources.append(local_source)
-	var net_ctrl: Node = get_node_or_null(net_session_controller_path)
+	var net_ctrl := get_node_or_null(net_session_controller_path) as NetSessionController
 	if net_ctrl == null:
 		return sources
-	if not net_ctrl.has_method("get_synced_peer_ids"):
-		return sources
 	var local_peer_id: int = 0
-	if net_ctrl.has_method("get_ui_self_peer_id"):
-		local_peer_id = int(net_ctrl.call("get_ui_self_peer_id"))
-	var peer_ids_variant: Variant = net_ctrl.call("get_synced_peer_ids")
+	local_peer_id = int(net_ctrl.get_ui_self_peer_id())
+	var peer_ids_variant: Variant = net_ctrl.get_synced_peer_ids()
 	if not (peer_ids_variant is Array):
 		return sources
 	for peer_id_variant in peer_ids_variant:
 		var peer_id: int = int(peer_id_variant)
 		if peer_id <= 0 or peer_id == local_peer_id:
 			continue
-		if not net_ctrl.has_method("get_ui_peer_hero_state"):
-			continue
-		var hero_state_variant: Variant = net_ctrl.call("get_ui_peer_hero_state", peer_id)
+		var hero_state_variant: Variant = net_ctrl.get_ui_peer_hero_state(peer_id)
 		if not (hero_state_variant is Dictionary):
 			continue
 		var hero_state: Dictionary = hero_state_variant as Dictionary
@@ -260,7 +252,7 @@ func _collect_authoritative_sources() -> Array:
 
 
 func _build_local_source() -> Dictionary:
-	var hero_ctrl: Node = get_node_or_null(hero_controller_path)
+	var hero_ctrl := get_node_or_null(hero_controller_path) as HeroController
 	if hero_ctrl == null:
 		return {}
 	var hero_variant: Variant = hero_ctrl.get("_hero")
@@ -270,20 +262,17 @@ func _build_local_source() -> Dictionary:
 	if hero == null or not is_instance_valid(hero):
 		return {}
 	var necro_state: Dictionary = {}
-	if hero_ctrl.has_method("get_necromancy_sync_state"):
-		var necro_variant: Variant = hero_ctrl.call("get_necromancy_sync_state")
-		if necro_variant is Dictionary:
-			necro_state = (necro_variant as Dictionary).duplicate(true)
+	var necro_variant: Variant = hero_ctrl.get_necromancy_sync_state()
+	if necro_variant is Dictionary:
+		necro_state = (necro_variant as Dictionary).duplicate(true)
 	var battle_prep_state: Dictionary = {}
-	if hero_ctrl.has_method("get_battle_prep_sync_state"):
-		var battle_prep_variant: Variant = hero_ctrl.call("get_battle_prep_sync_state")
-		if battle_prep_variant is Dictionary:
-			battle_prep_state = (battle_prep_variant as Dictionary).duplicate(true)
+	var battle_prep_variant: Variant = hero_ctrl.get_battle_prep_sync_state()
+	if battle_prep_variant is Dictionary:
+		battle_prep_state = (battle_prep_variant as Dictionary).duplicate(true)
 	var coin_state: Dictionary = {}
-	if hero_ctrl.has_method("get_coin_sync_state"):
-		var coin_variant: Variant = hero_ctrl.call("get_coin_sync_state")
-		if coin_variant is Dictionary:
-			coin_state = (coin_variant as Dictionary).duplicate(true)
+	var coin_variant: Variant = hero_ctrl.get_coin_sync_state()
+	if coin_variant is Dictionary:
+		coin_state = (coin_variant as Dictionary).duplicate(true)
 	if (
 		_get_total_battle_prep_count(necro_state, battle_prep_state) <= 0
 		and maxi(int(coin_state.get("revenge_spirit_count", 0)), 0) <= 0
@@ -293,8 +282,7 @@ func _build_local_source() -> Dictionary:
 	if multiplayer.multiplayer_peer != null:
 		local_peer_id = multiplayer.get_unique_id()
 	var is_dead: bool = false
-	if hero_ctrl.has_method("is_dead"):
-		is_dead = bool(hero_ctrl.call("is_dead"))
+	is_dead = bool(hero_ctrl.is_dead())
 	var source: Dictionary = {
 		"source_id": "peer_%d" % local_peer_id,
 		"peer_id": local_peer_id,
@@ -323,16 +311,11 @@ func _is_source_in_battle_phase(source: Dictionary) -> bool:
 	var pos_variant: Variant = source.get("position", null)
 	if not (pos_variant is Vector3):
 		return false
-	var scene_flow: Node = get_node_or_null(scene_flow_controller_path)
+	var scene_flow := get_node_or_null(scene_flow_controller_path) as SceneFlowController
 	if scene_flow == null:
 		return true
-	if (
-		not scene_flow.has_method("get_start_area_center")
-		or not scene_flow.has_method("get_start_area_full_recovery_radius")
-	):
-		return true
-	var center_variant: Variant = scene_flow.call("get_start_area_center")
-	var radius_variant: Variant = scene_flow.call("get_start_area_full_recovery_radius")
+	var center_variant: Variant = scene_flow.get_start_area_center()
+	var radius_variant: Variant = scene_flow.get_start_area_full_recovery_radius()
 	if not (center_variant is Vector3):
 		return true
 	var center: Vector3 = center_variant
@@ -488,7 +471,7 @@ func _process_special_summon_runtime(
 		return
 	if unit == null or not is_instance_valid(unit):
 		return
-	if not unit.has_method("is_dead") or not bool(unit.call("is_dead")):
+	if not unit.is_dead():
 		return
 	if bool(unit.get_meta("reward_granted", false)):
 		return
@@ -505,19 +488,17 @@ func _process_special_summon_runtime(
 
 func _collect_reward_peer_ids(owner_peer_id: int) -> Array[int]:
 	var ids: Array[int] = []
-	var net_ctrl: Node = get_node_or_null(net_session_controller_path)
+	var net_ctrl := get_node_or_null(net_session_controller_path) as NetSessionController
 	if net_ctrl != null:
-		if net_ctrl.has_method("get_ui_self_peer_id"):
-			var self_peer_id: int = int(net_ctrl.call("get_ui_self_peer_id"))
-			if self_peer_id > 0 and not ids.has(self_peer_id):
-				ids.append(self_peer_id)
-		if net_ctrl.has_method("get_synced_peer_ids"):
-			var peer_ids_variant: Variant = net_ctrl.call("get_synced_peer_ids")
-			if peer_ids_variant is Array:
-				for peer_id_variant in peer_ids_variant:
-					var peer_id: int = int(peer_id_variant)
-					if peer_id > 0 and not ids.has(peer_id):
-						ids.append(peer_id)
+		var self_peer_id: int = int(net_ctrl.get_ui_self_peer_id())
+		if self_peer_id > 0 and not ids.has(self_peer_id):
+			ids.append(self_peer_id)
+		var peer_ids_variant: Variant = net_ctrl.get_synced_peer_ids()
+		if peer_ids_variant is Array:
+			for peer_id_variant in peer_ids_variant:
+				var peer_id: int = int(peer_id_variant)
+				if peer_id > 0 and not ids.has(peer_id):
+					ids.append(peer_id)
 	if owner_peer_id > 0 and not ids.has(owner_peer_id):
 		ids.append(owner_peer_id)
 	if ids.is_empty():
@@ -528,18 +509,18 @@ func _collect_reward_peer_ids(owner_peer_id: int) -> Array[int]:
 func _grant_gold_reward_to_peer(peer_id: int, amount: int) -> void:
 	if peer_id <= 0 or amount <= 0:
 		return
-	var ui: Node = get_node_or_null(game_ui_path)
-	if ui == null or not ui.has_method("authority_grant_gold_reward"):
+	var ui := get_node_or_null(game_ui_path) as GameUI
+	if ui == null:
 		return
-	var updated_state_variant: Variant = ui.call("authority_grant_gold_reward", peer_id, amount)
+	var updated_state_variant: Variant = ui.authority_grant_gold_reward(peer_id, amount)
 	if not (updated_state_variant is Dictionary):
 		return
 	var updated_state: Dictionary = updated_state_variant as Dictionary
 	if updated_state.is_empty():
 		return
-	var net_ctrl: Node = get_node_or_null(net_session_controller_path)
-	if net_ctrl != null and net_ctrl.has_method("host_override_peer_equipment_state"):
-		net_ctrl.call("host_override_peer_equipment_state", peer_id, updated_state)
+	var net_ctrl := get_node_or_null(net_session_controller_path) as NetSessionController
+	if net_ctrl != null:
+		net_ctrl.host_override_peer_equipment_state(peer_id, updated_state)
 
 
 func _instantiate_client_summon(
@@ -574,8 +555,7 @@ func _instantiate_client_summon(
 	unit.setup_unit(
 		_get_visual_scene_for_kind(summon_kind), pos, _get_visual_scale_for_kind(summon_kind)
 	)
-	if unit.has_method("set_network_authority"):
-		unit.call("set_network_authority", false)
+	unit.set_network_authority(false)
 	_summoned_units[summon_id] = unit
 	return unit
 
@@ -605,8 +585,7 @@ func _spawn_or_configure_authoritative_unit(
 			spawn_pos,
 			_get_visual_scale_for_kind(summon_kind)
 		)
-		if unit.has_method("set_network_authority"):
-			unit.call("set_network_authority", true)
+		unit.set_network_authority(true)
 		_summoned_units[summon_id] = unit
 		return
 	_apply_runtime_config_to_unit(unit, summon_kind, source, anchor_node, summon_id)
@@ -816,9 +795,8 @@ func _set_unit_hp_scaled(unit: TaurenUnitAI, new_max_hp: int) -> void:
 	var next_hp: int = clampi(int(round(float(safe_max_hp) * hp_ratio)), 0, safe_max_hp)
 	if current_hp <= 0:
 		next_hp = safe_max_hp
-	unit.set("_current_hp", next_hp)
-	if unit.has_method("_update_hp_bar"):
-		unit.call("_update_hp_bar")
+	unit._current_hp = next_hp
+	unit._update_hp_bar()
 
 
 func _extract_slot_index_from_id(summon_id: String) -> int:

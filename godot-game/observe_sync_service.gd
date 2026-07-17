@@ -82,7 +82,9 @@ func apply_observed_enemy(current_state: Dictionary, enemy_state_variant: Varian
 	}
 
 
-func update_network_view_state(net_ctrl: Node, current_state: Dictionary) -> Dictionary:
+func update_network_view_state(
+	net_ctrl: NetSessionController, current_state: Dictionary
+) -> Dictionary:
 	var next_state: Dictionary = _copy_state(current_state)
 	var clear_observed_peer: bool = false
 
@@ -95,10 +97,7 @@ func update_network_view_state(net_ctrl: Node, current_state: Dictionary) -> Dic
 			"clear_observed_peer": clear_observed_peer,
 		}
 
-	if net_ctrl.has_method("get_ui_self_peer_id"):
-		next_state["self_peer_id"] = int(net_ctrl.call("get_ui_self_peer_id"))
-	else:
-		next_state["self_peer_id"] = 0
+	next_state["self_peer_id"] = int(net_ctrl.get_ui_self_peer_id())
 
 	if (
 		_bool_from_variant(next_state.get("observing_boss", false), false)
@@ -131,15 +130,11 @@ func update_network_view_state(net_ctrl: Node, current_state: Dictionary) -> Dic
 		}
 
 	var observed_remote_hero_state: Dictionary = {}
-	if net_ctrl.has_method("get_ui_peer_hero_state"):
-		var hero_state_variant: Variant = net_ctrl.call("get_ui_peer_hero_state", observed_peer_id)
-		observed_remote_hero_state = _dict_copy(hero_state_variant)
-	var observed_remote_equipment_state: Dictionary = {}
-	if net_ctrl.has_method("get_ui_peer_equipment_state"):
-		var equip_state_variant: Variant = net_ctrl.call(
-			"get_ui_peer_equipment_state", observed_peer_id
-		)
-		observed_remote_equipment_state = _dict_copy(equip_state_variant)
+	var hero_state_variant: Variant = net_ctrl.get_ui_peer_hero_state(observed_peer_id)
+	observed_remote_hero_state = _dict_copy(hero_state_variant)
+	var observed_remote_equipment_state: Dictionary = _dict_copy(
+		net_ctrl.get_ui_peer_equipment_state(observed_peer_id)
+	)
 	next_state["observed_remote_hero_state"] = observed_remote_hero_state
 	next_state["observed_remote_equipment_state"] = observed_remote_equipment_state
 	if observed_remote_hero_state.is_empty() and observed_remote_equipment_state.is_empty():
@@ -151,7 +146,7 @@ func update_network_view_state(net_ctrl: Node, current_state: Dictionary) -> Dic
 
 
 func fetch_local_authority_equipment_state(
-	net_ctrl: Node, observing_remote: bool, self_peer_id: int
+	net_ctrl: NetSessionController, observing_remote: bool, self_peer_id: int
 ) -> Dictionary:
 	if net_ctrl == null:
 		return {}
@@ -159,12 +154,10 @@ func fetch_local_authority_equipment_state(
 		return {}
 	if self_peer_id <= 0:
 		return {}
-	var net_mode: String = str(net_ctrl.get("network_mode")).strip_edges().to_lower()
+	var net_mode: String = str(net_ctrl.network_mode).strip_edges().to_lower()
 	if net_mode != "client":
 		return {}
-	if not net_ctrl.has_method("get_ui_peer_equipment_state"):
-		return {}
-	var state_variant: Variant = net_ctrl.call("get_ui_peer_equipment_state", self_peer_id)
+	var state_variant: Variant = net_ctrl.get_ui_peer_equipment_state(self_peer_id)
 	return _dict_copy(state_variant)
 
 
