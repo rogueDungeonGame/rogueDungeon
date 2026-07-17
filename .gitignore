@@ -51,3 +51,6 @@ Thumbs.db
 # AI asset generation intermediates
 generated_assets/
 design-mockups/
+
+# GdUnit4 测试报告
+godot-game/reports/

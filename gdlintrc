@@ -1,0 +1,15 @@
+# ponytail: 存量代码基线配置 —— 先保证 lint 常绿，规则随重构逐步收紧
+disable:
+  # 245 处存量违规，成员声明顺序不影响正确性，重构到哪个文件顺手修哪个
+  - class-definitions-order
+  # 已知的 God Object 债务（hero_controller 等 6 个文件），拆完后恢复此规则
+  - max-file-lines
+  # 存量长函数的产物，拆 God Object 时一并解决
+  - max-returns
+  - function-arguments-number
+  - max-public-methods
+  # 代码行长由 gdformat 强制（100）；剩余违规全是着色器/文案字符串字面量，拆无益
+  - max-line-length
+excluded_directories: !!set
+  .git: null
+  addons: null
