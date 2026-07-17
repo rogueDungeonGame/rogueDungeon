@@ -160,10 +160,11 @@ func _bind_runtime_after_model_ready() -> void:
 	_animation_player = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	_resolve_animations()
 	_play_idle_animation()
-	_push_network_control_command("idle", {
-		"target_pos": global_position
-	})
-	if _animation_player != null and not _animation_player.animation_finished.is_connected(_on_animation_finished):
+	_push_network_control_command("idle", {"target_pos": global_position})
+	if (
+		_animation_player != null
+		and not _animation_player.animation_finished.is_connected(_on_animation_finished)
+	):
 		_animation_player.animation_finished.connect(_on_animation_finished)
 
 
@@ -203,7 +204,11 @@ func _process(delta: float) -> void:
 				_is_attacking = false
 				_push_network_control_command("idle")
 			else:
-				if _pending_idle_after_animation and _animation_player != null and _animation_player.is_playing():
+				if (
+					_pending_idle_after_animation
+					and _animation_player != null
+					and _animation_player.is_playing()
+				):
 					return
 				_stop_move_and_idle()
 		return
@@ -243,7 +248,12 @@ func _process(delta: float) -> void:
 			_start_attack()
 
 
-func apply_damage(amount: int, attacker: Node3D = null, damage_source: String = "basic_attack", hit_context: Dictionary = {}) -> void:
+func apply_damage(
+	amount: int,
+	attacker: Node3D = null,
+	damage_source: String = "basic_attack",
+	hit_context: Dictionary = {}
+) -> void:
 	if invulnerable:
 		return
 	if _is_dead:
@@ -278,10 +288,15 @@ func _get_physical_damage_multiplier() -> float:
 
 
 func get_incoming_damage_bonus_percent() -> float:
-	return maxf(_incoming_damage_bonus_temporary_percent, 0.0) + maxf(_incoming_damage_bonus_permanent_percent, 0.0)
+	return (
+		maxf(_incoming_damage_bonus_temporary_percent, 0.0)
+		+ maxf(_incoming_damage_bonus_permanent_percent, 0.0)
+	)
 
 
-func apply_incoming_damage_bonus(bonus_percent: float, duration_sec: float = 0.0, permanent: bool = false) -> void:
+func apply_incoming_damage_bonus(
+	bonus_percent: float, duration_sec: float = 0.0, permanent: bool = false
+) -> void:
 	var safe_bonus: float = maxf(bonus_percent, 0.0)
 	if safe_bonus <= 0.0:
 		return
@@ -306,7 +321,9 @@ func _apply_incoming_damage_bonus_from_context(hit_context: Dictionary) -> void:
 func _update_incoming_damage_bonus_runtime(delta: float) -> void:
 	if _incoming_damage_bonus_temporary_percent <= 0.0 and _incoming_damage_bonus_time_left <= 0.0:
 		return
-	_incoming_damage_bonus_time_left = maxf(_incoming_damage_bonus_time_left - maxf(delta, 0.0), 0.0)
+	_incoming_damage_bonus_time_left = maxf(
+		_incoming_damage_bonus_time_left - maxf(delta, 0.0), 0.0
+	)
 	if _incoming_damage_bonus_time_left <= 0.0:
 		_incoming_damage_bonus_temporary_percent = 0.0
 
@@ -315,8 +332,28 @@ func apply_floor_profile(profile: Dictionary) -> void:
 	_cache_base_progression_stats()
 	if profile.is_empty():
 		return
-	max_hp = maxi(int(round(float(_base_progression_stats.get("max_hp", max_hp)) * float(profile.get("mob_hp_multiplier", 1.0)))), 1)
-	damage_per_hit = maxi(int(round(float(_base_progression_stats.get("damage_per_hit", damage_per_hit)) * float(profile.get("mob_damage_multiplier", 1.0)))), 1)
+	max_hp = maxi(
+		int(
+			round(
+				(
+					float(_base_progression_stats.get("max_hp", max_hp))
+					* float(profile.get("mob_hp_multiplier", 1.0))
+				)
+			)
+		),
+		1
+	)
+	damage_per_hit = maxi(
+		int(
+			round(
+				(
+					float(_base_progression_stats.get("damage_per_hit", damage_per_hit))
+					* float(profile.get("mob_damage_multiplier", 1.0))
+				)
+			)
+		),
+		1
+	)
 	armor = float(_base_progression_stats.get("armor", armor))
 	_current_hp = max_hp
 	_update_hp_bar()
@@ -356,11 +393,7 @@ func _show_damage_popup(amount: int, damage_source: String, is_critical: bool = 
 	if _hp_bar_anchor_height <= 0.0:
 		_hp_bar_anchor_height = _resolve_hp_bar_anchor_height()
 	CombatSceneUtils.spawn_damage_popup(
-		self,
-		amount,
-		_hp_bar_anchor_height,
-		_is_magic_damage_source(damage_source),
-		is_critical
+		self, amount, _hp_bar_anchor_height, _is_magic_damage_source(damage_source), is_critical
 	)
 
 
@@ -391,7 +424,9 @@ func _apply_remote_damage_popup_sync(state: Dictionary) -> void:
 		_show_damage_popup(amount, source, is_critical)
 
 
-func apply_knockback(push_direction: Vector3, distance: float, duration_sec: float = 0.2, source_priority: int = 0) -> bool:
+func apply_knockback(
+	push_direction: Vector3, distance: float, duration_sec: float = 0.2, source_priority: int = 0
+) -> bool:
 	if _is_dead:
 		return false
 	var safe_distance: float = clampf(distance, 0.0, 280.0)
@@ -421,9 +456,10 @@ func apply_knockback(push_direction: Vector3, distance: float, duration_sec: flo
 	_knockback_tween.set_trans(Tween.TRANS_LINEAR)
 	_knockback_tween.set_ease(Tween.EASE_IN_OUT)
 	_knockback_tween.tween_property(self, "global_position", to_pos, safe_duration)
-	_knockback_tween.finished.connect(func() -> void:
-		_knockback_active = false
-		_knockback_tween = null
+	_knockback_tween.finished.connect(
+		func() -> void:
+			_knockback_active = false
+			_knockback_tween = null
 	)
 	velocity = Vector3.ZERO
 	_reset_dynamic_detour_runtime()
@@ -456,10 +492,10 @@ func _retarget_to_attacker(attacker: Node3D) -> void:
 	if not _is_moving:
 		_is_moving = true
 		_play_walk_animation()
-		_push_network_control_command("chase_target", {
-			"target_path": str(attacker.get_path()),
-			"target_pos": attacker.global_position
-		})
+		_push_network_control_command(
+			"chase_target",
+			{"target_path": str(attacker.get_path()), "target_pos": attacker.global_position}
+		)
 
 
 func is_dead() -> bool:
@@ -547,14 +583,20 @@ func clear_follow_anchor() -> void:
 
 
 func _has_follow_anchor() -> bool:
-	return follow_anchor_enabled and _follow_anchor_node != null and is_instance_valid(_follow_anchor_node)
+	return (
+		follow_anchor_enabled
+		and _follow_anchor_node != null
+		and is_instance_valid(_follow_anchor_node)
+	)
 
 
 func _get_follow_anchor_target_position() -> Vector3:
 	if not _has_follow_anchor():
 		return global_position
 	var anchor_pos: Vector3 = _follow_anchor_node.global_position
-	var orbit_angle_rad: float = deg_to_rad(follow_anchor_angular_speed_deg) * float(Time.get_ticks_msec()) * 0.001
+	var orbit_angle_rad: float = (
+		deg_to_rad(follow_anchor_angular_speed_deg) * float(Time.get_ticks_msec()) * 0.001
+	)
 	var orbit_offset := Vector3(
 		cos(orbit_angle_rad) * follow_anchor_orbit_radius,
 		follow_anchor_orbit_height,
@@ -563,7 +605,7 @@ func _get_follow_anchor_target_position() -> Vector3:
 	return anchor_pos + follow_anchor_offset + orbit_offset
 
 
-func _move_toward_anchor_target(anchor_pos: Vector3, delta: float) -> void:
+func _move_toward_anchor_target(anchor_pos: Vector3, _delta: float) -> void:
 	var target_pos: Vector3 = anchor_pos
 	target_pos.y = global_position.y
 	var move_delta: Vector3 = target_pos - global_position
@@ -578,9 +620,7 @@ func _move_toward_anchor_target(anchor_pos: Vector3, delta: float) -> void:
 	if not _is_moving:
 		_is_moving = true
 		_play_walk_animation()
-		_push_network_control_command("move_to", {
-			"target_pos": target_pos
-		})
+		_push_network_control_command("move_to", {"target_pos": target_pos})
 
 
 func _is_target_dead(target: Node3D) -> bool:
@@ -627,7 +667,13 @@ func _chase_target(target_pos: Vector3, delta: float) -> void:
 		var side_vec: Vector3 = base_dir.cross(Vector3.UP)
 		if side_vec.length() > 0.001:
 			side_vec = side_vec.normalized()
-			steering_dir = (base_dir + side_vec * _dynamic_detour_side * maxf(dynamic_detour_side_strength, 0.0)).normalized()
+			steering_dir = (
+				(
+					base_dir
+					+ side_vec * _dynamic_detour_side * maxf(dynamic_detour_side_strength, 0.0)
+				)
+				. normalized()
+			)
 		_dynamic_detour_time_left = maxf(_dynamic_detour_time_left - maxf(delta, 0.0), 0.0)
 
 	var before_pos: Vector3 = global_position
@@ -651,10 +697,10 @@ func _chase_target(target_pos: Vector3, delta: float) -> void:
 		_is_moving = true
 		_play_walk_animation()
 		if _target != null and is_instance_valid(_target):
-			_push_network_control_command("chase_target", {
-				"target_path": str(_target.get_path()),
-				"target_pos": _target.global_position
-			})
+			_push_network_control_command(
+				"chase_target",
+				{"target_path": str(_target.get_path()), "target_pos": _target.global_position}
+			)
 
 
 func _update_chase_nav_target_throttled(target_pos: Vector3, force: bool = false) -> void:
@@ -685,10 +731,10 @@ func _start_attack() -> void:
 	velocity = Vector3.ZERO
 	_attack_cooldown = _get_attack_interval()
 	if _target != null and is_instance_valid(_target):
-		_push_network_control_command("attack_target", {
-			"target_path": str(_target.get_path()),
-			"target_pos": _target.global_position
-		})
+		_push_network_control_command(
+			"attack_target",
+			{"target_path": str(_target.get_path()), "target_pos": _target.global_position}
+		)
 	var attack_anim := _choose_attack_animation()
 	if _animation_player != null and attack_anim != "":
 		var anim := _animation_player.get_animation(attack_anim)
@@ -736,7 +782,9 @@ func _try_apply_damage_to_target() -> void:
 	if target_peer_id > 0:
 		var net_ctrl: Node = _get_network_session_controller()
 		if net_ctrl != null and net_ctrl.has_method("request_damage_remote_hero"):
-			net_ctrl.call("request_damage_remote_hero", target_peer_id, final_damage, false, "physical")
+			net_ctrl.call(
+				"request_damage_remote_hero", target_peer_id, final_damage, false, "physical"
+			)
 		if _is_target_dead(_target):
 			_target = _find_nearest_target()
 			return
@@ -750,7 +798,10 @@ func _on_animation_finished(_anim_name: StringName) -> void:
 		_pending_idle_after_animation = false
 		_resolve_target_after_attack_end()
 		return
-	if finished_attack and (_target == null or not is_instance_valid(_target) or _is_target_dead(_target)):
+	if (
+		finished_attack
+		and (_target == null or not is_instance_valid(_target) or _is_target_dead(_target))
+	):
 		_resolve_target_after_attack_end()
 
 
@@ -789,10 +840,10 @@ func _resolve_target_after_attack_end() -> void:
 			velocity = Vector3.ZERO
 			_is_moving = true
 			_play_walk_animation()
-			_push_network_control_command("chase_target", {
-				"target_path": str(_target.get_path()),
-				"target_pos": _target.global_position
-			})
+			_push_network_control_command(
+				"chase_target",
+				{"target_path": str(_target.get_path()), "target_pos": _target.global_position}
+			)
 			return
 		_target = null
 		if has_anchor_follow:
@@ -826,7 +877,9 @@ func _queue_idle_after_current_animation() -> void:
 	if _resolved_walk_animation != "" and current_anim_name == _resolved_walk_animation:
 		_play_idle_animation()
 		return
-	var current_anim: Animation = _animation_player.get_animation(_animation_player.current_animation)
+	var current_anim: Animation = _animation_player.get_animation(
+		_animation_player.current_animation
+	)
 	if current_anim != null and current_anim.loop_mode == Animation.LOOP_NONE:
 		_pending_idle_after_animation = true
 		return
@@ -876,14 +929,18 @@ func _resolve_animations() -> void:
 	if _animation_player == null:
 		return
 	_resolved_idle_animation = _resolve_animation(idle_animation, ["stand", "idle", "wait"])
-	_resolved_walk_animation = _resolve_animation(walk_animation, ["walk", "run", "move", "locomotion", "go"])
+	_resolved_walk_animation = _resolve_animation(
+		walk_animation, ["walk", "run", "move", "locomotion", "go"]
+	)
 	_resolved_death_animation = _resolve_animation(death_animation, ["death", "die"])
 	_resolve_attack_animations()
 	if _resolved_walk_animation == "":
 		_resolved_walk_animation = _fallback_walk_animation()
 	if _resolved_walk_animation == "" and not _warned_missing_walk:
 		_warned_missing_walk = true
-		push_warning("TaurenUnitAI 未找到行走动画，可用动画: %s" % [str(_animation_player.get_animation_list())])
+		push_warning(
+			"TaurenUnitAI 未找到行走动画，可用动画: %s" % [str(_animation_player.get_animation_list())]
+		)
 
 
 func _is_playable_animation(anim_name: String) -> bool:
@@ -959,7 +1016,12 @@ func _fallback_walk_animation() -> String:
 			continue
 		if lower.find("attack") >= 0 or lower.find("spell") >= 0 or lower.find("slam") >= 0:
 			continue
-		if lower.find("death") >= 0 or lower.find("die") >= 0 or lower.find("stand") >= 0 or lower.find("idle") >= 0:
+		if (
+			lower.find("death") >= 0
+			or lower.find("die") >= 0
+			or lower.find("stand") >= 0
+			or lower.find("idle") >= 0
+		):
 			continue
 		if not _is_playable_animation(anim_name):
 			continue
@@ -970,7 +1032,10 @@ func _fallback_walk_animation() -> String:
 func _play_idle_animation() -> void:
 	if _animation_player == null or _resolved_idle_animation == "":
 		return
-	if _animation_player.is_playing() and _animation_player.current_animation == _resolved_idle_animation:
+	if (
+		_animation_player.is_playing()
+		and _animation_player.current_animation == _resolved_idle_animation
+	):
 		return
 	var anim := _animation_player.get_animation(_resolved_idle_animation)
 	if anim != null:
@@ -981,7 +1046,10 @@ func _play_idle_animation() -> void:
 func _play_walk_animation() -> void:
 	if _animation_player == null or _resolved_walk_animation == "":
 		return
-	if _animation_player.is_playing() and _animation_player.current_animation == _resolved_walk_animation:
+	if (
+		_animation_player.is_playing()
+		and _animation_player.current_animation == _resolved_walk_animation
+	):
 		return
 	var anim := _animation_player.get_animation(_resolved_walk_animation)
 	if anim != null:
@@ -1058,9 +1126,7 @@ func _push_network_control_command(command_type: String, extra: Dictionary = {})
 		normalized_type = "idle"
 	_network_command_seq += 1
 	var payload: Dictionary = {
-		"seq": _network_command_seq,
-		"type": normalized_type,
-		"t_ms": Time.get_ticks_msec()
+		"seq": _network_command_seq, "type": normalized_type, "t_ms": Time.get_ticks_msec()
 	}
 	payload["target_pos"] = global_position
 	for key_variant in extra.keys():
@@ -1117,7 +1183,9 @@ func _refresh_hp_bar_anchor_height_and_position() -> void:
 
 
 func _sync_hp_bar_follow_and_facing() -> void:
-	CombatSceneUtils.sync_top_level_billboard_to_camera(_hp_bar, self, _hp_bar_anchor_height, get_viewport())
+	CombatSceneUtils.sync_top_level_billboard_to_camera(
+		_hp_bar, self, _hp_bar_anchor_height, get_viewport()
+	)
 
 
 func _compute_node_mesh_height(root_node: Node3D) -> float:
@@ -1186,11 +1254,17 @@ func apply_network_state(state: Dictionary) -> void:
 		_current_hp = clampi(int(state["hp"]), 0, maxi(max_hp, 1))
 	_apply_remote_damage_popup_sync(state)
 	if state.has("incoming_damage_bonus_temp_percent"):
-		_incoming_damage_bonus_temporary_percent = maxf(float(state["incoming_damage_bonus_temp_percent"]), 0.0)
+		_incoming_damage_bonus_temporary_percent = maxf(
+			float(state["incoming_damage_bonus_temp_percent"]), 0.0
+		)
 	if state.has("incoming_damage_bonus_permanent_percent"):
-		_incoming_damage_bonus_permanent_percent = maxf(float(state["incoming_damage_bonus_permanent_percent"]), 0.0)
+		_incoming_damage_bonus_permanent_percent = maxf(
+			float(state["incoming_damage_bonus_permanent_percent"]), 0.0
+		)
 	if state.has("incoming_damage_bonus_time_left"):
-		_incoming_damage_bonus_time_left = maxf(float(state["incoming_damage_bonus_time_left"]), 0.0)
+		_incoming_damage_bonus_time_left = maxf(
+			float(state["incoming_damage_bonus_time_left"]), 0.0
+		)
 	if state.has("armor"):
 		armor = float(state["armor"])
 	if state.has("dead"):
@@ -1221,7 +1295,10 @@ func _apply_network_animation_state(state: Dictionary) -> void:
 	var speed_scale: float = clampf(float(state.get("anim_speed", 1.0)), 0.05, 8.0)
 
 	if _is_dead:
-		if _resolved_death_animation != "" and _animation_player.has_animation(_resolved_death_animation):
+		if (
+			_resolved_death_animation != ""
+			and _animation_player.has_animation(_resolved_death_animation)
+		):
 			_configure_remote_animation_loop(_resolved_death_animation)
 			if String(_animation_player.current_animation) != _resolved_death_animation:
 				_animation_player.play(_resolved_death_animation, -1.0, 1.0, false)
@@ -1233,14 +1310,19 @@ func _apply_network_animation_state(state: Dictionary) -> void:
 		if fallback_attack_anim != "" and _animation_player.has_animation(fallback_attack_anim):
 			_configure_remote_animation_loop(fallback_attack_anim)
 			if String(_animation_player.current_animation) != fallback_attack_anim:
-				_animation_player.play(fallback_attack_anim, -1.0, maxf(_get_attack_speed_scale(), 0.05), false)
+				_animation_player.play(
+					fallback_attack_anim, -1.0, maxf(_get_attack_speed_scale(), 0.05), false
+				)
 			return
 	if _is_moving:
 		_play_walk_animation()
 		return
 	if desired_anim != "" and should_play and _animation_player.has_animation(desired_anim):
 		_configure_remote_animation_loop(desired_anim)
-		if not _animation_player.is_playing() or String(_animation_player.current_animation) != desired_anim:
+		if (
+			not _animation_player.is_playing()
+			or String(_animation_player.current_animation) != desired_anim
+		):
 			_animation_player.play(desired_anim)
 		_animation_player.speed_scale = speed_scale
 		return
@@ -1257,7 +1339,9 @@ func _configure_remote_animation_loop(anim_name: String) -> void:
 	var anim: Animation = _animation_player.get_animation(anim_name)
 	if anim == null:
 		return
-	var should_loop: bool = anim_name == _resolved_idle_animation or anim_name == _resolved_walk_animation
+	var should_loop: bool = (
+		anim_name == _resolved_idle_animation or anim_name == _resolved_walk_animation
+	)
 	var desired_loop_mode: int = Animation.LOOP_LINEAR if should_loop else Animation.LOOP_NONE
 	if anim.loop_mode != desired_loop_mode:
 		anim.loop_mode = desired_loop_mode

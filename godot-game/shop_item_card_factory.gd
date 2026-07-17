@@ -3,23 +3,25 @@ class_name ShopItemCardFactory
 
 
 func create_card(
-		data: Dictionary,
-		index: int,
-		can_buy: bool,
-		buy_disabled: bool,
-		ui_scale: float,
-		build_name: String,
-		build_color: Color,
-		item_level: int,
-		cost: int,
-		icon_texture: Texture2D,
-		tooltip_text: String,
-		on_buy_pressed: Callable,
-		on_hover_entered: Callable,
-		on_hover_exited: Callable
-	) -> PanelContainer:
+	data: Dictionary,
+	index: int,
+	can_buy: bool,
+	buy_disabled: bool,
+	ui_scale: float,
+	build_name: String,
+	build_color: Color,
+	item_level: int,
+	cost: int,
+	icon_texture: Texture2D,
+	tooltip_text: String,
+	on_buy_pressed: Callable,
+	on_hover_entered: Callable,
+	on_hover_exited: Callable
+) -> PanelContainer:
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(_px(148.0, ui_scale), _px(134.0 if can_buy else 118.0, ui_scale))
+	panel.custom_minimum_size = Vector2(
+		_px(148.0, ui_scale), _px(134.0 if can_buy else 118.0, ui_scale)
+	)
 	var ssb := StyleBoxFlat.new()
 	ssb.bg_color = Color(0.1, 0.08, 0.16, 1.0)
 	ssb.border_color = build_color

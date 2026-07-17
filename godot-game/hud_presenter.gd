@@ -18,15 +18,14 @@ func configure(refs: Dictionary, colors: Dictionary) -> void:
 
 
 func update(
-		hero_ctrl: Node,
-		enemy_ai: Node,
-		ui_state: Object,
-		skill_status_service: Object
-	) -> void:
+	hero_ctrl: Node, enemy_ai: Node, ui_state: Object, skill_status_service: Object
+) -> void:
 	var observing_boss: bool = _is_observing_boss(ui_state)
 	var observing_enemy: bool = _is_observing_enemy(ui_state)
 	var observing_remote: bool = _is_observing_remote(ui_state)
-	_update_hero_info(hero_ctrl, enemy_ai, ui_state, observing_boss, observing_enemy, observing_remote)
+	_update_hero_info(
+		hero_ctrl, enemy_ai, ui_state, observing_boss, observing_enemy, observing_remote
+	)
 	_update_boss_info(enemy_ai)
 	if skill_status_service != null:
 		skill_status_service.update_skill_name_labels(
@@ -40,9 +39,27 @@ func update(
 			_get_label("e_skill_name_label"),
 			_get_label("r_skill_name_label")
 		)
-		skill_status_service.update_flash_cd(hero_ctrl, observing_boss, observing_enemy, observing_remote, _get_label("flash_cd_label"))
-		skill_status_service.update_haste_cd(hero_ctrl, observing_boss, observing_enemy, observing_remote, _get_label("haste_cd_label"))
-		skill_status_service.update_e_skill_cd(hero_ctrl, observing_boss, observing_enemy, observing_remote, _get_label("e_skill_cd_label"))
+		skill_status_service.update_flash_cd(
+			hero_ctrl,
+			observing_boss,
+			observing_enemy,
+			observing_remote,
+			_get_label("flash_cd_label")
+		)
+		skill_status_service.update_haste_cd(
+			hero_ctrl,
+			observing_boss,
+			observing_enemy,
+			observing_remote,
+			_get_label("haste_cd_label")
+		)
+		skill_status_service.update_e_skill_cd(
+			hero_ctrl,
+			observing_boss,
+			observing_enemy,
+			observing_remote,
+			_get_label("e_skill_cd_label")
+		)
 		skill_status_service.update_skill_cast_masks(
 			hero_ctrl,
 			observing_boss,
@@ -52,17 +69,23 @@ func update(
 			_refs.get("skill_cd_masks", {}),
 			_refs.get("skill_cd_mask_materials", {})
 		)
-		skill_status_service.update_r_skill_status(hero_ctrl, observing_boss, observing_enemy, observing_remote, _get_label("r_skill_cd_label"))
+		skill_status_service.update_r_skill_status(
+			hero_ctrl,
+			observing_boss,
+			observing_enemy,
+			observing_remote,
+			_get_label("r_skill_cd_label")
+		)
 
 
 func _update_hero_info(
-		hero_ctrl: Node,
-		enemy_ai: Node,
-		ui_state: Object,
-		observing_boss: bool,
-		observing_enemy: bool,
-		observing_remote: bool
-	) -> void:
+	hero_ctrl: Node,
+	enemy_ai: Node,
+	ui_state: Object,
+	observing_boss: bool,
+	observing_enemy: bool,
+	observing_remote: bool
+) -> void:
 	if observing_boss:
 		_update_observed_boss_info(enemy_ai)
 		return
@@ -96,7 +119,9 @@ func _update_hero_info(
 
 	var fill_sb := hero_hp_bar.get_theme_stylebox("fill") as StyleBoxFlat
 	if fill_sb != null:
-		fill_sb.bg_color = _hp_low_color().lerp(_hp_full_color(), float(current_hp) / float(hp_max_value))
+		fill_sb.bg_color = _hp_low_color().lerp(
+			_hp_full_color(), float(current_hp) / float(hp_max_value)
+		)
 
 	var current_mp: Variant = hero_ctrl.get("current_mana")
 	var max_mp: Variant = hero_ctrl.get("max_mana")
@@ -127,7 +152,15 @@ func _update_hero_info(
 	var natural_str: int = 0
 	var natural_agi: int = 0
 	var natural_int: int = 0
-	if hero_lv != null and str_base != null and agi_base != null and int_base != null and str_growth != null and agi_growth != null and int_growth != null:
+	if (
+		hero_lv != null
+		and str_base != null
+		and agi_base != null
+		and int_base != null
+		and str_growth != null
+		and agi_growth != null
+		and int_growth != null
+	):
 		var lv_i: int = maxi(_variant_to_int(hero_lv, 1), 1)
 		natural_str = roundi(float(str_base) + float(str_growth) * float(lv_i - 1))
 		natural_agi = roundi(float(agi_base) + float(agi_growth) * float(lv_i - 1))
@@ -137,7 +170,9 @@ func _update_hero_info(
 	var attack_range: Variant = hero_ctrl.get("attack_range")
 	var attack_speed: Variant = hero_ctrl.get("attack_speed")
 	var attack_interval: Variant = hero_ctrl.get("attack_interval")
-	var cooldown_reduction_percent_total: Variant = hero_ctrl.get("cooldown_reduction_percent_total")
+	var cooldown_reduction_percent_total: Variant = hero_ctrl.get(
+		"cooldown_reduction_percent_total"
+	)
 	var passive_skill_name: Variant = hero_ctrl.get("skill_passive_name")
 	var physical_crit_chance: Variant = hero_ctrl.get("physical_crit_chance")
 	var physical_crit_multiplier: Variant = hero_ctrl.get("physical_crit_multiplier")
@@ -196,7 +231,24 @@ func _update_hero_info(
 			pcrit_mul_text = "%.2fx" % float(physical_crit_multiplier)
 		if passive_skill_name != null:
 			passive_text = str(passive_skill_name)
-		var atk_tip: String = "主属性: %s (%d)\n基础攻击: %s\n装备攻击加成: +%s\n最终攻击: %s\n攻速加成(IAS): %s\n攻击速度: %s 次/秒\n攻击间隔: %s 秒\n攻击范围: %s\n冷却减免(CDR): %s\n物理暴击率: %s\n物理暴击倍率: %s\n被动技能: %s" % [primary_attr_name, primary_attr_value, base_damage_text, equip_damage_text, dmg_text, ias_text, speed_text, interval_text, range_text, cdr_text, pcrit_text, pcrit_mul_text, passive_text]
+		var atk_tip: String = (
+			"主属性: %s (%d)\n基础攻击: %s\n装备攻击加成: +%s\n最终攻击: %s\n攻速加成(IAS): %s\n攻击速度: %s 次/秒\n攻击间隔: %s 秒\n攻击范围: %s\n冷却减免(CDR): %s\n物理暴击率: %s\n物理暴击倍率: %s\n被动技能: %s"
+			% [
+				primary_attr_name,
+				primary_attr_value,
+				base_damage_text,
+				equip_damage_text,
+				dmg_text,
+				ias_text,
+				speed_text,
+				interval_text,
+				range_text,
+				cdr_text,
+				pcrit_text,
+				pcrit_mul_text,
+				passive_text
+			]
+		)
 		_set_tooltip_if_changed(atk_label, atk_tip)
 	if _get_label("atk_speed_label") != null and attack_speed != null:
 		_get_label("atk_speed_label").text = "攻速: %.2f" % float(attack_speed)
@@ -239,18 +291,20 @@ func _update_hero_info(
 	var mp_regen: Variant = hero_ctrl.get("mana_regen_per_second")
 	if mp_regen != null and _get_label("mp_regen_label") != null:
 		_get_label("mp_regen_label").text = "回蓝: %.2f/s" % float(mp_regen)
-	_update_attribute_labels(str_val, agi_val, int_val, has_growth_data, natural_str, natural_agi, natural_int)
+	_update_attribute_labels(
+		str_val, agi_val, int_val, has_growth_data, natural_str, natural_agi, natural_int
+	)
 
 
 func _update_attribute_labels(
-		str_val: Variant,
-		agi_val: Variant,
-		int_val: Variant,
-		has_growth_data: bool,
-		natural_str: int,
-		natural_agi: int,
-		natural_int: int
-	) -> void:
+	str_val: Variant,
+	agi_val: Variant,
+	int_val: Variant,
+	has_growth_data: bool,
+	natural_str: int,
+	natural_agi: int,
+	natural_int: int
+) -> void:
 	var str_label: Label = _get_label("str_label")
 	if str_val != null and str_label != null:
 		str_label.text = "力量: %d" % _variant_to_int(str_val, 0)
@@ -262,7 +316,10 @@ func _update_attribute_labels(
 		if has_growth_data:
 			str_natural_text = str(natural_str)
 			str_equip_text = str(str_now - natural_str)
-		var str_tip: String = "每点力量提供:\n+25 生命上限\n+0.05 生命回复/秒\n\n当前力量: %d\n自然成长: %s\n装备加成: %s\n力量提供生命: +%d\n力量提供回血: +%.2f/s" % [str_now, str_natural_text, str_equip_text, str_hp_bonus, str_regen_bonus]
+		var str_tip: String = (
+			"每点力量提供:\n+25 生命上限\n+0.05 生命回复/秒\n\n当前力量: %d\n自然成长: %s\n装备加成: %s\n力量提供生命: +%d\n力量提供回血: +%.2f/s"
+			% [str_now, str_natural_text, str_equip_text, str_hp_bonus, str_regen_bonus]
+		)
 		_set_tooltip_if_changed(str_label, str_tip)
 	var agi_label: Label = _get_label("agi_label")
 	if agi_val != null and agi_label != null:
@@ -275,7 +332,10 @@ func _update_attribute_labels(
 		if has_growth_data:
 			agi_natural_text = str(natural_agi)
 			agi_equip_text = str(agi_now - natural_agi)
-		var agi_tip: String = "每点敏捷提供:\n+1%% 攻速(IAS)\n+0.14 护甲\n\n当前敏捷: %d\n自然成长: %s\n装备加成: %s\n敏捷提供攻速: +%.1f%%\n敏捷提供护甲: +%.2f" % [agi_now, agi_natural_text, agi_equip_text, agi_ias_bonus, agi_armor_bonus]
+		var agi_tip: String = (
+			"每点敏捷提供:\n+1%% 攻速(IAS)\n+0.14 护甲\n\n当前敏捷: %d\n自然成长: %s\n装备加成: %s\n敏捷提供攻速: +%.1f%%\n敏捷提供护甲: +%.2f"
+			% [agi_now, agi_natural_text, agi_equip_text, agi_ias_bonus, agi_armor_bonus]
+		)
 		_set_tooltip_if_changed(agi_label, agi_tip)
 	var int_label: Label = _get_label("int_label")
 	if int_val != null and int_label != null:
@@ -288,7 +348,10 @@ func _update_attribute_labels(
 		if has_growth_data:
 			int_natural_text = str(natural_int)
 			int_equip_text = str(int_now - natural_int)
-		var int_tip: String = "每点智力提供:\n+15 法力上限\n+0.05 法力回复/秒\n\n当前智力: %d\n自然成长: %s\n装备加成: %s\n智力提供法力: +%d\n智力提供回蓝: +%.2f/s" % [int_now, int_natural_text, int_equip_text, int_mp_bonus, int_regen_bonus]
+		var int_tip: String = (
+			"每点智力提供:\n+15 法力上限\n+0.05 法力回复/秒\n\n当前智力: %d\n自然成长: %s\n装备加成: %s\n智力提供法力: +%d\n智力提供回蓝: +%.2f/s"
+			% [int_now, int_natural_text, int_equip_text, int_mp_bonus, int_regen_bonus]
+		)
 		_set_tooltip_if_changed(int_label, int_tip)
 
 
@@ -325,7 +388,13 @@ func _update_remote_hero_info(ui_state: Object) -> void:
 	var profile_text: String = str(hero_state.get("hero_profile", ""))
 	var hero_name_label: Label = _get_label("hero_name_label")
 	if hero_name_label != null:
-		hero_name_label.text = "玩家P%d · %s" % [_get_observed_peer_id(ui_state), _resolve_hero_display_name(remote_hero_id, profile_text)]
+		hero_name_label.text = (
+			"玩家P%d · %s"
+			% [
+				_get_observed_peer_id(ui_state),
+				_resolve_hero_display_name(remote_hero_id, profile_text)
+			]
+		)
 	_update_hero_portrait(remote_hero_id, profile_text)
 
 	_update_remote_stat_labels(hero_state)
@@ -336,15 +405,31 @@ func _update_remote_stat_labels(hero_state: Dictionary) -> void:
 	_set_stat_float_label_from_state("def_label", hero_state, "armor", "护甲", "%.1f")
 	_set_stat_rounded_label_from_state("spd_label", hero_state, "move_speed", "移速")
 	_set_stat_float_label_from_state("atk_speed_label", hero_state, "attack_speed", "攻速", "%.2f")
-	_set_stat_float_label_from_state("atk_interval_label", hero_state, "attack_interval", "攻间隔", "%.2f")
+	_set_stat_float_label_from_state(
+		"atk_interval_label", hero_state, "attack_interval", "攻间隔", "%.2f"
+	)
 	_set_stat_rounded_label_from_state("atk_range_label", hero_state, "attack_range", "攻距")
-	_set_stat_float_label_from_state("cdr_label", hero_state, "cooldown_reduction_percent_total", "冷却减免", "%.1f%%")
-	_set_stat_float_label_from_state("phys_crit_rate_label", hero_state, "physical_crit_chance", "物暴率", "%.1f%%")
-	_set_stat_float_label_from_state("phys_crit_mul_label", hero_state, "physical_crit_multiplier", "物暴倍", "%.2fx")
-	_set_stat_float_label_from_state("spell_crit_rate_label", hero_state, "spell_crit_chance", "法暴率", "%.1f%%")
-	_set_stat_float_label_from_state("spell_crit_mul_label", hero_state, "spell_crit_multiplier", "法暴倍", "%.2fx")
-	_set_stat_float_label_from_state("hp_regen_label", hero_state, "hp_regen_per_second", "回血", "%.2f/s")
-	_set_stat_float_label_from_state("mp_regen_label", hero_state, "mana_regen_per_second", "回蓝", "%.2f/s")
+	_set_stat_float_label_from_state(
+		"cdr_label", hero_state, "cooldown_reduction_percent_total", "冷却减免", "%.1f%%"
+	)
+	_set_stat_float_label_from_state(
+		"phys_crit_rate_label", hero_state, "physical_crit_chance", "物暴率", "%.1f%%"
+	)
+	_set_stat_float_label_from_state(
+		"phys_crit_mul_label", hero_state, "physical_crit_multiplier", "物暴倍", "%.2fx"
+	)
+	_set_stat_float_label_from_state(
+		"spell_crit_rate_label", hero_state, "spell_crit_chance", "法暴率", "%.1f%%"
+	)
+	_set_stat_float_label_from_state(
+		"spell_crit_mul_label", hero_state, "spell_crit_multiplier", "法暴倍", "%.2fx"
+	)
+	_set_stat_float_label_from_state(
+		"hp_regen_label", hero_state, "hp_regen_per_second", "回血", "%.2f/s"
+	)
+	_set_stat_float_label_from_state(
+		"mp_regen_label", hero_state, "mana_regen_per_second", "回蓝", "%.2f/s"
+	)
 	_set_stat_int_label_from_state("str_label", hero_state, "strength", "力量")
 	_set_stat_int_label_from_state("agi_label", hero_state, "agility", "敏捷")
 	_set_stat_int_label_from_state("int_label", hero_state, "intelligence", "智力")
@@ -499,7 +584,16 @@ func _clear_hero_mp() -> void:
 
 
 func _clear_non_combat_stat_labels() -> void:
-	for key in ["cdr_label", "phys_crit_rate_label", "phys_crit_mul_label", "spell_crit_rate_label", "spell_crit_mul_label", "str_label", "agi_label", "int_label"]:
+	for key in [
+		"cdr_label",
+		"phys_crit_rate_label",
+		"phys_crit_mul_label",
+		"spell_crit_rate_label",
+		"spell_crit_mul_label",
+		"str_label",
+		"agi_label",
+		"int_label"
+	]:
 		var label: Label = _get_label(key)
 		if label == null:
 			continue
@@ -529,7 +623,9 @@ func _clear_non_combat_stat_labels() -> void:
 		mp_regen_label.text = "回蓝: -"
 
 
-func _set_stat_int_label_from_state(label_key: String, state: Dictionary, state_key: String, title: String) -> void:
+func _set_stat_int_label_from_state(
+	label_key: String, state: Dictionary, state_key: String, title: String
+) -> void:
 	var label: Label = _get_label(label_key)
 	if label == null:
 		return
@@ -539,7 +635,9 @@ func _set_stat_int_label_from_state(label_key: String, state: Dictionary, state_
 		label.text = "%s: -" % title
 
 
-func _set_stat_rounded_label_from_state(label_key: String, state: Dictionary, state_key: String, title: String) -> void:
+func _set_stat_rounded_label_from_state(
+	label_key: String, state: Dictionary, state_key: String, title: String
+) -> void:
 	var label: Label = _get_label(label_key)
 	if label == null:
 		return
@@ -549,7 +647,9 @@ func _set_stat_rounded_label_from_state(label_key: String, state: Dictionary, st
 		label.text = "%s: -" % title
 
 
-func _set_stat_float_label_from_state(label_key: String, state: Dictionary, state_key: String, title: String, format_text: String) -> void:
+func _set_stat_float_label_from_state(
+	label_key: String, state: Dictionary, state_key: String, title: String, format_text: String
+) -> void:
 	var label: Label = _get_label(label_key)
 	if label == null:
 		return
@@ -568,7 +668,12 @@ func _resolve_hero_display_name(hero_id: int, profile_text: String = "") -> Stri
 	var normalized: String = profile_text.strip_edges().to_lower()
 	if normalized == "远程" or normalized == "ranged" or normalized.find("火枪手") >= 0:
 		return "2号%s" % HERO_NAME_RANGED
-	if normalized == "近战" or normalized == "melee" or normalized.find("守望者") >= 0 or normalized.find("暗夜刺客") >= 0:
+	if (
+		normalized == "近战"
+		or normalized == "melee"
+		or normalized.find("守望者") >= 0
+		or normalized.find("暗夜刺客") >= 0
+	):
 		return "1号%s" % HERO_NAME_MELEE
 	if profile_text.strip_edges().is_empty():
 		return "未知英雄"
@@ -589,7 +694,12 @@ func _update_hero_portrait(hero_id: int, profile_text: String = "") -> void:
 			var normalized: String = profile_text.strip_edges().to_lower()
 			if normalized == "远程" or normalized == "ranged" or normalized.find("火枪手") >= 0:
 				texture = _refs.get("hero_portrait_ranged_texture", null) as Texture2D
-			elif normalized == "近战" or normalized == "melee" or normalized.find("守望者") >= 0 or normalized.find("暗夜刺客") >= 0:
+			elif (
+				normalized == "近战"
+				or normalized == "melee"
+				or normalized.find("守望者") >= 0
+				or normalized.find("暗夜刺客") >= 0
+			):
 				texture = _refs.get("hero_portrait_melee_texture", null) as Texture2D
 	portrait.texture = texture
 	portrait.visible = texture != null

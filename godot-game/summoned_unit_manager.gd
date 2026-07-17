@@ -7,9 +7,14 @@ extends Node3D
 @export var summon_unit_scene: PackedScene = preload("res://tauren_unit.tscn")
 @export var spirit_owl_visual_scene: PackedScene = preload("res://summons/spirit_owl_visual.tscn")
 @export var moon_tower_visual_scene: PackedScene = preload("res://summons/moon_tower_visual.tscn")
-@export var serpent_ward_visual_scene: PackedScene = preload("res://summons/serpent_ward_visual.tscn")
-@export var challenge_griffin_visual_scene: PackedScene = preload("res://summons/challenge_griffin_visual.tscn")
-@export var resentment_spirit_visual_scene: PackedScene = preload("res://modles/SpiritOfVengeance.before_trim.glb")
+@export
+var serpent_ward_visual_scene: PackedScene = preload("res://summons/serpent_ward_visual.tscn")
+@export var challenge_griffin_visual_scene: PackedScene = preload(
+	"res://summons/challenge_griffin_visual.tscn"
+)
+@export var resentment_spirit_visual_scene: PackedScene = preload(
+	"res://modles/SpiritOfVengeance.before_trim.glb"
+)
 
 const SUMMON_KIND_SPIRIT_OWL: String = "spirit_owl"
 const SUMMON_KIND_MOON_TOWER: String = "moon_tower"
@@ -105,7 +110,15 @@ func _update_authoritative_summons() -> void:
 			continue
 		var battle_active: bool = bool(source.get("battle_active", false))
 		if not battle_active:
-			if _source_runtime.has(source_id) and (bool((_source_runtime[source_id] as Dictionary).get("battle_active", false)) or bool((_source_runtime[source_id] as Dictionary).get("revenge_spawned", false))):
+			if (
+				_source_runtime.has(source_id)
+				and (
+					bool((_source_runtime[source_id] as Dictionary).get("battle_active", false))
+					or bool(
+						(_source_runtime[source_id] as Dictionary).get("revenge_spawned", false)
+					)
+				)
+			):
 				_deactivate_source(source_id)
 			continue
 		var anchor_node: Node3D = _get_or_create_anchor_node(source_id)
@@ -148,7 +161,14 @@ func _update_dead_source_revenge_spirit(source: Dictionary, runtime: Dictionary)
 	runtime["battle_active"] = false
 	runtime["revenge_spawned"] = true
 	runtime["unit_ids"] = [summon_id]
-	_spawn_or_configure_authoritative_unit(summon_id, SUMMON_KIND_RESENTMENT_SPIRIT, source, anchor_node, anchor_node.global_position, 0)
+	_spawn_or_configure_authoritative_unit(
+		summon_id,
+		SUMMON_KIND_RESENTMENT_SPIRIT,
+		source,
+		anchor_node,
+		anchor_node.global_position,
+		0
+	)
 
 
 func _prune_runtime_units(runtime: Dictionary, keep_kind: String = "") -> void:
@@ -209,7 +229,10 @@ func _collect_authoritative_sources() -> Array:
 		var coin_variant: Variant = hero_state.get("coin", {})
 		if coin_variant is Dictionary:
 			coin_state = coin_variant as Dictionary
-		if _get_total_battle_prep_count(necro_state, battle_prep_state) <= 0 and maxi(int(coin_state.get("revenge_spirit_count", 0)), 0) <= 0:
+		if (
+			_get_total_battle_prep_count(necro_state, battle_prep_state) <= 0
+			and maxi(int(coin_state.get("revenge_spirit_count", 0)), 0) <= 0
+		):
 			continue
 		var pos_variant: Variant = hero_state.get("pos", null)
 		if not (pos_variant is Vector3):
@@ -260,7 +283,10 @@ func _build_local_source() -> Dictionary:
 		var coin_variant: Variant = hero_ctrl.call("get_coin_sync_state")
 		if coin_variant is Dictionary:
 			coin_state = (coin_variant as Dictionary).duplicate(true)
-	if _get_total_battle_prep_count(necro_state, battle_prep_state) <= 0 and maxi(int(coin_state.get("revenge_spirit_count", 0)), 0) <= 0:
+	if (
+		_get_total_battle_prep_count(necro_state, battle_prep_state) <= 0
+		and maxi(int(coin_state.get("revenge_spirit_count", 0)), 0) <= 0
+	):
 		return {}
 	var local_peer_id: int = 1
 	if multiplayer.multiplayer_peer != null:
@@ -299,7 +325,10 @@ func _is_source_in_battle_phase(source: Dictionary) -> bool:
 	var scene_flow: Node = get_node_or_null(scene_flow_controller_path)
 	if scene_flow == null:
 		return true
-	if not scene_flow.has_method("get_start_area_center") or not scene_flow.has_method("get_start_area_full_recovery_radius"):
+	if (
+		not scene_flow.has_method("get_start_area_center")
+		or not scene_flow.has_method("get_start_area_full_recovery_radius")
+	):
 		return true
 	var center_variant: Variant = scene_flow.call("get_start_area_center")
 	var radius_variant: Variant = scene_flow.call("get_start_area_full_recovery_radius")
@@ -313,7 +342,12 @@ func _is_source_in_battle_phase(source: Dictionary) -> bool:
 
 
 func _get_total_battle_prep_count(necro_state: Dictionary, battle_prep_state: Dictionary) -> int:
-	return maxi(int(necro_state.get("battle_prep_owl_count", 0)), 0) + maxi(int(necro_state.get("battle_prep_tower_count", 0)), 0) + maxi(int(battle_prep_state.get("snake_ward_count", 0)), 0) + maxi(int(battle_prep_state.get("challenge_griffin_count", 0)), 0)
+	return (
+		maxi(int(necro_state.get("battle_prep_owl_count", 0)), 0)
+		+ maxi(int(necro_state.get("battle_prep_tower_count", 0)), 0)
+		+ maxi(int(battle_prep_state.get("snake_ward_count", 0)), 0)
+		+ maxi(int(battle_prep_state.get("challenge_griffin_count", 0)), 0)
+	)
 
 
 func _get_or_create_source_runtime(source_id: String) -> Dictionary:
@@ -340,7 +374,9 @@ func _get_or_create_anchor_node(source_id: String) -> Node3D:
 	return anchor
 
 
-func _spawn_battle_prep_summons_for_source(source: Dictionary, runtime: Dictionary, anchor_node: Node3D) -> void:
+func _spawn_battle_prep_summons_for_source(
+	source: Dictionary, runtime: Dictionary, anchor_node: Node3D
+) -> void:
 	var unit_ids: Array = []
 	var necro_state: Dictionary = {}
 	var necro_variant: Variant = source.get("necromancy", {})
@@ -353,29 +389,54 @@ func _spawn_battle_prep_summons_for_source(source: Dictionary, runtime: Dictiona
 	var source_id: String = str(source.get("source_id", ""))
 	var anchor_pos: Vector3 = anchor_node.global_position
 	var trigger_multiplier: int = maxi(int(battle_prep_state.get("trigger_multiplier", 1)), 1)
-	var owl_count: int = maxi(int(necro_state.get("battle_prep_owl_count", 0)), 0) * trigger_multiplier
+	var owl_count: int = (
+		maxi(int(necro_state.get("battle_prep_owl_count", 0)), 0) * trigger_multiplier
+	)
 	for idx in range(owl_count):
 		var summon_id: String = "%s_%s_%d" % [source_id, SUMMON_KIND_SPIRIT_OWL, idx]
-		_spawn_or_configure_authoritative_unit(summon_id, SUMMON_KIND_SPIRIT_OWL, source, anchor_node, anchor_pos + Vector3(0.0, 120.0, 0.0), idx)
+		_spawn_or_configure_authoritative_unit(
+			summon_id,
+			SUMMON_KIND_SPIRIT_OWL,
+			source,
+			anchor_node,
+			anchor_pos + Vector3(0.0, 120.0, 0.0),
+			idx
+		)
 		unit_ids.append(summon_id)
-	var tower_count: int = maxi(int(necro_state.get("battle_prep_tower_count", 0)), 0) * trigger_multiplier
+	var tower_count: int = (
+		maxi(int(necro_state.get("battle_prep_tower_count", 0)), 0) * trigger_multiplier
+	)
 	var battle_index: int = int(runtime.get("battle_index", 1))
 	for idx in range(tower_count):
 		var summon_id: String = "%s_%s_%d" % [source_id, SUMMON_KIND_MOON_TOWER, idx]
-		var tower_pos: Vector3 = _build_moon_tower_spawn_position(source_id, battle_index, idx, anchor_pos)
-		_spawn_or_configure_authoritative_unit(summon_id, SUMMON_KIND_MOON_TOWER, source, anchor_node, tower_pos, idx)
+		var tower_pos: Vector3 = _build_moon_tower_spawn_position(
+			source_id, battle_index, idx, anchor_pos
+		)
+		_spawn_or_configure_authoritative_unit(
+			summon_id, SUMMON_KIND_MOON_TOWER, source, anchor_node, tower_pos, idx
+		)
 		unit_ids.append(summon_id)
 	var snake_ward_count: int = maxi(int(battle_prep_state.get("snake_ward_count", 0)), 0)
 	for idx in range(snake_ward_count):
 		var summon_id: String = "%s_%s_%d" % [source_id, SUMMON_KIND_SERPENT_WARD, idx]
-		var ward_pos: Vector3 = _build_ring_spawn_position(source_id, battle_index, idx, anchor_pos, 150.0, 260.0)
-		_spawn_or_configure_authoritative_unit(summon_id, SUMMON_KIND_SERPENT_WARD, source, anchor_node, ward_pos, idx)
+		var ward_pos: Vector3 = _build_ring_spawn_position(
+			source_id, battle_index, idx, anchor_pos, 150.0, 260.0
+		)
+		_spawn_or_configure_authoritative_unit(
+			summon_id, SUMMON_KIND_SERPENT_WARD, source, anchor_node, ward_pos, idx
+		)
 		unit_ids.append(summon_id)
-	var challenge_griffin_count: int = maxi(int(battle_prep_state.get("challenge_griffin_count", 0)), 0)
+	var challenge_griffin_count: int = maxi(
+		int(battle_prep_state.get("challenge_griffin_count", 0)), 0
+	)
 	for idx in range(challenge_griffin_count):
 		var summon_id: String = "%s_%s_%d" % [source_id, SUMMON_KIND_CHALLENGE_GRIFFIN, idx]
-		var griffin_pos: Vector3 = _build_ring_spawn_position(source_id, battle_index + 17, idx, anchor_pos, 240.0, 360.0)
-		_spawn_or_configure_authoritative_unit(summon_id, SUMMON_KIND_CHALLENGE_GRIFFIN, source, anchor_node, griffin_pos, idx)
+		var griffin_pos: Vector3 = _build_ring_spawn_position(
+			source_id, battle_index + 17, idx, anchor_pos, 240.0, 360.0
+		)
+		_spawn_or_configure_authoritative_unit(
+			summon_id, SUMMON_KIND_CHALLENGE_GRIFFIN, source, anchor_node, griffin_pos, idx
+		)
 		unit_ids.append(summon_id)
 	runtime["unit_ids"] = unit_ids
 
@@ -419,7 +480,9 @@ func _deactivate_source(source_id: String) -> void:
 		_anchor_nodes.erase(source_id)
 
 
-func _process_special_summon_runtime(unit: TaurenUnitAI, summon_kind: String, source: Dictionary) -> void:
+func _process_special_summon_runtime(
+	unit: TaurenUnitAI, summon_kind: String, source: Dictionary
+) -> void:
 	if summon_kind != SUMMON_KIND_CHALLENGE_GRIFFIN:
 		return
 	if unit == null or not is_instance_valid(unit):
@@ -478,7 +541,9 @@ func _grant_gold_reward_to_peer(peer_id: int, amount: int) -> void:
 		net_ctrl.call("host_override_peer_equipment_state", peer_id, updated_state)
 
 
-func _instantiate_client_summon(summon_id: String, summon_kind: String, state: Dictionary) -> TaurenUnitAI:
+func _instantiate_client_summon(
+	summon_id: String, summon_kind: String, state: Dictionary
+) -> TaurenUnitAI:
 	if summon_unit_scene == null:
 		return null
 	var unit := summon_unit_scene.instantiate() as TaurenUnitAI
@@ -492,7 +557,9 @@ func _instantiate_client_summon(summon_id: String, summon_kind: String, state: D
 	unit.name = summon_id
 	unit.set_meta("summon_kind", summon_kind)
 	unit.target_group_name = &"hero" if summon_kind == SUMMON_KIND_CHALLENGE_GRIFFIN else &"enemy"
-	unit.collision_group_name = &"enemy" if summon_kind == SUMMON_KIND_CHALLENGE_GRIFFIN else StringName("")
+	unit.collision_group_name = (
+		&"enemy" if summon_kind == SUMMON_KIND_CHALLENGE_GRIFFIN else StringName("")
+	)
 	unit.allow_target_chase = summon_kind == SUMMON_KIND_CHALLENGE_GRIFFIN
 	unit.follow_anchor_enabled = false
 	unit.max_hp = maxi(int(state.get("max_hp", 1)), 1)
@@ -503,14 +570,23 @@ func _instantiate_client_summon(summon_id: String, summon_kind: String, state: D
 	unit.magic_immunity_rate = clampf(float(state.get("magic_immunity_rate", 0.0)), 0.0, 100.0)
 	unit.invulnerable = summon_kind == SUMMON_KIND_RESENTMENT_SPIRIT
 	add_child(unit)
-	unit.setup_unit(_get_visual_scene_for_kind(summon_kind), pos, _get_visual_scale_for_kind(summon_kind))
+	unit.setup_unit(
+		_get_visual_scene_for_kind(summon_kind), pos, _get_visual_scale_for_kind(summon_kind)
+	)
 	if unit.has_method("set_network_authority"):
 		unit.call("set_network_authority", false)
 	_summoned_units[summon_id] = unit
 	return unit
 
 
-func _spawn_or_configure_authoritative_unit(summon_id: String, summon_kind: String, source: Dictionary, anchor_node: Node3D, spawn_pos: Vector3, slot_index: int) -> void:
+func _spawn_or_configure_authoritative_unit(
+	summon_id: String,
+	summon_kind: String,
+	source: Dictionary,
+	anchor_node: Node3D,
+	spawn_pos: Vector3,
+	_slot_index: int
+) -> void:
 	var unit: TaurenUnitAI = _summoned_units.get(summon_id, null) as TaurenUnitAI
 	if unit == null or not is_instance_valid(unit):
 		if summon_unit_scene == null:
@@ -523,7 +599,11 @@ func _spawn_or_configure_authoritative_unit(summon_id: String, summon_kind: Stri
 		unit.set_meta("summon_kind", summon_kind)
 		add_child(unit)
 		_apply_runtime_config_to_unit(unit, summon_kind, source, anchor_node, summon_id)
-		unit.setup_unit(_get_visual_scene_for_kind(summon_kind), spawn_pos, _get_visual_scale_for_kind(summon_kind))
+		unit.setup_unit(
+			_get_visual_scene_for_kind(summon_kind),
+			spawn_pos,
+			_get_visual_scale_for_kind(summon_kind)
+		)
 		if unit.has_method("set_network_authority"):
 			unit.call("set_network_authority", true)
 		_summoned_units[summon_id] = unit
@@ -542,7 +622,13 @@ func _prepare_unit_common_flags(unit: TaurenUnitAI) -> void:
 	unit.collision_height = 90.0
 
 
-func _apply_runtime_config_to_unit(unit: TaurenUnitAI, summon_kind: String, source: Dictionary, anchor_node: Node3D, summon_id: String) -> void:
+func _apply_runtime_config_to_unit(
+	unit: TaurenUnitAI,
+	summon_kind: String,
+	source: Dictionary,
+	anchor_node: Node3D,
+	summon_id: String
+) -> void:
 	var necro_state: Dictionary = {}
 	var necro_variant: Variant = source.get("necromancy", {})
 	if necro_variant is Dictionary:
@@ -551,9 +637,15 @@ func _apply_runtime_config_to_unit(unit: TaurenUnitAI, summon_kind: String, sour
 	var battle_prep_variant: Variant = source.get("battle_prep", {})
 	if battle_prep_variant is Dictionary:
 		battle_prep_state = battle_prep_variant as Dictionary
-	var summon_power_multiplier: float = 1.0 + maxf(float(necro_state.get("summon_power_percent", 0.0)), 0.0) * 0.01
-	var summon_attack_multiplier: float = 1.0 + maxf(float(necro_state.get("summon_attack_bonus_percent", 0.0)), 0.0) * 0.01
-	var summon_range_multiplier: float = 1.0 + maxf(float(necro_state.get("summon_range_bonus_percent", 0.0)), 0.0) * 0.01
+	var summon_power_multiplier: float = (
+		1.0 + maxf(float(necro_state.get("summon_power_percent", 0.0)), 0.0) * 0.01
+	)
+	var summon_attack_multiplier: float = (
+		1.0 + maxf(float(necro_state.get("summon_attack_bonus_percent", 0.0)), 0.0) * 0.01
+	)
+	var summon_range_multiplier: float = (
+		1.0 + maxf(float(necro_state.get("summon_range_bonus_percent", 0.0)), 0.0) * 0.01
+	)
 	var hero_damage: float = maxf(float(source.get("damage", 0)), 0.0)
 	var hero_intelligence: float = maxf(float(source.get("intelligence", 0)), 0.0)
 	var hero_attack_range: float = maxf(float(source.get("attack_range", 0.0)), 60.0)
@@ -568,7 +660,9 @@ func _apply_runtime_config_to_unit(unit: TaurenUnitAI, summon_kind: String, sour
 	unit.set_meta("source_peer_id", int(source.get("peer_id", 0)))
 	unit.target_group_name = &"enemy"
 	unit.collision_group_name = StringName("")
-	unit.magic_immunity_rate = clampf(float(necro_state.get("summon_magic_resist_percent", 0.0)), 0.0, 100.0)
+	unit.magic_immunity_rate = clampf(
+		float(necro_state.get("summon_magic_resist_percent", 0.0)), 0.0, 100.0
+	)
 	unit.allow_target_chase = false
 	unit.critical_chance_percent = 0.0
 	unit.critical_multiplier = 2.0
@@ -579,13 +673,28 @@ func _apply_runtime_config_to_unit(unit: TaurenUnitAI, summon_kind: String, sour
 		unit.follow_anchor_offset = Vector3(0.0, 120.0, 0.0)
 		unit.follow_anchor_orbit_radius = 90.0
 		unit.follow_anchor_orbit_height = 20.0
-		unit.follow_anchor_angular_speed_deg = 140.0 + float(_extract_slot_index_from_id(summon_id)) * 24.0
+		unit.follow_anchor_angular_speed_deg = (
+			140.0 + float(_extract_slot_index_from_id(summon_id)) * 24.0
+		)
 		unit.follow_anchor_speed = 960.0
 		unit.attack_range = maxf(720.0 * summon_range_multiplier, 120.0)
 		unit.engage_range = unit.attack_range + 120.0
 		unit.attack_speed = 1.35
-		unit.damage_per_hit = maxi(int(round(maxf(hero_damage * 0.9, hero_intelligence * 2.0) * summon_power_multiplier * summon_attack_multiplier)), 1)
-		_set_unit_hp_scaled(unit, maxi(int(round((220.0 + hero_intelligence * 12.0) * summon_power_multiplier)), 1))
+		unit.damage_per_hit = maxi(
+			int(
+				round(
+					(
+						maxf(hero_damage * 0.9, hero_intelligence * 2.0)
+						* summon_power_multiplier
+						* summon_attack_multiplier
+					)
+				)
+			),
+			1
+		)
+		_set_unit_hp_scaled(
+			unit, maxi(int(round((220.0 + hero_intelligence * 12.0) * summon_power_multiplier)), 1)
+		)
 	elif summon_kind == SUMMON_KIND_MOON_TOWER:
 		unit.clear_follow_anchor()
 		unit.follow_anchor_enabled = false
@@ -597,8 +706,21 @@ func _apply_runtime_config_to_unit(unit: TaurenUnitAI, summon_kind: String, sour
 		unit.attack_range = maxf(980.0 * summon_range_multiplier, 180.0)
 		unit.engage_range = unit.attack_range + 40.0
 		unit.attack_speed = 0.85
-		unit.damage_per_hit = maxi(int(round((hero_intelligence * 2.4 + hero_damage * 0.6) * summon_power_multiplier * summon_attack_multiplier)), 1)
-		_set_unit_hp_scaled(unit, maxi(int(round((320.0 + hero_intelligence * 18.0) * summon_power_multiplier)), 1))
+		unit.damage_per_hit = maxi(
+			int(
+				round(
+					(
+						(hero_intelligence * 2.4 + hero_damage * 0.6)
+						* summon_power_multiplier
+						* summon_attack_multiplier
+					)
+				)
+			),
+			1
+		)
+		_set_unit_hp_scaled(
+			unit, maxi(int(round((320.0 + hero_intelligence * 18.0) * summon_power_multiplier)), 1)
+		)
 	elif summon_kind == SUMMON_KIND_SERPENT_WARD:
 		unit.clear_follow_anchor()
 		unit.follow_anchor_enabled = false
@@ -614,7 +736,9 @@ func _apply_runtime_config_to_unit(unit: TaurenUnitAI, summon_kind: String, sour
 		unit.attack_range = maxf(760.0, 180.0)
 		unit.engage_range = unit.attack_range + 40.0
 		unit.attack_speed = 1.15
-		unit.damage_per_hit = maxi(int(round((hero_damage * 0.7 + hero_intelligence * 1.4) * summon_power_multiplier)), 1)
+		unit.damage_per_hit = maxi(
+			int(round((hero_damage * 0.7 + hero_intelligence * 1.4) * summon_power_multiplier)), 1
+		)
 		_set_unit_hp_scaled(unit, maxi(int(round(180.0 + hero_intelligence * 8.0)), 1))
 	elif summon_kind == SUMMON_KIND_CHALLENGE_GRIFFIN:
 		unit.clear_follow_anchor()
@@ -653,7 +777,19 @@ func _apply_runtime_config_to_unit(unit: TaurenUnitAI, summon_kind: String, sour
 		unit.attack_speed = hero_attack_speed
 		unit.critical_chance_percent = hero_crit_chance
 		unit.critical_multiplier = hero_crit_multiplier
-		unit.damage_per_hit = maxi(int(round(hero_damage * maxf(float(coin_state.get("revenge_spirit_attack_percent", 40.0)) * 0.01, 0.0))), 1)
+		unit.damage_per_hit = maxi(
+			int(
+				round(
+					(
+						hero_damage
+						* maxf(
+							float(coin_state.get("revenge_spirit_attack_percent", 40.0)) * 0.01, 0.0
+						)
+					)
+				)
+			),
+			1
+		)
 		_set_unit_hp_scaled(unit, 999999)
 	else:
 		unit.clear_follow_anchor()
@@ -694,7 +830,9 @@ func _extract_slot_index_from_id(summon_id: String) -> int:
 	return 0
 
 
-func _build_moon_tower_spawn_position(source_id: String, battle_index: int, slot_index: int, center: Vector3) -> Vector3:
+func _build_moon_tower_spawn_position(
+	source_id: String, battle_index: int, slot_index: int, center: Vector3
+) -> Vector3:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(hash("%s:%d:%d" % [source_id, battle_index, slot_index]))
 	var angle: float = rng.randf_range(0.0, TAU)
@@ -703,7 +841,14 @@ func _build_moon_tower_spawn_position(source_id: String, battle_index: int, slot
 	return center + offset
 
 
-func _build_ring_spawn_position(source_id: String, battle_index: int, slot_index: int, center: Vector3, min_radius: float, max_radius: float) -> Vector3:
+func _build_ring_spawn_position(
+	source_id: String,
+	battle_index: int,
+	slot_index: int,
+	center: Vector3,
+	min_radius: float,
+	max_radius: float
+) -> Vector3:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(hash("%s:ring:%d:%d" % [source_id, battle_index, slot_index]))
 	var angle: float = rng.randf_range(0.0, TAU)

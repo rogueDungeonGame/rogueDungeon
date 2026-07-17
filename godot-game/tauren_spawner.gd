@@ -51,10 +51,26 @@ func _load_tauren_scene() -> PackedScene:
 
 
 func _spawn_initial_units(model_scene: PackedScene) -> void:
-	_spawn_units(maxi(unit_count, 0), global_position, spawn_radius, spawn_radius_jitter, min_spawn_distance, model_scene, _spawn_rect_enabled)
+	_spawn_units(
+		maxi(unit_count, 0),
+		global_position,
+		spawn_radius,
+		spawn_radius_jitter,
+		min_spawn_distance,
+		model_scene,
+		_spawn_rect_enabled
+	)
 
 
-func _spawn_units(count: int, center_position: Vector3, base_radius: float, radius_jitter: float, min_distance: float, model_scene: PackedScene, use_random_positions: bool) -> void:
+func _spawn_units(
+	count: int,
+	center_position: Vector3,
+	base_radius: float,
+	radius_jitter: float,
+	min_distance: float,
+	model_scene: PackedScene,
+	use_random_positions: bool
+) -> void:
 	if count <= 0 or model_scene == null:
 		return
 	var spawned_positions: Array[Vector3] = _collect_existing_unit_positions()
@@ -74,9 +90,19 @@ func _spawn_units(count: int, center_position: Vector3, base_radius: float, radi
 		if _spawn_rect_enabled:
 			spawn_pos = _pick_spawn_position_in_rect(spawned_positions, min_distance, seeded_rng)
 		elif use_random_positions:
-			spawn_pos = _pick_spawn_position_random(spawned_positions, center_position, base_radius, radius_jitter, min_distance)
+			spawn_pos = _pick_spawn_position_random(
+				spawned_positions, center_position, base_radius, radius_jitter, min_distance
+			)
 		else:
-			spawn_pos = _pick_spawn_position_deterministic(i, count, spawned_positions, center_position, base_radius, radius_jitter, min_distance)
+			spawn_pos = _pick_spawn_position_deterministic(
+				i,
+				count,
+				spawned_positions,
+				center_position,
+				base_radius,
+				radius_jitter,
+				min_distance
+			)
 		spawned_positions.append(spawn_pos)
 		_apply_profile_to_unit(unit)
 		unit.setup_unit(model_scene, spawn_pos, unit_scale)
@@ -85,7 +111,15 @@ func _spawn_units(count: int, center_position: Vector3, base_radius: float, radi
 			unit.call("set_network_authority", _network_authority_enabled)
 
 
-func _pick_spawn_position_deterministic(slot_index: int, slot_total: int, existing_positions: Array[Vector3], center_position: Vector3, base_radius: float, radius_jitter: float, min_distance: float) -> Vector3:
+func _pick_spawn_position_deterministic(
+	slot_index: int,
+	slot_total: int,
+	existing_positions: Array[Vector3],
+	center_position: Vector3,
+	base_radius: float,
+	radius_jitter: float,
+	min_distance: float
+) -> Vector3:
 	var min_radius: float = maxf(80.0, base_radius - radius_jitter)
 	var max_radius: float = maxf(min_radius + 1.0, base_radius + radius_jitter)
 	var safe_min_distance: float = maxf(min_distance, 60.0)
@@ -94,14 +128,28 @@ func _pick_spawn_position_deterministic(slot_index: int, slot_total: int, existi
 	var initial_radius: float = lerpf(min_radius, max_radius, sqrt(normalized))
 	var golden_angle_rad: float = deg_to_rad(137.507764)
 	var base_angle: float = (float(slot_index) + float(_spawn_serial)) * golden_angle_rad
-	var result: Vector3 = center_position + Vector3(cos(base_angle) * initial_radius, spawn_height, sin(base_angle) * initial_radius)
+	var result: Vector3 = (
+		center_position
+		+ Vector3(cos(base_angle) * initial_radius, spawn_height, sin(base_angle) * initial_radius)
+	)
 
 	for attempt in range(maxi(spawn_try_count, 1)):
-		var radius_offset: float = floorf(float(attempt) / 6.0) * maxf(safe_min_distance * 0.35, 24.0)
+		var radius_offset: float = (
+			floorf(float(attempt) / 6.0) * maxf(safe_min_distance * 0.35, 24.0)
+		)
 		var angle_offset: float = float(attempt) * deg_to_rad(17.5)
-		var candidate_radius: float = clampf(initial_radius + radius_offset, min_radius, max_radius + radius_offset)
+		var candidate_radius: float = clampf(
+			initial_radius + radius_offset, min_radius, max_radius + radius_offset
+		)
 		var candidate_angle: float = base_angle + angle_offset
-		var candidate := center_position + Vector3(cos(candidate_angle) * candidate_radius, spawn_height, sin(candidate_angle) * candidate_radius)
+		var candidate := (
+			center_position
+			+ Vector3(
+				cos(candidate_angle) * candidate_radius,
+				spawn_height,
+				sin(candidate_angle) * candidate_radius
+			)
+		)
 		if _is_position_far_enough(candidate, existing_positions, safe_min_distance):
 			return candidate
 		result = candidate
@@ -109,7 +157,13 @@ func _pick_spawn_position_deterministic(slot_index: int, slot_total: int, existi
 	return result
 
 
-func _pick_spawn_position_random(existing_positions: Array[Vector3], center_position: Vector3, base_radius: float, radius_jitter: float, min_distance: float) -> Vector3:
+func _pick_spawn_position_random(
+	existing_positions: Array[Vector3],
+	center_position: Vector3,
+	base_radius: float,
+	radius_jitter: float,
+	min_distance: float
+) -> Vector3:
 	var min_radius: float = maxf(80.0, base_radius - radius_jitter)
 	var max_radius: float = maxf(min_radius + 1.0, base_radius + radius_jitter)
 	var safe_min_distance: float = maxf(min_distance, 60.0)
@@ -118,7 +172,9 @@ func _pick_spawn_position_random(existing_positions: Array[Vector3], center_posi
 	for _i in range(maxi(spawn_try_count, 1)):
 		var angle := randf() * TAU
 		var radius := randf_range(min_radius, max_radius)
-		var candidate := center_position + Vector3(cos(angle) * radius, spawn_height, sin(angle) * radius)
+		var candidate := (
+			center_position + Vector3(cos(angle) * radius, spawn_height, sin(angle) * radius)
+		)
 		if _is_position_far_enough(candidate, existing_positions, safe_min_distance):
 			return candidate
 		result = candidate
@@ -126,7 +182,9 @@ func _pick_spawn_position_random(existing_positions: Array[Vector3], center_posi
 	return result
 
 
-func _pick_spawn_position_in_rect(existing_positions: Array[Vector3], min_distance: float, rng: RandomNumberGenerator) -> Vector3:
+func _pick_spawn_position_in_rect(
+	existing_positions: Array[Vector3], min_distance: float, rng: RandomNumberGenerator
+) -> Vector3:
 	var safe_rng := rng
 	if safe_rng == null:
 		safe_rng = RandomNumberGenerator.new()
@@ -153,7 +211,9 @@ func _pick_spawn_position_in_rect(existing_positions: Array[Vector3], min_distan
 	return result
 
 
-func _is_position_far_enough(candidate: Vector3, existing_positions: Array[Vector3], min_distance: float) -> bool:
+func _is_position_far_enough(
+	candidate: Vector3, existing_positions: Array[Vector3], min_distance: float
+) -> bool:
 	for p in existing_positions:
 		if candidate.distance_to(p) < min_distance:
 			return false
@@ -172,7 +232,9 @@ func set_network_authority(enabled: bool) -> void:
 			unit.call("set_network_authority", enabled)
 
 
-func configure_spawn_rect(origin_xz: Vector2, size_xz: Vector2, seed: int = 0, margin: float = 0.0) -> void:
+func configure_spawn_rect(
+	origin_xz: Vector2, size_xz: Vector2, seed: int = 0, margin: float = 0.0
+) -> void:
 	_spawn_rect_origin_xz = origin_xz
 	_spawn_rect_size_xz = Vector2(maxf(size_xz.x, 0.0), maxf(size_xz.y, 0.0))
 	_spawn_rect_seed = maxi(seed, 0)
@@ -336,8 +398,28 @@ func _apply_profile_to_unit(unit: TaurenUnitAI) -> void:
 		unit.damage_per_hit = int(_base_unit_stats.get("damage_per_hit", unit.damage_per_hit))
 		unit.armor = float(_base_unit_stats.get("armor", unit.armor))
 		return
-	unit.max_hp = maxi(int(round(float(_base_unit_stats.get("max_hp", unit.max_hp)) * float(_floor_profile.get("mob_hp_multiplier", 1.0)))), 1)
-	unit.damage_per_hit = maxi(int(round(float(_base_unit_stats.get("damage_per_hit", unit.damage_per_hit)) * float(_floor_profile.get("mob_damage_multiplier", 1.0)))), 1)
+	unit.max_hp = maxi(
+		int(
+			round(
+				(
+					float(_base_unit_stats.get("max_hp", unit.max_hp))
+					* float(_floor_profile.get("mob_hp_multiplier", 1.0))
+				)
+			)
+		),
+		1
+	)
+	unit.damage_per_hit = maxi(
+		int(
+			round(
+				(
+					float(_base_unit_stats.get("damage_per_hit", unit.damage_per_hit))
+					* float(_floor_profile.get("mob_damage_multiplier", 1.0))
+				)
+			)
+		),
+		1
+	)
 	unit.armor = float(_base_unit_stats.get("armor", unit.armor))
 
 

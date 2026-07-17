@@ -16,7 +16,9 @@ const DAMAGE_POPUP_CRIT_ICON_PIXEL_SCALE: float = 0.95
 const DAMAGE_POPUP_CRIT_LABEL_OFFSET_PX: float = 12.0
 const DAMAGE_POPUP_CRIT_ICON_OFFSET_X_PX: float = -26.0
 const DAMAGE_POPUP_CRIT_ICON_OFFSET_Y_PX: float = 6.0
-const DAMAGE_POPUP_CRIT_ICON_TEXTURE: Texture2D = preload("res://icons/skills/BTNCriticalStrike.png")
+const DAMAGE_POPUP_CRIT_ICON_TEXTURE: Texture2D = preload(
+	"res://icons/skills/BTNCriticalStrike.png"
+)
 
 
 static func is_obstacle_collider(collider: Node, obstacle_root_name: String = "Obstacles") -> bool:
@@ -29,14 +31,14 @@ static func is_obstacle_collider(collider: Node, obstacle_root_name: String = "O
 
 
 static func is_move_segment_blocked(
-		world_3d: World3D,
-		from_pos: Vector3,
-		to_pos: Vector3,
-		probe_half_width: float,
-		probe_height: float,
-		collision_mask: int,
-		obstacle_root_name: String = "Obstacles"
-	) -> bool:
+	world_3d: World3D,
+	from_pos: Vector3,
+	to_pos: Vector3,
+	probe_half_width: float,
+	probe_height: float,
+	collision_mask: int,
+	obstacle_root_name: String = "Obstacles"
+) -> bool:
 	if world_3d == null:
 		return false
 	var horizontal: Vector3 = to_pos - from_pos
@@ -106,10 +108,13 @@ static func compute_node_mesh_height(root_node: Node3D, ignored_nodes: Array = [
 		for x_idx in range(2):
 			for y_idx in range(2):
 				for z_idx in range(2):
-					var corner_local: Vector3 = local_aabb.position + Vector3(
-						local_aabb.size.x * float(x_idx),
-						local_aabb.size.y * float(y_idx),
-						local_aabb.size.z * float(z_idx)
+					var corner_local: Vector3 = (
+						local_aabb.position
+						+ Vector3(
+							local_aabb.size.x * float(x_idx),
+							local_aabb.size.y * float(y_idx),
+							local_aabb.size.z * float(z_idx)
+						)
 					)
 					var corner_root: Vector3 = mesh_to_root * corner_local
 					min_y = minf(min_y, corner_root.y)
@@ -121,13 +126,13 @@ static func compute_node_mesh_height(root_node: Node3D, ignored_nodes: Array = [
 
 
 static func spawn_damage_popup(
-		anchor_node: Node3D,
-		amount: int,
-		anchor_height: float,
-		is_magic: bool,
-		is_critical: bool = false,
-		height_offset: float = DAMAGE_POPUP_HEIGHT_OFFSET
-	) -> void:
+	anchor_node: Node3D,
+	amount: int,
+	anchor_height: float,
+	is_magic: bool,
+	is_critical: bool = false,
+	height_offset: float = DAMAGE_POPUP_HEIGHT_OFFSET
+) -> void:
 	if anchor_node == null or not is_instance_valid(anchor_node):
 		return
 	var safe_amount: int = maxi(amount, 0)
@@ -135,7 +140,9 @@ static func spawn_damage_popup(
 		return
 
 	var popup_color: Color = DAMAGE_POPUP_MAGIC_COLOR if is_magic else DAMAGE_POPUP_PHYSICAL_COLOR
-	var font_scale: float = DAMAGE_POPUP_CRIT_FONT_SCALE if is_critical else DAMAGE_POPUP_NON_CRIT_FONT_SCALE
+	var font_scale: float = (
+		DAMAGE_POPUP_CRIT_FONT_SCALE if is_critical else DAMAGE_POPUP_NON_CRIT_FONT_SCALE
+	)
 	var start_pos := Vector3(
 		randf_range(-DAMAGE_POPUP_SIDEWAYS_JITTER, DAMAGE_POPUP_SIDEWAYS_JITTER),
 		anchor_height + height_offset,
@@ -202,21 +209,24 @@ static func spawn_damage_popup(
 		tween.tween_property(
 			crit_icon,
 			"modulate",
-			Color(DAMAGE_POPUP_CRIT_ICON_COLOR.r, DAMAGE_POPUP_CRIT_ICON_COLOR.g, DAMAGE_POPUP_CRIT_ICON_COLOR.b, 0.0),
+			Color(
+				DAMAGE_POPUP_CRIT_ICON_COLOR.r,
+				DAMAGE_POPUP_CRIT_ICON_COLOR.g,
+				DAMAGE_POPUP_CRIT_ICON_COLOR.b,
+				0.0
+			),
 			DAMAGE_POPUP_LIFETIME_SEC
 		)
-	tween.finished.connect(func() -> void:
-		if is_instance_valid(popup_root):
-			popup_root.queue_free()
+	tween.finished.connect(
+		func() -> void:
+			if is_instance_valid(popup_root):
+				popup_root.queue_free()
 	)
 
 
 static func sync_top_level_billboard_to_camera(
-		billboard_node: Node3D,
-		anchor_node: Node3D,
-		anchor_height: float,
-		viewport: Viewport
-	) -> void:
+	billboard_node: Node3D, anchor_node: Node3D, anchor_height: float, viewport: Viewport
+) -> void:
 	if billboard_node == null or not is_instance_valid(billboard_node):
 		return
 	if anchor_node == null or not is_instance_valid(anchor_node):

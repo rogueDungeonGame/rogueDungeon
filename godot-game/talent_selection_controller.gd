@@ -65,7 +65,9 @@ func is_popup_open() -> bool:
 	return _talent_popup_open
 
 
-func update(hero_ctrl: Node, is_observing_any: bool, popup_controller: Object, input_lock_changed: Callable) -> void:
+func update(
+	hero_ctrl: Node, is_observing_any: bool, popup_controller: Object, input_lock_changed: Callable
+) -> void:
 	if hero_ctrl == null:
 		return
 	if is_observing_any:
@@ -95,7 +97,9 @@ func update(hero_ctrl: Node, is_observing_any: bool, popup_controller: Object, i
 		_show_next_talent_popup(hero_ctrl, popup_controller, input_lock_changed)
 
 
-func on_option_pressed(option_index: int, hero_ctrl: Node, popup_controller: Object, input_lock_changed: Callable) -> void:
+func on_option_pressed(
+	option_index: int, hero_ctrl: Node, popup_controller: Object, input_lock_changed: Callable
+) -> void:
 	if option_index < 0 or option_index >= _talent_current_options.size():
 		return
 	var option_variant: Variant = _talent_current_options[option_index]
@@ -125,7 +129,9 @@ func build_bonus_bundle(hero_ctrl: Node) -> Dictionary:
 	return _build_warden_talent_bundle(_talent_selected_counts)
 
 
-func _reset_talent_selection_runtime(hero_ctrl: Node, popup_controller: Object, input_lock_changed: Callable) -> void:
+func _reset_talent_selection_runtime(
+	hero_ctrl: Node, popup_controller: Object, input_lock_changed: Callable
+) -> void:
 	_talent_pending_choice_count = 0
 	_talent_last_seen_hero_level = 0
 	_talent_session_initialized = false
@@ -143,7 +149,9 @@ func _queue_talent_choices(count: int) -> void:
 	_talent_pending_choice_count += safe_count
 
 
-func _set_talent_popup_visible(visible: bool, popup_controller: Object, input_lock_changed: Callable) -> void:
+func _set_talent_popup_visible(
+	visible: bool, popup_controller: Object, input_lock_changed: Callable
+) -> void:
 	if popup_controller != null:
 		popup_controller.set_visible(visible)
 	if input_lock_changed.is_valid():
@@ -175,7 +183,9 @@ func _pick_random_talent_options(pool: Array, count: int) -> Array:
 	return picked
 
 
-func _show_next_talent_popup(hero_ctrl: Node, popup_controller: Object, input_lock_changed: Callable) -> void:
+func _show_next_talent_popup(
+	hero_ctrl: Node, popup_controller: Object, input_lock_changed: Callable
+) -> void:
 	if popup_controller == null:
 		return
 	var pool: Array = _get_current_talent_pool(hero_ctrl)
@@ -186,7 +196,9 @@ func _show_next_talent_popup(hero_ctrl: Node, popup_controller: Object, input_lo
 		return
 	_talent_popup_open = true
 	_set_talent_popup_visible(true, popup_controller, input_lock_changed)
-	popup_controller.show_options(_talent_current_options, _talent_pending_choice_count, _talent_selected_counts, "天赋强化")
+	popup_controller.show_options(
+		_talent_current_options, _talent_pending_choice_count, _talent_selected_counts, "天赋强化"
+	)
 
 
 func _build_warden_talent_bundle(counts: Dictionary) -> Dictionary:
@@ -294,7 +306,9 @@ func _build_rifleman_talent_bundle(counts: Dictionary) -> Dictionary:
 		bundle["attack_range_bonus_flat"] = 65.0 * float(attack_range_count)
 	var precision_pierce_count: int = int(counts.get("rifleman_precision_ignore_armor", 0))
 	if precision_pierce_count > 0:
-		bundle["rifleman_precision_ignore_armor_damage_bonus"] = 0.24 * float(precision_pierce_count)
+		bundle["rifleman_precision_ignore_armor_damage_bonus"] = (
+			0.24 * float(precision_pierce_count)
+		)
 	return bundle
 
 

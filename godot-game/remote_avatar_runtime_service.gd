@@ -3,22 +3,22 @@ class_name RemoteAvatarRuntimeService
 
 
 func upsert_remote_avatar(
-		peer_id: int,
-		self_id: int,
-		position: Vector3,
-		yaw: float,
-		model_key: String,
-		remote_snap_distance: float,
-		remote_player_scale: Vector3,
-		remote_players_root: Node3D,
-		remote_avatars: Dictionary,
-		remote_avatar_model_keys: Dictionary,
-		remote_avatar_last_anims: Dictionary,
-		remote_avatar_target_positions: Dictionary,
-		remote_avatar_target_yaws: Dictionary,
-		resolve_scene_fn: Callable,
-		disable_collisions_fn: Callable
-	) -> Node3D:
+	peer_id: int,
+	self_id: int,
+	position: Vector3,
+	yaw: float,
+	model_key: String,
+	remote_snap_distance: float,
+	remote_player_scale: Vector3,
+	remote_players_root: Node3D,
+	remote_avatars: Dictionary,
+	remote_avatar_model_keys: Dictionary,
+	remote_avatar_last_anims: Dictionary,
+	remote_avatar_target_positions: Dictionary,
+	remote_avatar_target_yaws: Dictionary,
+	resolve_scene_fn: Callable,
+	disable_collisions_fn: Callable
+) -> Node3D:
 	if peer_id <= 0 or peer_id == self_id:
 		return null
 	var avatar: Node3D = null
@@ -67,13 +67,13 @@ func upsert_remote_avatar(
 
 
 func create_remote_avatar(
-		remote_players_root: Node3D,
-		peer_id: int,
-		model_key: String,
-		remote_player_scale: Vector3,
-		resolve_scene_fn: Callable,
-		disable_collisions_fn: Callable
-	) -> Node3D:
+	remote_players_root: Node3D,
+	peer_id: int,
+	model_key: String,
+	remote_player_scale: Vector3,
+	resolve_scene_fn: Callable,
+	disable_collisions_fn: Callable
+) -> Node3D:
 	if remote_players_root == null:
 		return null
 	var avatar: Node3D = null
@@ -101,12 +101,12 @@ func create_remote_avatar(
 
 
 func resolve_remote_player_scene(
-		model_key: String,
-		remote_player_scene: PackedScene,
-		remote_melee_player_scene: PackedScene,
-		remote_ranged_player_scene: PackedScene,
-		remote_transformed_player_scene: PackedScene
-	) -> PackedScene:
+	model_key: String,
+	remote_player_scene: PackedScene,
+	remote_melee_player_scene: PackedScene,
+	remote_ranged_player_scene: PackedScene,
+	remote_transformed_player_scene: PackedScene
+) -> PackedScene:
 	if model_key == "transformed":
 		if remote_transformed_player_scene != null:
 			return remote_transformed_player_scene
@@ -138,8 +138,12 @@ func get_remote_model_key(hero_state: Dictionary) -> String:
 	return "melee"
 
 
-func apply_remote_avatar_animation(peer_id: int, avatar: Node3D, hero_state: Dictionary, remote_avatar_last_anims: Dictionary) -> void:
-	var anim_player: AnimationPlayer = avatar.find_child("AnimationPlayer", true, false) as AnimationPlayer
+func apply_remote_avatar_animation(
+	peer_id: int, avatar: Node3D, hero_state: Dictionary, remote_avatar_last_anims: Dictionary
+) -> void:
+	var anim_player: AnimationPlayer = (
+		avatar.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	)
 	if anim_player == null:
 		return
 	var desired_anim: String = str(hero_state.get("anim_name", ""))
@@ -155,7 +159,11 @@ func apply_remote_avatar_animation(peer_id: int, avatar: Node3D, hero_state: Dic
 		return
 
 	var last_anim: String = str(remote_avatar_last_anims.get(peer_id, ""))
-	var need_restart: bool = not anim_player.is_playing() or String(anim_player.current_animation) != desired_anim or last_anim != desired_anim
+	var need_restart: bool = (
+		not anim_player.is_playing()
+		or String(anim_player.current_animation) != desired_anim
+		or last_anim != desired_anim
+	)
 	if need_restart:
 		anim_player.play(desired_anim)
 	remote_avatar_last_anims[peer_id] = desired_anim
@@ -190,7 +198,9 @@ func find_anim_by_keywords(anim_player: AnimationPlayer, keywords: Array[String]
 	return ""
 
 
-func remove_absent_remote_avatars(valid_remote_ids: Dictionary, remote_avatars: Dictionary, remove_fn: Callable) -> void:
+func remove_absent_remote_avatars(
+	valid_remote_ids: Dictionary, remote_avatars: Dictionary, remove_fn: Callable
+) -> void:
 	var stale_ids: Array[int] = []
 	for key_variant in remote_avatars.keys():
 		var peer_id: int = int(key_variant)
@@ -202,20 +212,20 @@ func remove_absent_remote_avatars(valid_remote_ids: Dictionary, remote_avatars: 
 
 
 func remove_remote_avatar(
-		peer_id: int,
-		remote_avatars: Dictionary,
-		remote_avatar_model_keys: Dictionary,
-		remote_avatar_last_anims: Dictionary,
-		remote_avatar_target_positions: Dictionary,
-		remote_avatar_target_yaws: Dictionary,
-		remote_avatar_velocities: Dictionary,
-		remote_avatar_last_receive_ms: Dictionary,
-		remote_avatar_hp_bars: Dictionary,
-		remote_avatar_hp_bar_materials: Dictionary,
-		remote_last_flash_cd: Dictionary,
-		remote_last_haste_active: Dictionary,
-		remote_last_skill_event_seq: Dictionary
-	) -> void:
+	peer_id: int,
+	remote_avatars: Dictionary,
+	remote_avatar_model_keys: Dictionary,
+	remote_avatar_last_anims: Dictionary,
+	remote_avatar_target_positions: Dictionary,
+	remote_avatar_target_yaws: Dictionary,
+	remote_avatar_velocities: Dictionary,
+	remote_avatar_last_receive_ms: Dictionary,
+	remote_avatar_hp_bars: Dictionary,
+	remote_avatar_hp_bar_materials: Dictionary,
+	remote_last_flash_cd: Dictionary,
+	remote_last_haste_active: Dictionary,
+	remote_last_skill_event_seq: Dictionary
+) -> void:
 	if not remote_avatars.has(peer_id):
 		return
 	var avatar: Node3D = remote_avatars[peer_id] as Node3D
@@ -236,20 +246,20 @@ func remove_remote_avatar(
 
 
 func clear_remote_avatars(
-		remote_avatars: Dictionary,
-		remote_avatar_model_keys: Dictionary,
-		remote_avatar_last_anims: Dictionary,
-		remote_avatar_target_positions: Dictionary,
-		remote_avatar_target_yaws: Dictionary,
-		remote_avatar_velocities: Dictionary,
-		remote_avatar_last_receive_ms: Dictionary,
-		remote_avatar_hp_bars: Dictionary,
-		remote_avatar_hp_bar_materials: Dictionary,
-		remote_last_flash_cd: Dictionary,
-		remote_last_haste_active: Dictionary,
-		remote_last_skill_event_seq: Dictionary,
-		remove_fn: Callable
-	) -> void:
+	remote_avatars: Dictionary,
+	remote_avatar_model_keys: Dictionary,
+	remote_avatar_last_anims: Dictionary,
+	remote_avatar_target_positions: Dictionary,
+	remote_avatar_target_yaws: Dictionary,
+	remote_avatar_velocities: Dictionary,
+	remote_avatar_last_receive_ms: Dictionary,
+	remote_avatar_hp_bars: Dictionary,
+	remote_avatar_hp_bar_materials: Dictionary,
+	remote_last_flash_cd: Dictionary,
+	remote_last_haste_active: Dictionary,
+	remote_last_skill_event_seq: Dictionary,
+	remove_fn: Callable
+) -> void:
 	for key_variant in remote_avatars.keys():
 		var key: int = int(key_variant)
 		if remove_fn != null and remove_fn.is_valid():

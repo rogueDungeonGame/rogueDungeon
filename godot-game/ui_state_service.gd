@@ -28,10 +28,14 @@ func apply_observe_snapshot(state: Dictionary) -> void:
 		observed_enemy_state = (enemy_state_variant as Dictionary).duplicate(true)
 	var self_peer_variant: Variant = state.get("self_peer_id", self_peer_id)
 	self_peer_id = int(self_peer_variant)
-	var remote_hero_variant: Variant = state.get("observed_remote_hero_state", observed_remote_hero_state)
+	var remote_hero_variant: Variant = state.get(
+		"observed_remote_hero_state", observed_remote_hero_state
+	)
 	if remote_hero_variant is Dictionary:
 		observed_remote_hero_state = (remote_hero_variant as Dictionary).duplicate(true)
-	var remote_equipment_variant: Variant = state.get("observed_remote_equipment_state", observed_remote_equipment_state)
+	var remote_equipment_variant: Variant = state.get(
+		"observed_remote_equipment_state", observed_remote_equipment_state
+	)
 	if remote_equipment_variant is Dictionary:
 		observed_remote_equipment_state = (remote_equipment_variant as Dictionary).duplicate(true)
 

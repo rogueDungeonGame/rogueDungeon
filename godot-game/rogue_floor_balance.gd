@@ -25,31 +25,36 @@ const ROUND_CLEAR_GOLD_PER_FLOOR: int = 150
 const ROUND_CLEAR_SURVIVOR_BONUS: int = 35
 
 const DIFFICULTY_DATA := {
-	DIFFICULTY_SIMPLE: {
+	DIFFICULTY_SIMPLE:
+	{
 		"display_name": "Simple",
 		"enemy_damage_multiplier": 0.75,
 		"growth_bonus_all": 0.0,
 		"boss_hp_growth_offset": 0.0,
 	},
-	DIFFICULTY_NORMAL: {
+	DIFFICULTY_NORMAL:
+	{
 		"display_name": "Normal",
 		"enemy_damage_multiplier": 0.85,
 		"growth_bonus_all": 0.0,
 		"boss_hp_growth_offset": 0.0,
 	},
-	DIFFICULTY_HARD: {
+	DIFFICULTY_HARD:
+	{
 		"display_name": "Hard",
 		"enemy_damage_multiplier": 1.0,
 		"growth_bonus_all": 0.0,
 		"boss_hp_growth_offset": 0.0,
 	},
-	DIFFICULTY_CRUEL: {
+	DIFFICULTY_CRUEL:
+	{
 		"display_name": "Cruel",
 		"enemy_damage_multiplier": 1.0,
 		"growth_bonus_all": 0.05,
 		"boss_hp_growth_offset": -0.05,
 	},
-	DIFFICULTY_INFERNO: {
+	DIFFICULTY_INFERNO:
+	{
 		"display_name": "Inferno",
 		"enemy_damage_multiplier": 1.20,
 		"growth_bonus_all": 0.10,
@@ -70,7 +75,9 @@ static func get_difficulty_display_name(raw_value: String) -> String:
 	return str((DIFFICULTY_DATA[key] as Dictionary).get("display_name", "Simple"))
 
 
-static func build_floor_profile(floor_index: int, raw_difficulty: String = DIFFICULTY_SIMPLE) -> Dictionary:
+static func build_floor_profile(
+	floor_index: int, raw_difficulty: String = DIFFICULTY_SIMPLE
+) -> Dictionary:
 	var floor_no: int = maxi(floor_index, 1)
 	var difficulty_key: String = normalize_difficulty_key(raw_difficulty)
 	var difficulty: Dictionary = DIFFICULTY_DATA[difficulty_key] as Dictionary
@@ -88,10 +95,18 @@ static func build_floor_profile(floor_index: int, raw_difficulty: String = DIFFI
 		skill_damage_growth -= FLOOR_12_SKILL_DAMAGE_PENALTY
 
 	var enemy_damage_multiplier: float = float(difficulty.get("enemy_damage_multiplier", 1.0))
-	var boss_damage_multiplier: float = pow(damage_growth, floor_no) * enemy_damage_multiplier * BOSS_BASE_ATTACK_MULTIPLIER
-	var boss_skill_damage_multiplier: float = pow(skill_damage_growth, floor_no) * enemy_damage_multiplier * BOSS_BASE_SKILL_DAMAGE_MULTIPLIER
+	var boss_damage_multiplier: float = (
+		pow(damage_growth, floor_no) * enemy_damage_multiplier * BOSS_BASE_ATTACK_MULTIPLIER
+	)
+	var boss_skill_damage_multiplier: float = (
+		pow(skill_damage_growth, floor_no)
+		* enemy_damage_multiplier
+		* BOSS_BASE_SKILL_DAMAGE_MULTIPLIER
+	)
 	var boss_hp_multiplier: float = pow(boss_hp_growth, floor_no) * BOSS_BASE_HP_MULTIPLIER
-	var mob_damage_multiplier: float = pow(damage_growth, floor_no) * enemy_damage_multiplier * MOB_BASE_ATTACK_MULTIPLIER
+	var mob_damage_multiplier: float = (
+		pow(damage_growth, floor_no) * enemy_damage_multiplier * MOB_BASE_ATTACK_MULTIPLIER
+	)
 	var mob_hp_multiplier: float = pow(mob_hp_growth, floor_no) * MOB_BASE_HP_MULTIPLIER
 
 	return {

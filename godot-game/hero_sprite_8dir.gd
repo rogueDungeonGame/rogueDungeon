@@ -57,7 +57,10 @@ func _process(_delta: float) -> void:
 func _find_hero_controller() -> Node:
 	var node: Node = get_parent()
 	while node != null:
-		if node.has_method("get_collision_profile_id") and node.has_method("get_hp_bar_anchor_height"):
+		if (
+			node.has_method("get_collision_profile_id")
+			and node.has_method("get_hp_bar_anchor_height")
+		):
 			return node
 		node = node.get_parent()
 	return null
@@ -107,7 +110,14 @@ func _resolve_state_suffix() -> String:
 		var current_animation_name: String = String(_animation_player.current_animation).to_lower()
 		if current_animation_name.find("death") >= 0 and can_show_dead:
 			return dead_suffix
-		if (current_animation_name.find("walk") >= 0 or current_animation_name.find("run") >= 0 or current_animation_name.find("move") >= 0) and _texture_cache.has(_last_direction_name + move_suffix):
+		if (
+			(
+				current_animation_name.find("walk") >= 0
+				or current_animation_name.find("run") >= 0
+				or current_animation_name.find("move") >= 0
+			)
+			and _texture_cache.has(_last_direction_name + move_suffix)
+		):
 			return move_suffix
 	return idle_suffix
 

@@ -48,7 +48,9 @@ func _apply_texture_if_needed(force: bool) -> void:
 	_sprite.texture = next_texture
 	_sprite.pixel_size = maxf(pixel_size, 0.0001)
 	_sprite.double_sided = true
-	_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED if draw_as_billboard else BaseMaterial3D.BILLBOARD_DISABLED
+	_sprite.billboard = (
+		BaseMaterial3D.BILLBOARD_ENABLED if draw_as_billboard else BaseMaterial3D.BILLBOARD_DISABLED
+	)
 	var local_pos: Vector3 = _sprite.position
 	local_pos.y = _resolve_sprite_local_y()
 	_sprite.position = local_pos
@@ -94,7 +96,7 @@ func _compute_bottom_center_from_alpha(image: Image) -> Vector2:
 			break
 	if found_y < 0 or max_x < min_x:
 		return Vector2(float(w) * 0.5, float(h))
-	return Vector2((float(min_x + max_x) * 0.5), float(found_y))
+	return Vector2(float(min_x + max_x) * 0.5, float(found_y))
 
 
 func _resolve_sprite_local_y() -> float:

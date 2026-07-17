@@ -3,18 +3,20 @@ class_name RemoteAvatarVisualService
 
 
 func update_remote_avatar_hp_bar(
-		peer_id: int,
-		avatar: Node3D,
-		hero_state: Dictionary,
-		is_dead: bool,
-		remote_hp_bar_height: float,
-		remote_hp_bar_width: float,
-		remote_avatar_hp_bars: Dictionary,
-		remote_avatar_hp_bar_materials: Dictionary
-	) -> void:
+	peer_id: int,
+	avatar: Node3D,
+	hero_state: Dictionary,
+	is_dead: bool,
+	remote_hp_bar_height: float,
+	remote_hp_bar_width: float,
+	remote_avatar_hp_bars: Dictionary,
+	remote_avatar_hp_bar_materials: Dictionary
+) -> void:
 	if avatar == null or not is_instance_valid(avatar):
 		return
-	var bar_height: float = resolve_remote_avatar_hp_bar_height(hero_state, avatar, remote_hp_bar_height)
+	var bar_height: float = resolve_remote_avatar_hp_bar_height(
+		hero_state, avatar, remote_hp_bar_height
+	)
 	var hp_bar: MeshInstance3D = ensure_remote_avatar_hp_bar(
 		peer_id,
 		avatar,
@@ -27,7 +29,9 @@ func update_remote_avatar_hp_bar(
 		return
 	var max_hp: int = maxi(int(hero_state.get("max_hp", 1)), 1)
 	var hp: int = clampi(int(hero_state.get("hp", max_hp)), 0, max_hp)
-	var material: ShaderMaterial = remote_avatar_hp_bar_materials.get(peer_id, null) as ShaderMaterial
+	var material: ShaderMaterial = (
+		remote_avatar_hp_bar_materials.get(peer_id, null) as ShaderMaterial
+	)
 	if material != null:
 		material.set_shader_parameter("hp_ratio", float(hp) / float(max_hp))
 	var bar_mesh: QuadMesh = hp_bar.mesh as QuadMesh
@@ -39,15 +43,19 @@ func update_remote_avatar_hp_bar(
 
 
 func ensure_remote_avatar_hp_bar(
-		peer_id: int,
-		avatar: Node3D,
-		bar_height: float,
-		remote_hp_bar_width: float,
-		remote_avatar_hp_bars: Dictionary,
-		remote_avatar_hp_bar_materials: Dictionary
-	) -> MeshInstance3D:
+	peer_id: int,
+	avatar: Node3D,
+	bar_height: float,
+	remote_hp_bar_width: float,
+	remote_avatar_hp_bars: Dictionary,
+	remote_avatar_hp_bar_materials: Dictionary
+) -> MeshInstance3D:
 	var existing_bar: MeshInstance3D = remote_avatar_hp_bars.get(peer_id, null) as MeshInstance3D
-	if existing_bar != null and is_instance_valid(existing_bar) and existing_bar.get_parent() == avatar:
+	if (
+		existing_bar != null
+		and is_instance_valid(existing_bar)
+		and existing_bar.get_parent() == avatar
+	):
 		existing_bar.top_level = true
 		return existing_bar
 	var hp_bar := avatar.get_node_or_null("RemoteHPBar") as MeshInstance3D
@@ -79,7 +87,9 @@ func ensure_remote_avatar_hp_bar(
 	return hp_bar
 
 
-func resolve_remote_avatar_hp_bar_height(hero_state: Dictionary, avatar: Node3D, remote_hp_bar_height: float) -> float:
+func resolve_remote_avatar_hp_bar_height(
+	hero_state: Dictionary, avatar: Node3D, remote_hp_bar_height: float
+) -> float:
 	if hero_state.has("hp_bar_anchor_height"):
 		return maxf(float(hero_state.get("hp_bar_anchor_height", remote_hp_bar_height)), 0.0)
 	if hero_state.has("hp_bar_height"):
@@ -93,7 +103,9 @@ func resolve_remote_avatar_hp_bar_height(hero_state: Dictionary, avatar: Node3D,
 	return maxf(remote_hp_bar_height, 0.0)
 
 
-func sync_remote_avatar_hp_bar_transform(avatar: Node3D, hp_bar: MeshInstance3D, bar_height: float) -> void:
+func sync_remote_avatar_hp_bar_transform(
+	avatar: Node3D, hp_bar: MeshInstance3D, bar_height: float
+) -> void:
 	if avatar == null or not is_instance_valid(avatar):
 		return
 	if hp_bar == null or not is_instance_valid(hp_bar):
@@ -165,10 +177,13 @@ func compute_node_mesh_height(root_node: Node3D, ignored_mesh_name: String = "")
 		for x_idx in range(2):
 			for y_idx in range(2):
 				for z_idx in range(2):
-					var corner_local: Vector3 = local_aabb.position + Vector3(
-						local_aabb.size.x * float(x_idx),
-						local_aabb.size.y * float(y_idx),
-						local_aabb.size.z * float(z_idx)
+					var corner_local: Vector3 = (
+						local_aabb.position
+						+ Vector3(
+							local_aabb.size.x * float(x_idx),
+							local_aabb.size.y * float(y_idx),
+							local_aabb.size.z * float(z_idx)
+						)
 					)
 					var corner_root: Vector3 = mesh_to_root * corner_local
 					min_y = minf(min_y, corner_root.y)

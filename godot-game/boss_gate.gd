@@ -23,7 +23,12 @@ func _ready() -> void:
 	call_deferred("_refresh_hp_bar_anchor_position")
 
 
-func apply_damage(amount: int, _attacker: Node3D = null, _damage_source: String = "physical", _hit_context: Dictionary = {}) -> void:
+func apply_damage(
+	amount: int,
+	_attacker: Node3D = null,
+	_damage_source: String = "physical",
+	_hit_context: Dictionary = {}
+) -> void:
 	if multiplayer.multiplayer_peer != null and not multiplayer.is_server():
 		return
 	if not _is_gate_damage_enabled():
@@ -153,10 +158,13 @@ func _compute_node_mesh_height(root_node: Node3D) -> float:
 		for x_idx in range(2):
 			for y_idx in range(2):
 				for z_idx in range(2):
-					var corner_local: Vector3 = local_aabb.position + Vector3(
-						local_aabb.size.x * float(x_idx),
-						local_aabb.size.y * float(y_idx),
-						local_aabb.size.z * float(z_idx)
+					var corner_local: Vector3 = (
+						local_aabb.position
+						+ Vector3(
+							local_aabb.size.x * float(x_idx),
+							local_aabb.size.y * float(y_idx),
+							local_aabb.size.z * float(z_idx)
+						)
 					)
 					var corner_root: Vector3 = mesh_to_root * corner_local
 					min_y = minf(min_y, corner_root.y)

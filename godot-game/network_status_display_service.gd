@@ -60,7 +60,9 @@ func build_status_text(input: Dictionary) -> String:
 	var room_ids: Array[int] = _int_array_copy(input.get("room_ids", []))
 	var peers_count: int = maxi(room_ids.size() - 1, 0)
 	var room_ids_text: String = _format_player_ids(room_ids)
-	var state_text: String = _get_link_state_text(mode_raw, peers_count, bool(input.get("network_running", false)))
+	var state_text: String = _get_link_state_text(
+		mode_raw, peers_count, bool(input.get("network_running", false))
+	)
 	var fps_value: int = maxi(int(input.get("fps", 0)), 0)
 	var sync_delay_text: String = _build_sync_latency_summary(mode_raw, room_ids, input)
 	var running_text: String = "ON" if bool(input.get("network_running", false)) else "OFF"
@@ -69,31 +71,40 @@ func build_status_text(input: Dictionary) -> String:
 	var mode_color: String = _resolve_mode_color(mode_raw)
 	var peers_color: String = "#66FF7A" if peers_count > 0 else "#FFD166"
 	var sync_delay_color: String = "#7CFFEE" if sync_delay_text != "-" else "#9AA0A6"
-	var text: String = "perf=fps:%s sync_delay=%s\nNET(%s) mode=%s state=%s self=%s peers=%s host=%s\nroom_ids=%s" % [
-		_colorize(str(fps_value), "#B8F2E6"),
-		_colorize(sync_delay_text, sync_delay_color),
-		_colorize(running_text, running_color),
-		_colorize(mode, mode_color),
-		_colorize(state_text, state_color),
-		_colorize(str(self_id), "#FFF59D"),
-		_colorize(str(peers_count), peers_color),
-		_colorize("%s:%d" % [str(input.get("server_host", "")), int(input.get("server_port", 0))], "#C5D1FF"),
-		_colorize(room_ids_text, "#7FDBFF")
-	]
+	var text: String = (
+		"perf=fps:%s sync_delay=%s\nNET(%s) mode=%s state=%s self=%s peers=%s host=%s\nroom_ids=%s"
+		% [
+			_colorize(str(fps_value), "#B8F2E6"),
+			_colorize(sync_delay_text, sync_delay_color),
+			_colorize(running_text, running_color),
+			_colorize(mode, mode_color),
+			_colorize(state_text, state_color),
+			_colorize(str(self_id), "#FFF59D"),
+			_colorize(str(peers_count), peers_color),
+			_colorize(
+				"%s:%d" % [str(input.get("server_host", "")), int(input.get("server_port", 0))],
+				"#C5D1FF"
+			),
+			_colorize(room_ids_text, "#7FDBFF")
+		]
+	)
 
 	var transport_mode: String = str(input.get("transport_mode", "")).strip_edges().to_lower()
 	if transport_mode == "steam_relay":
 		var local_id_relay: String = str(input.get("relay_local_id", "")).strip_edges()
 		var target_relay_id: String = str(input.get("relay_target_id", "")).strip_edges()
 		var steam_ready: String = "on" if bool(input.get("steam_initialized", false)) else "off"
-		text += "\ntransport=%s app=%s local=%s host_id=%s vport=%s steam=%s" % [
-			_colorize("steam_relay", "#8EC5FF"),
-			_colorize(str(int(input.get("steam_app_id", 0))), "#C5D1FF"),
-			_colorize(local_id_relay if not local_id_relay.is_empty() else "-", "#C5D1FF"),
-			_colorize(target_relay_id if not target_relay_id.is_empty() else "-", "#C5D1FF"),
-			_colorize(str(maxi(int(input.get("steam_virtual_port", 0)), 0)), "#C5D1FF"),
-			_colorize(steam_ready, "#66FF7A" if steam_ready == "on" else "#FF6B6B")
-		]
+		text += (
+			"\ntransport=%s app=%s local=%s host_id=%s vport=%s steam=%s"
+			% [
+				_colorize("steam_relay", "#8EC5FF"),
+				_colorize(str(int(input.get("steam_app_id", 0))), "#C5D1FF"),
+				_colorize(local_id_relay if not local_id_relay.is_empty() else "-", "#C5D1FF"),
+				_colorize(target_relay_id if not target_relay_id.is_empty() else "-", "#C5D1FF"),
+				_colorize(str(maxi(int(input.get("steam_virtual_port", 0)), 0)), "#C5D1FF"),
+				_colorize(steam_ready, "#66FF7A" if steam_ready == "on" else "#FF6B6B")
+			]
+		)
 	elif transport_mode == "steam_stub":
 		var local_id: String = str(input.get("stub_local_id", "")).strip_edges()
 		var target_id: String = str(input.get("stub_target_id", "")).strip_edges()
@@ -102,13 +113,16 @@ func build_status_text(input: Dictionary) -> String:
 		var endpoint_text: String = "-"
 		if not endpoint_host.is_empty() and endpoint_port > 0:
 			endpoint_text = "%s:%d" % [endpoint_host, endpoint_port]
-		text += "\ntransport=%s app=%s local=%s host_id=%s endpoint=%s" % [
-			_colorize("steam_stub", "#8EC5FF"),
-			_colorize(str(int(input.get("steam_app_id", 0))), "#C5D1FF"),
-			_colorize(local_id if not local_id.is_empty() else "-", "#C5D1FF"),
-			_colorize(target_id if not target_id.is_empty() else "-", "#C5D1FF"),
-			_colorize(endpoint_text, "#C5D1FF")
-		]
+		text += (
+			"\ntransport=%s app=%s local=%s host_id=%s endpoint=%s"
+			% [
+				_colorize("steam_stub", "#8EC5FF"),
+				_colorize(str(int(input.get("steam_app_id", 0))), "#C5D1FF"),
+				_colorize(local_id if not local_id.is_empty() else "-", "#C5D1FF"),
+				_colorize(target_id if not target_id.is_empty() else "-", "#C5D1FF"),
+				_colorize(endpoint_text, "#C5D1FF")
+			]
+		)
 	else:
 		text += "\ntransport=%s" % _colorize("enet_direct", "#8EC5FF")
 
@@ -122,12 +136,18 @@ func build_status_text(input: Dictionary) -> String:
 		if bool(input.get("host_migration_in_progress", false)):
 			var target_steam_id: int = int(input.get("host_migration_target_steam_id", 0))
 			migration_text = "wait->%s" % (str(target_steam_id) if target_steam_id > 0 else "-")
-		text += "\nlobby=id:%s owner:%s members:%s migration:%s" % [
-			_colorize(str(steam_lobby_id), "#B9FBC0"),
-			_colorize(lobby_host_text, "#B9FBC0"),
-			_colorize(str(_int_array_copy(input.get("steam_lobby_member_steam_ids", [])).size()), "#B9FBC0"),
-			_colorize(migration_text, "#FFD166" if migration_text != "off" else "#66FF7A")
-		]
+		text += (
+			"\nlobby=id:%s owner:%s members:%s migration:%s"
+			% [
+				_colorize(str(steam_lobby_id), "#B9FBC0"),
+				_colorize(lobby_host_text, "#B9FBC0"),
+				_colorize(
+					str(_int_array_copy(input.get("steam_lobby_member_steam_ids", [])).size()),
+					"#B9FBC0"
+				),
+				_colorize(migration_text, "#FFD166" if migration_text != "off" else "#66FF7A")
+			]
+		)
 
 	var hero_summary: String = _build_hero_summary(room_ids, input)
 	if not hero_summary.is_empty():
@@ -136,35 +156,63 @@ func build_status_text(input: Dictionary) -> String:
 	if not equip_summary.is_empty():
 		text += "\nequip=%s" % _colorize(equip_summary, "#A0C4FF")
 
-	var active_world_ms: int = int(round(float(input.get("active_world_sync_interval_sec", 0.0)) * 1000.0))
-	var hero_sync_ms: int = int(round(maxf(float(input.get("hero_sync_interval_sec", 0.02)), 0.02) * 1000.0))
+	var active_world_ms: int = int(
+		round(float(input.get("active_world_sync_interval_sec", 0.0)) * 1000.0)
+	)
+	var hero_sync_ms: int = int(
+		round(maxf(float(input.get("hero_sync_interval_sec", 0.02)), 0.02) * 1000.0)
+	)
 	var chunk_size_info: int = int(input.get("world_mob_chunk_size", 0))
 	if bool(input.get("adaptive_world_sync_enabled", false)):
 		chunk_size_info = int(input.get("dynamic_world_mob_chunk_size", chunk_size_info))
-	text += "\nsync=hero/%s world/%s chunk=%s pkt=%s adaptive=%s" % [
-		_colorize("%dms" % hero_sync_ms, "#FDE68A"),
-		_colorize("%dms" % active_world_ms, "#FDE68A"),
-		_colorize(str(chunk_size_info), "#FDE68A"),
-		_colorize("%dB" % int(input.get("last_world_packet_bytes", 0)), "#FDE68A"),
-		_colorize("on" if bool(input.get("adaptive_world_sync_enabled", false)) else "off", "#66FF7A" if bool(input.get("adaptive_world_sync_enabled", false)) else "#9AA0A6")
-	]
+	text += (
+		"\nsync=hero/%s world/%s chunk=%s pkt=%s adaptive=%s"
+		% [
+			_colorize("%dms" % hero_sync_ms, "#FDE68A"),
+			_colorize("%dms" % active_world_ms, "#FDE68A"),
+			_colorize(str(chunk_size_info), "#FDE68A"),
+			_colorize("%dB" % int(input.get("last_world_packet_bytes", 0)), "#FDE68A"),
+			_colorize(
+				"on" if bool(input.get("adaptive_world_sync_enabled", false)) else "off",
+				"#66FF7A" if bool(input.get("adaptive_world_sync_enabled", false)) else "#9AA0A6"
+			)
+		]
+	)
 
 	if mode_raw == "client":
-		text += "\ninput=seq:%s ack:%s pending:%s" % [
-			_colorize(str(int(input.get("client_input_seq", 0))), "#E0AAFF"),
-			_colorize(str(int(input.get("last_ack_input_seq_from_host", 0))), "#E0AAFF"),
-			_colorize(str(int(input.get("client_recent_input_frames_size", 0))), "#E0AAFF")
-		]
+		text += (
+			"\ninput=seq:%s ack:%s pending:%s"
+			% [
+				_colorize(str(int(input.get("client_input_seq", 0))), "#E0AAFF"),
+				_colorize(str(int(input.get("last_ack_input_seq_from_host", 0))), "#E0AAFF"),
+				_colorize(str(int(input.get("client_recent_input_frames_size", 0))), "#E0AAFF")
+			]
+		)
 	elif mode_raw == "host":
-		text += "\ninput_ack_peers=%s world_seq=%s" % [
-			_colorize(str(int(input.get("peer_last_input_seq_size", 0))), "#E0AAFF"),
-			_colorize(str(int(input.get("host_world_snapshot_seq", 0))), "#E0AAFF")
-		]
-		text += " dmg_budget=%s x%s active=%s" % [
-			_colorize("%.0f/s" % maxf(float(input.get("damage_request_budget_per_sec", 0.0)), 0.0), "#FFC6FF"),
-			_colorize("%.1f" % clampf(float(input.get("damage_request_budget_burst_sec", 1.0)), 1.0, 4.0), "#FFC6FF"),
-			_colorize(str(int(input.get("peer_damage_budget_tokens_size", 0))), "#FFC6FF")
-		]
+		text += (
+			"\ninput_ack_peers=%s world_seq=%s"
+			% [
+				_colorize(str(int(input.get("peer_last_input_seq_size", 0))), "#E0AAFF"),
+				_colorize(str(int(input.get("host_world_snapshot_seq", 0))), "#E0AAFF")
+			]
+		)
+		text += (
+			" dmg_budget=%s x%s active=%s"
+			% [
+				_colorize(
+					"%.0f/s" % maxf(float(input.get("damage_request_budget_per_sec", 0.0)), 0.0),
+					"#FFC6FF"
+				),
+				_colorize(
+					(
+						"%.1f"
+						% clampf(float(input.get("damage_request_budget_burst_sec", 1.0)), 1.0, 4.0)
+					),
+					"#FFC6FF"
+				),
+				_colorize(str(int(input.get("peer_damage_budget_tokens_size", 0))), "#FFC6FF")
+			]
+		)
 		var breaker_summary: String = _build_damage_breaker_summary(room_ids, input)
 		if not breaker_summary.is_empty():
 			text += " breaker=%s" % _colorize(breaker_summary, "#FFADAD")
@@ -178,7 +226,9 @@ func build_status_text(input: Dictionary) -> String:
 	return text
 
 
-func get_room_player_ids(network_running: bool, has_multiplayer_peer: bool, self_id: int, peer_ids: Array) -> Array[int]:
+func get_room_player_ids(
+	network_running: bool, has_multiplayer_peer: bool, self_id: int, peer_ids: Array
+) -> Array[int]:
 	var ids: Array[int] = []
 	if not network_running:
 		return ids
@@ -195,7 +245,9 @@ func get_room_player_ids(network_running: bool, has_multiplayer_peer: bool, self
 	return ids
 
 
-func _build_sync_latency_summary(mode_raw: String, room_ids: Array[int], input: Dictionary) -> String:
+func _build_sync_latency_summary(
+	mode_raw: String, room_ids: Array[int], input: Dictionary
+) -> String:
 	if mode_raw == "client":
 		var client_last_rtt_ms: int = int(input.get("client_last_rtt_ms", -1))
 		if client_last_rtt_ms < 0:
@@ -245,12 +297,19 @@ func _build_hero_summary(room_ids: Array[int], input: Dictionary) -> String:
 		var command_variant: Variant = state.get("command_bus", null)
 		if command_variant is Dictionary:
 			cmd_type = str((command_variant as Dictionary).get("type", "-"))
-		parts.append("P%d hp=%d/%d mp=%d/%d profile=%s cmd=%s" % [peer_id, hp, max_hp, mana, max_mana, profile, cmd_type])
+		parts.append(
+			(
+				"P%d hp=%d/%d mp=%d/%d profile=%s cmd=%s"
+				% [peer_id, hp, max_hp, mana, max_mana, profile, cmd_type]
+			)
+		)
 	return " | ".join(parts)
 
 
 func _build_equipment_summary(room_ids: Array[int], input: Dictionary) -> String:
-	var peer_latest_equipment_state: Dictionary = _dict_copy(input.get("peer_latest_equipment_state", {}))
+	var peer_latest_equipment_state: Dictionary = _dict_copy(
+		input.get("peer_latest_equipment_state", {})
+	)
 	var parts: Array[String] = []
 	for peer_id in room_ids:
 		if not peer_latest_equipment_state.has(peer_id):
@@ -268,14 +327,21 @@ func _build_equipment_summary(room_ids: Array[int], input: Dictionary) -> String
 		var offer_variant: Variant = state.get("shop_offer_ids", [])
 		if offer_variant is Array:
 			offer_count = (offer_variant as Array).size()
-		parts.append("P%d inv=%s gold=%d shop=%d offer=%d" % [peer_id, inv_text, gold, shop_level, offer_count])
+		parts.append(
+			(
+				"P%d inv=%s gold=%d shop=%d offer=%d"
+				% [peer_id, inv_text, gold, shop_level, offer_count]
+			)
+		)
 	return " | ".join(parts)
 
 
 func _build_damage_request_audit_summary(room_ids: Array[int], input: Dictionary) -> String:
 	var peer_damage_accept_total: Dictionary = _dict_copy(input.get("peer_damage_accept_total", {}))
 	var peer_damage_reject_total: Dictionary = _dict_copy(input.get("peer_damage_reject_total", {}))
-	var peer_damage_reject_reason_counts: Dictionary = _dict_copy(input.get("peer_damage_reject_reason_counts", {}))
+	var peer_damage_reject_reason_counts: Dictionary = _dict_copy(
+		input.get("peer_damage_reject_reason_counts", {})
+	)
 	var parts: Array[String] = []
 	for peer_id in room_ids:
 		var ok_count: int = int(peer_damage_accept_total.get(peer_id, 0))
@@ -291,13 +357,20 @@ func _build_damage_request_audit_summary(room_ids: Array[int], input: Dictionary
 			if reason_hits > top_reason_count:
 				top_reason_count = reason_hits
 				top_reason = reason_key
-		parts.append("P%d ok=%d rej=%d top=%s(%d)" % [peer_id, ok_count, reject_count, top_reason, top_reason_count])
+		parts.append(
+			(
+				"P%d ok=%d rej=%d top=%s(%d)"
+				% [peer_id, ok_count, reject_count, top_reason, top_reason_count]
+			)
+		)
 	return " | ".join(parts)
 
 
 func _build_damage_breaker_summary(room_ids: Array[int], input: Dictionary) -> String:
 	var now_ms: int = int(input.get("now_ms", 0))
-	var blocked_until_by_peer: Dictionary = _dict_copy(input.get("peer_damage_breaker_blocked_until_ms", {}))
+	var blocked_until_by_peer: Dictionary = _dict_copy(
+		input.get("peer_damage_breaker_blocked_until_ms", {})
+	)
 	var active_parts: Array[String] = []
 	for peer_id in room_ids:
 		var blocked_until_ms: int = int(blocked_until_by_peer.get(peer_id, 0))

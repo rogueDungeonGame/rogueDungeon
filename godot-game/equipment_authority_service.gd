@@ -42,12 +42,12 @@ func grant_remote_gold_reward(peer_id: int, amount: int, build_state_fn: Callabl
 
 
 func handle_action(
-		peer_id: int,
-		request: Dictionary,
-		baseline_state: Dictionary,
-		build_state_fn: Callable,
-		apply_action_fn: Callable
-	) -> Dictionary:
+	peer_id: int,
+	request: Dictionary,
+	baseline_state: Dictionary,
+	build_state_fn: Callable,
+	apply_action_fn: Callable
+) -> Dictionary:
 	if peer_id <= 0:
 		return {
 			"ok": false,

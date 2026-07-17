@@ -22,19 +22,37 @@ func _init(config: Dictionary = {}) -> void:
 	if config.get("build_alias_map", null) is Dictionary:
 		_build_alias_map = (config.get("build_alias_map", {}) as Dictionary).duplicate(true)
 	if config.get("spark_force_item_names", null) is Dictionary:
-		_spark_force_item_names = (config.get("spark_force_item_names", {}) as Dictionary).duplicate(true)
+		_spark_force_item_names = (
+			(config.get("spark_force_item_names", {}) as Dictionary).duplicate(true)
+		)
 	_charge_build_name = str(config.get("charge_build_name", _charge_build_name)).strip_edges()
 	_coin_build_name = str(config.get("coin_build_name", _coin_build_name)).strip_edges()
 	_charge_stack_agility = int(config.get("charge_stack_agility", _charge_stack_agility))
-	_charge_staff_summon_bonus_per_stack = float(config.get("charge_staff_summon_bonus_per_stack", _charge_staff_summon_bonus_per_stack))
-	_coin_button_attack_speed_per_layer = int(config.get("coin_button_attack_speed_per_layer", _coin_button_attack_speed_per_layer))
-	_coin_smile_damage_tenths_per_coin_owned = int(config.get("coin_smile_damage_tenths_per_coin_owned", _coin_smile_damage_tenths_per_coin_owned))
-	_coin_gold_refresh_limit_per_item = int(config.get("coin_gold_refresh_limit_per_item", _coin_gold_refresh_limit_per_item))
-	_coin_lucky_gold_per_trigger = int(config.get("coin_lucky_gold_per_trigger", _coin_lucky_gold_per_trigger))
-	_coin_gold_gold_per_layer = int(config.get("coin_gold_gold_per_layer", _coin_gold_gold_per_layer))
+	_charge_staff_summon_bonus_per_stack = float(
+		config.get("charge_staff_summon_bonus_per_stack", _charge_staff_summon_bonus_per_stack)
+	)
+	_coin_button_attack_speed_per_layer = int(
+		config.get("coin_button_attack_speed_per_layer", _coin_button_attack_speed_per_layer)
+	)
+	_coin_smile_damage_tenths_per_coin_owned = int(
+		config.get(
+			"coin_smile_damage_tenths_per_coin_owned", _coin_smile_damage_tenths_per_coin_owned
+		)
+	)
+	_coin_gold_refresh_limit_per_item = int(
+		config.get("coin_gold_refresh_limit_per_item", _coin_gold_refresh_limit_per_item)
+	)
+	_coin_lucky_gold_per_trigger = int(
+		config.get("coin_lucky_gold_per_trigger", _coin_lucky_gold_per_trigger)
+	)
+	_coin_gold_gold_per_layer = int(
+		config.get("coin_gold_gold_per_layer", _coin_gold_gold_per_layer)
+	)
 
 
-func calculate_inventory_bonuses(item_db: Array, inv: Array, meta_array: Array, coin_state: Dictionary, destroy_bonus: Dictionary) -> Dictionary:
+func calculate_inventory_bonuses(
+	item_db: Array, inv: Array, meta_array: Array, coin_state: Dictionary, destroy_bonus: Dictionary
+) -> Dictionary:
 	var total: Dictionary = {
 		"strength": 0,
 		"agility": 0,
@@ -74,33 +92,70 @@ func calculate_inventory_bonuses(item_db: Array, inv: Array, meta_array: Array, 
 		total["mana"] = int(total["mana"]) + int(item_bonus.get("mana", 0))
 		total["damage"] = int(total["damage"]) + int(item_bonus.get("damage", 0))
 		total["armor"] = float(total["armor"]) + float(item_bonus.get("armor", 0.0))
-		total["attack_speed_percent"] = float(total["attack_speed_percent"]) + float(item_bonus.get("attack_speed_percent", 0.0))
+		total["attack_speed_percent"] = (
+			float(total["attack_speed_percent"])
+			+ float(item_bonus.get("attack_speed_percent", 0.0))
+		)
 		total["move_speed"] = float(total["move_speed"]) + float(item_bonus.get("move_speed", 0.0))
-		total["attack_range"] = float(total["attack_range"]) + float(item_bonus.get("attack_range", 0.0))
+		total["attack_range"] = (
+			float(total["attack_range"]) + float(item_bonus.get("attack_range", 0.0))
+		)
 		total["hp_regen"] = float(total["hp_regen"]) + float(item_bonus.get("hp_regen", 0.0))
-		total["cooldown_reduction_percent"] = float(total["cooldown_reduction_percent"]) + float(item_bonus.get("cooldown_reduction_percent", 0.0))
-		total["physical_crit_chance"] = float(total["physical_crit_chance"]) + float(item_bonus.get("physical_crit_chance", 0.0))
-		total["physical_crit_multiplier"] = float(total["physical_crit_multiplier"]) + float(item_bonus.get("physical_crit_multiplier", 0.0))
-		total["spell_crit_chance"] = float(total["spell_crit_chance"]) + float(item_bonus.get("spell_crit_chance", 0.0))
-		total["spell_crit_multiplier"] = float(total["spell_crit_multiplier"]) + float(item_bonus.get("spell_crit_multiplier", 0.0))
-		total["spell_damage_percent"] = float(total["spell_damage_percent"]) + float(item_bonus.get("spell_damage_percent", 0.0))
-		total["magic_damage_reduction_percent"] = float(total["magic_damage_reduction_percent"]) + float(item_bonus.get("magic_damage_reduction_percent", 0.0))
+		total["cooldown_reduction_percent"] = (
+			float(total["cooldown_reduction_percent"])
+			+ float(item_bonus.get("cooldown_reduction_percent", 0.0))
+		)
+		total["physical_crit_chance"] = (
+			float(total["physical_crit_chance"])
+			+ float(item_bonus.get("physical_crit_chance", 0.0))
+		)
+		total["physical_crit_multiplier"] = (
+			float(total["physical_crit_multiplier"])
+			+ float(item_bonus.get("physical_crit_multiplier", 0.0))
+		)
+		total["spell_crit_chance"] = (
+			float(total["spell_crit_chance"]) + float(item_bonus.get("spell_crit_chance", 0.0))
+		)
+		total["spell_crit_multiplier"] = (
+			float(total["spell_crit_multiplier"])
+			+ float(item_bonus.get("spell_crit_multiplier", 0.0))
+		)
+		total["spell_damage_percent"] = (
+			float(total["spell_damage_percent"])
+			+ float(item_bonus.get("spell_damage_percent", 0.0))
+		)
+		total["magic_damage_reduction_percent"] = (
+			float(total["magic_damage_reduction_percent"])
+			+ float(item_bonus.get("magic_damage_reduction_percent", 0.0))
+		)
 
 	var spark_effects: Dictionary = _calculate_spark_effects(item_db, inv)
 	total["spark_effects"] = spark_effects
-	var bonus_per_spark_item: float = float(spark_effects.get("bonus_attack_speed_percent_per_spark_item", 0.0))
+	var bonus_per_spark_item: float = float(
+		spark_effects.get("bonus_attack_speed_percent_per_spark_item", 0.0)
+	)
 	var spark_item_count: int = int(spark_effects.get("spark_item_count", 0))
 	if bonus_per_spark_item > 0.0 and spark_item_count > 0:
-		total["attack_speed_percent"] = float(total["attack_speed_percent"]) + bonus_per_spark_item * float(spark_item_count)
+		total["attack_speed_percent"] = (
+			float(total["attack_speed_percent"]) + bonus_per_spark_item * float(spark_item_count)
+		)
 
 	var charge_effects: Dictionary = _calculate_charge_effects(item_db, inv, meta_array)
 	total["charge_effects"] = charge_effects
 	total["agility"] = int(total["agility"]) + int(charge_effects.get("agility", 0))
 	total["intelligence"] = int(total["intelligence"]) + int(charge_effects.get("intelligence", 0))
 	total["hp"] = int(total["hp"]) + int(charge_effects.get("hp", 0))
-	total["spell_damage_percent"] = float(total["spell_damage_percent"]) + float(charge_effects.get("spell_damage_percent", 0.0))
-	total["attack_range"] = float(total["attack_range"]) + float(charge_effects.get("attack_range", 0.0))
-	total["physical_crit_multiplier"] = float(total["physical_crit_multiplier"]) + float(charge_effects.get("physical_crit_multiplier", 0.0))
+	total["spell_damage_percent"] = (
+		float(total["spell_damage_percent"])
+		+ float(charge_effects.get("spell_damage_percent", 0.0))
+	)
+	total["attack_range"] = (
+		float(total["attack_range"]) + float(charge_effects.get("attack_range", 0.0))
+	)
+	total["physical_crit_multiplier"] = (
+		float(total["physical_crit_multiplier"])
+		+ float(charge_effects.get("physical_crit_multiplier", 0.0))
+	)
 
 	total["necromancy_effects"] = _calculate_necromancy_effects(item_db, inv, meta_array)
 	total["battle_banner_effects"] = _calculate_battle_banner_effects(item_db, inv)
@@ -113,13 +168,17 @@ func calculate_inventory_bonuses(item_db: Array, inv: Array, meta_array: Array, 
 	total["agility"] = int(total["agility"]) + int(coin_effects.get("agility", 0))
 	total["intelligence"] = int(total["intelligence"]) + int(coin_effects.get("intelligence", 0))
 	total["damage"] = int(total["damage"]) + int(coin_effects.get("damage", 0))
-	total["attack_speed_percent"] = float(total["attack_speed_percent"]) + float(coin_effects.get("attack_speed_percent", 0.0))
+	total["attack_speed_percent"] = (
+		float(total["attack_speed_percent"]) + float(coin_effects.get("attack_speed_percent", 0.0))
+	)
 
 	total["strength"] = int(total["strength"]) + int(destroy_bonus.get("strength", 0))
 	total["agility"] = int(total["agility"]) + int(destroy_bonus.get("agility", 0))
 	total["intelligence"] = int(total["intelligence"]) + int(destroy_bonus.get("intelligence", 0))
 	total["hp"] = int(total["hp"]) + int(destroy_bonus.get("hp", 0))
-	total["spell_damage_percent"] = float(total["spell_damage_percent"]) + float(destroy_bonus.get("spell_damage_percent", 0.0))
+	total["spell_damage_percent"] = (
+		float(total["spell_damage_percent"]) + float(destroy_bonus.get("spell_damage_percent", 0.0))
+	)
 	return total
 
 
@@ -161,21 +220,38 @@ func _calculate_spark_effects(item_db: Array, inv: Array) -> Dictionary:
 			spark_item_count += 1
 	effects["spark_item_count"] = spark_item_count
 	effects["inventory_level_sum"] = inventory_level_sum
-	effects["bonus_attack_speed_percent_per_spark_item"] = 5.0 * float(_count_named_items(item_count_by_name, ["加速手套"]))
-	effects["attack_interval_reduction_sec"] = 0.15 * float(_count_named_items(item_count_by_name, ["疾风短剑"])) + 0.3 * float(_count_named_items(item_count_by_name, ["幻影对剑"]))
+	effects["bonus_attack_speed_percent_per_spark_item"] = (
+		5.0 * float(_count_named_items(item_count_by_name, ["加速手套"]))
+	)
+	effects["attack_interval_reduction_sec"] = (
+		0.15 * float(_count_named_items(item_count_by_name, ["疾风短剑"]))
+		+ 0.3 * float(_count_named_items(item_count_by_name, ["幻影对剑"]))
+	)
 	var spark_ring_count: int = _count_named_items(item_count_by_name, ["火花环刃"])
 	if spark_ring_count > 0:
 		effects["attack_effect_multiplier"] = pow(2.0, float(spark_ring_count))
-	effects["attack_effect_attack_speed_ratio"] = float(_count_named_items(item_count_by_name, ["破败火花剑", "破败之刃"]))
-	effects["attack_effect_agility_ratio"] = float(_count_named_items(item_count_by_name, ["火花奇术手"]))
-	effects["attack_effect_current_mana_ratio"] = 0.02 * float(_count_named_items(item_count_by_name, ["霓虹棍剑"])) + 0.04 * float(_count_named_items(item_count_by_name, ["蓝港棍剑"]))
-	effects["attack_effect_max_hp_ratio"] = 0.02 * float(_count_named_items(item_count_by_name, ["毁灭之怒", "泰坦之怒"])) + 0.04 * float(_count_named_items(item_count_by_name, ["陨灭泰坦之锤", "陨灭泰坦锤"]))
+	effects["attack_effect_attack_speed_ratio"] = float(
+		_count_named_items(item_count_by_name, ["破败火花剑", "破败之刃"])
+	)
+	effects["attack_effect_agility_ratio"] = float(
+		_count_named_items(item_count_by_name, ["火花奇术手"])
+	)
+	effects["attack_effect_current_mana_ratio"] = (
+		0.02 * float(_count_named_items(item_count_by_name, ["霓虹棍剑"]))
+		+ 0.04 * float(_count_named_items(item_count_by_name, ["蓝港棍剑"]))
+	)
+	effects["attack_effect_max_hp_ratio"] = (
+		0.02 * float(_count_named_items(item_count_by_name, ["毁灭之怒", "泰坦之怒"]))
+		+ 0.04 * float(_count_named_items(item_count_by_name, ["陨灭泰坦之锤", "陨灭泰坦锤"]))
+	)
 	var ember_blade_count: int = _count_named_items(item_count_by_name, ["火花末刃"])
 	effects["attack_effect_flat_damage"] = 20.0 * float(ember_blade_count)
 	effects["attack_effect_flat_heal"] = 10.0 * float(ember_blade_count)
 	if ember_blade_count > 0:
 		effects["attack_effect_low_hp_double_threshold"] = 0.35
-	effects["attack_effect_total_item_level_scale"] = 10.0 * float(_count_named_items(item_count_by_name, ["闪耀之爪"]))
+	effects["attack_effect_total_item_level_scale"] = (
+		10.0 * float(_count_named_items(item_count_by_name, ["闪耀之爪"]))
+	)
 	var flying_arrow_count: int = _count_named_items(item_count_by_name, ["火花飞矢"])
 	if flying_arrow_count > 0:
 		effects["on_hit_attack_speed_bonus_percent"] = 20.0 * float(flying_arrow_count)
@@ -240,9 +316,13 @@ func _calculate_necromancy_effects(item_db: Array, inv: Array, meta_array: Array
 	var spirit_staff_charge_count: int = 0
 	for slot_idx in _find_item_slots_by_name(item_db, inv, "通灵杖"):
 		var spirit_staff_idx: int = int(inv[slot_idx])
-		var spirit_staff_meta: Dictionary = _get_inventory_meta_entry(meta_array, slot_idx, spirit_staff_idx)
+		var spirit_staff_meta: Dictionary = _get_inventory_meta_entry(
+			meta_array, slot_idx, spirit_staff_idx
+		)
 		spirit_staff_charge_count += maxi(int(spirit_staff_meta.get("charges", 0)), 0)
-	var total_staff_bonus: float = float(spirit_staff_charge_count) * _charge_staff_summon_bonus_per_stack
+	var total_staff_bonus: float = (
+		float(spirit_staff_charge_count) * _charge_staff_summon_bonus_per_stack
+	)
 	effects["summon_attack_bonus_percent_flat"] = total_staff_bonus
 	effects["summon_range_bonus_percent_flat"] = total_staff_bonus
 	return effects
@@ -285,18 +365,33 @@ func _calculate_charge_effects(item_db: Array, inv: Array, meta_array: Array) ->
 		var charge_agility: int = maxi(int(entry.get("permanent_agility", 0)), 0)
 		if item_name != "通灵杖":
 			charge_agility += charge_count * _charge_stack_agility
-		var particle_bonus_per_two: int = maxi(int(entry.get("particle_bonus_per_two_charges", 0)), 0)
+		var particle_bonus_per_two: int = maxi(
+			int(entry.get("particle_bonus_per_two_charges", 0)), 0
+		)
 		if particle_bonus_per_two > 0 and charge_count > 0:
 			charge_agility += (charge_count / 2) * particle_bonus_per_two
 		effects["agility"] = int(effects.get("agility", 0)) + charge_agility
 		charge_attribute_agility_total += charge_agility
 		effects["hp"] = int(effects.get("hp", 0)) + maxi(int(entry.get("permanent_hp", 0)), 0)
-		effects["spell_damage_percent"] = float(effects.get("spell_damage_percent", 0.0)) + float(maxi(int(entry.get("permanent_spell_damage_percent", 0)), 0))
-		effects["attack_range"] = float(effects.get("attack_range", 0.0)) + float(maxi(int(entry.get("permanent_attack_range", 0)), 0))
-		effects["physical_crit_multiplier"] = float(effects.get("physical_crit_multiplier", 0.0)) + float(maxi(int(entry.get("permanent_physical_crit_multiplier", 0)), 0))
+		effects["spell_damage_percent"] = (
+			float(effects.get("spell_damage_percent", 0.0))
+			+ float(maxi(int(entry.get("permanent_spell_damage_percent", 0)), 0))
+		)
+		effects["attack_range"] = (
+			float(effects.get("attack_range", 0.0))
+			+ float(maxi(int(entry.get("permanent_attack_range", 0)), 0))
+		)
+		effects["physical_crit_multiplier"] = (
+			float(effects.get("physical_crit_multiplier", 0.0))
+			+ float(maxi(int(entry.get("permanent_physical_crit_multiplier", 0)), 0))
+		)
 		if item_name == "未来引擎":
 			var future_engine_bonus: Dictionary = _parse_item_bonus(item_data)
-			effects["agility"] = int(effects.get("agility", 0)) + int(future_engine_bonus.get("agility", 0)) + charge_agility
+			effects["agility"] = (
+				int(effects.get("agility", 0))
+				+ int(future_engine_bonus.get("agility", 0))
+				+ charge_agility
+			)
 	effects["intelligence"] = charge_attribute_agility_total * charge_scepter_count
 	effects["attack_effect_agility_ratio"] = float(perfect_core_count + perfect_firestone_count)
 	effects["on_hit_permanent_hp_gain"] = perfect_firestone_count
@@ -360,9 +455,15 @@ func _calculate_battle_prep_effects(item_db: Array, inv: Array) -> Dictionary:
 		item_count_by_name[item_name] = int(item_count_by_name.get(item_name, 0)) + 1
 	var trigger_multiplier: int = 1 + _count_named_items(item_count_by_name, ["耐文合金"])
 	effects["trigger_multiplier"] = maxi(trigger_multiplier, 1)
-	effects["snake_ward_count"] = _count_named_items(item_count_by_name, ["储备蛇棒"]) * 3 * maxi(trigger_multiplier, 1)
-	effects["challenge_griffin_count"] = _count_named_items(item_count_by_name, ["挑战头巾"]) * maxi(trigger_multiplier, 1)
-	effects["revive_charge_if_empty"] = _count_named_items(item_count_by_name, ["吊命娃娃"]) * maxi(trigger_multiplier, 1)
+	effects["snake_ward_count"] = (
+		_count_named_items(item_count_by_name, ["储备蛇棒"]) * 3 * maxi(trigger_multiplier, 1)
+	)
+	effects["challenge_griffin_count"] = (
+		_count_named_items(item_count_by_name, ["挑战头巾"]) * maxi(trigger_multiplier, 1)
+	)
+	effects["revive_charge_if_empty"] = (
+		_count_named_items(item_count_by_name, ["吊命娃娃"]) * maxi(trigger_multiplier, 1)
+	)
 	effects["titan_helmet_count"] = _count_named_items(item_count_by_name, ["泰坦巨盔"])
 	return effects
 
@@ -402,7 +503,9 @@ func _calculate_settlement_effects(item_db: Array, inv: Array) -> Dictionary:
 	return effects
 
 
-func _calculate_coin_effects(item_db: Array, inv: Array, meta_array: Array, coin_state: Dictionary) -> Dictionary:
+func _calculate_coin_effects(
+	item_db: Array, inv: Array, meta_array: Array, coin_state: Dictionary
+) -> Dictionary:
 	var effects: Dictionary = {
 		"strength": 0,
 		"agility": 0,
@@ -410,7 +513,8 @@ func _calculate_coin_effects(item_db: Array, inv: Array, meta_array: Array, coin
 		"damage": 0,
 		"attack_speed_percent": 0.0,
 		"revive_charge_total": maxi(int(coin_state.get("revive_event_charges", 0)), 0),
-		"auto_destroy_coin_enabled": _bool_from_variant(coin_state.get("auto_destroy_coin_enabled", false), false),
+		"auto_destroy_coin_enabled":
+		_bool_from_variant(coin_state.get("auto_destroy_coin_enabled", false), false),
 		"total_coin_count": 0,
 		"total_coin_layers": 0,
 		"gold_coin_count": 0,
@@ -428,24 +532,40 @@ func _calculate_coin_effects(item_db: Array, inv: Array, meta_array: Array, coin
 		var item_name: String = _get_item_name_by_index(item_db, item_idx)
 		var entry: Dictionary = _get_inventory_meta_entry(meta_array, slot_idx, item_idx)
 		coin_item_count_by_name[item_name] = int(coin_item_count_by_name.get(item_name, 0)) + 1
-		effects["strength"] = int(effects.get("strength", 0)) + int(entry.get("permanent_strength", 0))
+		effects["strength"] = (
+			int(effects.get("strength", 0)) + int(entry.get("permanent_strength", 0))
+		)
 		effects["agility"] = int(effects.get("agility", 0)) + int(entry.get("permanent_agility", 0))
-		effects["intelligence"] = int(effects.get("intelligence", 0)) + int(entry.get("permanent_intelligence", 0))
+		effects["intelligence"] = (
+			int(effects.get("intelligence", 0)) + int(entry.get("permanent_intelligence", 0))
+		)
 		effects["damage"] = int(effects.get("damage", 0)) + int(entry.get("permanent_damage", 0))
-		effects["attack_speed_percent"] = float(effects.get("attack_speed_percent", 0.0)) + float(int(entry.get("permanent_attack_speed_percent", 0)))
+		effects["attack_speed_percent"] = (
+			float(effects.get("attack_speed_percent", 0.0))
+			+ float(int(entry.get("permanent_attack_speed_percent", 0)))
+		)
 		smile_damage_tenths_total += int(entry.get("permanent_damage_tenths", 0))
 		if item_name == "经验币":
-			effects["attack_speed_percent"] = float(effects.get("attack_speed_percent", 0.0)) + float(maxi(int(entry.get("coin_layers", 0)), 0))
+			effects["attack_speed_percent"] = (
+				float(effects.get("attack_speed_percent", 0.0))
+				+ float(maxi(int(entry.get("coin_layers", 0)), 0))
+			)
 		if item_name == "铜硬币":
 			effects["damage"] = int(effects.get("damage", 0)) + total_coin_layers
 	effects["damage"] = int(effects.get("damage", 0)) + int(smile_damage_tenths_total / 10)
-	effects["damage"] = int(effects.get("damage", 0)) + maxi(int(coin_state.get("retained_copper_damage", 0)), 0)
+	effects["damage"] = (
+		int(effects.get("damage", 0)) + maxi(int(coin_state.get("retained_copper_damage", 0)), 0)
+	)
 	effects["total_coin_count"] = total_coin_count
 	effects["total_coin_layers"] = total_coin_layers
 	effects["gold_coin_count"] = _count_named_items(coin_item_count_by_name, ["金硬币"])
-	effects["gold_coin_refresh_limit"] = int(effects["gold_coin_count"]) * _coin_gold_refresh_limit_per_item
+	effects["gold_coin_refresh_limit"] = (
+		int(effects["gold_coin_count"]) * _coin_gold_refresh_limit_per_item
+	)
 	effects["revenge_spirit_count"] = _count_named_items(coin_item_count_by_name, ["怨恨硬币"])
-	effects["revenge_spirit_attack_percent"] = (40.0 + float(total_coin_layers)) * float(int(effects["revenge_spirit_count"]))
+	effects["revenge_spirit_attack_percent"] = (
+		(40.0 + float(total_coin_layers)) * float(int(effects["revenge_spirit_count"]))
+	)
 	effects["dream_active_count"] = int(effects["gold_coin_count"])
 	return effects
 
@@ -481,7 +601,9 @@ func _parse_item_bonus(item_data: Dictionary) -> Dictionary:
 	result["agility"] = int(result["agility"]) + _sum_regex_int(stat_text, "\\+(\\d+)敏捷")
 	result["agility"] = int(result["agility"]) + _sum_regex_int(stat_text, "\\+(\\d+)敏(?!捷)")
 	result["intelligence"] = int(result["intelligence"]) + _sum_regex_int(stat_text, "\\+(\\d+)智力")
-	result["intelligence"] = int(result["intelligence"]) + _sum_regex_int(stat_text, "\\+(\\d+)智(?!力)")
+	result["intelligence"] = (
+		int(result["intelligence"]) + _sum_regex_int(stat_text, "\\+(\\d+)智(?!力)")
+	)
 	result["hp"] = int(result["hp"]) + _sum_regex_int(stat_text, "\\+(\\d+)生命")
 	result["hp"] = int(result["hp"]) + _sum_regex_int(stat_text, "\\+(\\d+)[Hh][Pp]")
 	result["hp"] = int(result["hp"]) + _sum_regex_int(stat_text, "\\+(\\d+)生命最大值")
@@ -493,32 +615,97 @@ func _parse_item_bonus(item_data: Dictionary) -> Dictionary:
 	result["mana"] = int(result["mana"]) + _sum_regex_int(stat_text, "最大(?:法力|魔法|蓝量|MP)\\+(\\d+)")
 	result["damage"] = int(result["damage"]) + _sum_regex_int(stat_text, "\\+(\\d+)攻击(?:力)?")
 	result["armor"] = float(result["armor"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)护甲"))
-	result["attack_speed_percent"] = float(result["attack_speed_percent"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%攻速"))
-	result["attack_speed_percent"] = float(result["attack_speed_percent"]) + float(_sum_regex_int(stat_text, "攻速\\+(\\d+)%"))
-	result["attack_speed_percent"] = float(result["attack_speed_percent"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%攻击速度"))
-	result["attack_speed_percent"] = float(result["attack_speed_percent"]) + float(_sum_regex_int(stat_text, "攻击速度\\+(\\d+)%"))
-	result["move_speed"] = float(result["move_speed"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)移速"))
-	result["move_speed"] = float(result["move_speed"]) + float(_sum_regex_int(stat_text, "移速\\+(\\d+)"))
-	result["attack_range"] = float(result["attack_range"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)攻击范围"))
-	result["attack_range"] = float(result["attack_range"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)攻击距离"))
-	result["hp_regen"] = float(result["hp_regen"]) + _sum_regex_float(stat_text, "\\+(\\d+(?:\\.\\d+)?)生命恢复")
-	result["hp_regen"] = float(result["hp_regen"]) + _sum_regex_float(stat_text, "生命恢复\\+(\\d+(?:\\.\\d+)?)")
-	result["cooldown_reduction_percent"] = float(result["cooldown_reduction_percent"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%冷却减免"))
-	result["cooldown_reduction_percent"] = float(result["cooldown_reduction_percent"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%冷却缩减"))
-	result["cooldown_reduction_percent"] = float(result["cooldown_reduction_percent"]) + float(_sum_regex_int(stat_text, "冷却减免\\+(\\d+)%"))
-	result["cooldown_reduction_percent"] = float(result["cooldown_reduction_percent"]) + float(_sum_regex_int(stat_text, "冷却缩减\\+(\\d+)%"))
-	result["cooldown_reduction_percent"] = float(result["cooldown_reduction_percent"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%[Cc][Dd][Rr]"))
-	result["cooldown_reduction_percent"] = float(result["cooldown_reduction_percent"]) + float(_sum_regex_int(stat_text, "[Cc][Dd][Rr]\\+(\\d+)%"))
-	result["physical_crit_chance"] = float(result["physical_crit_chance"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%暴击率"))
-	result["physical_crit_chance"] = float(result["physical_crit_chance"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%暴击(?!率|伤害|倍率)"))
-	result["physical_crit_multiplier"] = float(result["physical_crit_multiplier"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%(?:暴击伤害|暴击倍率)"))
-	result["spell_crit_chance"] = float(result["spell_crit_chance"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%法术暴击率"))
-	result["spell_crit_chance"] = float(result["spell_crit_chance"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%法暴率?"))
-	result["spell_crit_multiplier"] = float(result["spell_crit_multiplier"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%(?:法术暴击伤害|法术暴击倍率|法暴伤害|法暴倍率)"))
-	result["spell_damage_percent"] = float(result["spell_damage_percent"]) + _sum_regex_float(stat_text, "\\+(\\d+(?:\\.\\d+)?)%法伤")
-	result["spell_damage_percent"] = float(result["spell_damage_percent"]) + _sum_regex_float(stat_text, "\\+(\\d+(?:\\.\\d+)?)%法术伤害")
-	result["magic_damage_reduction_percent"] = float(result["magic_damage_reduction_percent"]) + _sum_regex_float(stat_text, "-(\\d+(?:\\.\\d+)?)%受到的魔法伤害")
-	result["magic_damage_reduction_percent"] = float(result["magic_damage_reduction_percent"]) + _sum_regex_float(stat_text, "减少(\\d+(?:\\.\\d+)?)%受到的魔法伤害")
+	result["attack_speed_percent"] = (
+		float(result["attack_speed_percent"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%攻速"))
+	)
+	result["attack_speed_percent"] = (
+		float(result["attack_speed_percent"]) + float(_sum_regex_int(stat_text, "攻速\\+(\\d+)%"))
+	)
+	result["attack_speed_percent"] = (
+		float(result["attack_speed_percent"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%攻击速度"))
+	)
+	result["attack_speed_percent"] = (
+		float(result["attack_speed_percent"]) + float(_sum_regex_int(stat_text, "攻击速度\\+(\\d+)%"))
+	)
+	result["move_speed"] = (
+		float(result["move_speed"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)移速"))
+	)
+	result["move_speed"] = (
+		float(result["move_speed"]) + float(_sum_regex_int(stat_text, "移速\\+(\\d+)"))
+	)
+	result["attack_range"] = (
+		float(result["attack_range"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)攻击范围"))
+	)
+	result["attack_range"] = (
+		float(result["attack_range"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)攻击距离"))
+	)
+	result["hp_regen"] = (
+		float(result["hp_regen"]) + _sum_regex_float(stat_text, "\\+(\\d+(?:\\.\\d+)?)生命恢复")
+	)
+	result["hp_regen"] = (
+		float(result["hp_regen"]) + _sum_regex_float(stat_text, "生命恢复\\+(\\d+(?:\\.\\d+)?)")
+	)
+	result["cooldown_reduction_percent"] = (
+		float(result["cooldown_reduction_percent"])
+		+ float(_sum_regex_int(stat_text, "\\+(\\d+)%冷却减免"))
+	)
+	result["cooldown_reduction_percent"] = (
+		float(result["cooldown_reduction_percent"])
+		+ float(_sum_regex_int(stat_text, "\\+(\\d+)%冷却缩减"))
+	)
+	result["cooldown_reduction_percent"] = (
+		float(result["cooldown_reduction_percent"])
+		+ float(_sum_regex_int(stat_text, "冷却减免\\+(\\d+)%"))
+	)
+	result["cooldown_reduction_percent"] = (
+		float(result["cooldown_reduction_percent"])
+		+ float(_sum_regex_int(stat_text, "冷却缩减\\+(\\d+)%"))
+	)
+	result["cooldown_reduction_percent"] = (
+		float(result["cooldown_reduction_percent"])
+		+ float(_sum_regex_int(stat_text, "\\+(\\d+)%[Cc][Dd][Rr]"))
+	)
+	result["cooldown_reduction_percent"] = (
+		float(result["cooldown_reduction_percent"])
+		+ float(_sum_regex_int(stat_text, "[Cc][Dd][Rr]\\+(\\d+)%"))
+	)
+	result["physical_crit_chance"] = (
+		float(result["physical_crit_chance"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%暴击率"))
+	)
+	result["physical_crit_chance"] = (
+		float(result["physical_crit_chance"])
+		+ float(_sum_regex_int(stat_text, "\\+(\\d+)%暴击(?!率|伤害|倍率)"))
+	)
+	result["physical_crit_multiplier"] = (
+		float(result["physical_crit_multiplier"])
+		+ float(_sum_regex_int(stat_text, "\\+(\\d+)%(?:暴击伤害|暴击倍率)"))
+	)
+	result["spell_crit_chance"] = (
+		float(result["spell_crit_chance"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%法术暴击率"))
+	)
+	result["spell_crit_chance"] = (
+		float(result["spell_crit_chance"]) + float(_sum_regex_int(stat_text, "\\+(\\d+)%法暴率?"))
+	)
+	result["spell_crit_multiplier"] = (
+		float(result["spell_crit_multiplier"])
+		+ float(_sum_regex_int(stat_text, "\\+(\\d+)%(?:法术暴击伤害|法术暴击倍率|法暴伤害|法暴倍率)"))
+	)
+	result["spell_damage_percent"] = (
+		float(result["spell_damage_percent"])
+		+ _sum_regex_float(stat_text, "\\+(\\d+(?:\\.\\d+)?)%法伤")
+	)
+	result["spell_damage_percent"] = (
+		float(result["spell_damage_percent"])
+		+ _sum_regex_float(stat_text, "\\+(\\d+(?:\\.\\d+)?)%法术伤害")
+	)
+	result["magic_damage_reduction_percent"] = (
+		float(result["magic_damage_reduction_percent"])
+		+ _sum_regex_float(stat_text, "-(\\d+(?:\\.\\d+)?)%受到的魔法伤害")
+	)
+	result["magic_damage_reduction_percent"] = (
+		float(result["magic_damage_reduction_percent"])
+		+ _sum_regex_float(stat_text, "减少(\\d+(?:\\.\\d+)?)%受到的魔法伤害")
+	)
 	return result
 
 
@@ -555,7 +742,10 @@ func _is_spark_item_for_effects(item_data: Dictionary) -> bool:
 
 
 func _is_charge_item_for_effects(item_data: Dictionary) -> bool:
-	return _normalize_build_name(str(item_data.get("build", _default_build_name))) == _charge_build_name
+	return (
+		_normalize_build_name(str(item_data.get("build", _default_build_name)))
+		== _charge_build_name
+	)
 
 
 func _is_coin_item_for_effects(item_data: Dictionary) -> bool:
@@ -566,7 +756,9 @@ func _is_coin_item_for_effects(item_data: Dictionary) -> bool:
 		return false
 	if item_name == "夹层硬币" or item_name == "经验币":
 		return true
-	return _normalize_build_name(str(item_data.get("build", _default_build_name))) == _coin_build_name
+	return (
+		_normalize_build_name(str(item_data.get("build", _default_build_name))) == _coin_build_name
+	)
 
 
 func _get_coin_item_slots(item_db: Array, inventory: Array) -> Array[int]:
@@ -608,11 +800,17 @@ func _get_inventory_meta_entry(meta_array: Array, slot_idx: int, _item_idx: int 
 	return {}
 
 
-func _get_effective_inventory_item_level(item_db: Array, item_idx: int, slot_idx: int, meta_array: Array, inventory: Array = []) -> int:
+func _get_effective_inventory_item_level(
+	item_db: Array, item_idx: int, slot_idx: int, meta_array: Array, inventory: Array = []
+) -> int:
 	if item_idx < 0 or item_idx >= item_db.size():
 		return 0
 	var item_name: String = _get_item_name_by_index(item_db, item_idx)
-	if not inventory.is_empty() and _find_item_slots_by_name(item_db, inventory, "金硬币").size() > 0 and item_name != "金硬币":
+	if (
+		not inventory.is_empty()
+		and _find_item_slots_by_name(item_db, inventory, "金硬币").size() > 0
+		and item_name != "金硬币"
+	):
 		return 0
 	var base_level: int = _get_item_level(_get_item_data(item_db, item_idx))
 	var entry: Dictionary = _get_inventory_meta_entry(meta_array, slot_idx, item_idx)

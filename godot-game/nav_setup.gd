@@ -1,5 +1,6 @@
 extends NavigationRegion3D
 
+
 func _ready() -> void:
 	var nav_mesh := NavigationMesh.new()
 	nav_mesh.cell_size = _compute_nav_cell_size()

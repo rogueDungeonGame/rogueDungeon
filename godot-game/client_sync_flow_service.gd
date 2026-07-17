@@ -3,13 +3,13 @@ class_name ClientSyncFlowService
 
 
 func advance_client_ping(
-		mode_raw: String,
-		ping_elapsed_sec: float,
-		interval_sec: float,
-		current_ping_seq: int,
-		ping_sent_ms: Dictionary,
-		now_ms: int
-	) -> Dictionary:
+	mode_raw: String,
+	ping_elapsed_sec: float,
+	interval_sec: float,
+	current_ping_seq: int,
+	ping_sent_ms: Dictionary,
+	now_ms: int
+) -> Dictionary:
 	if mode_raw.strip_edges().to_lower() != "client":
 		return {
 			"should_send": false,
@@ -43,7 +43,9 @@ func advance_client_ping(
 	}
 
 
-func should_send_equipment_state(equipment_signature: String, last_sent_equipment_signature: String) -> bool:
+func should_send_equipment_state(
+	equipment_signature: String, last_sent_equipment_signature: String
+) -> bool:
 	return equipment_signature != last_sent_equipment_signature
 
 
@@ -52,11 +54,14 @@ func should_send_client_input(send_elapsed_sec: float, send_interval_sec: float)
 	var should_send: bool = send_elapsed_sec >= safe_interval
 	return {
 		"should_send": should_send,
-		"next_send_elapsed_sec": fmod(send_elapsed_sec, safe_interval) if should_send else send_elapsed_sec,
+		"next_send_elapsed_sec":
+		fmod(send_elapsed_sec, safe_interval) if should_send else send_elapsed_sec,
 	}
 
 
-func filter_skill_event_for_send(hero_state: Dictionary, last_sent_skill_event_seq: int) -> Dictionary:
+func filter_skill_event_for_send(
+	hero_state: Dictionary, last_sent_skill_event_seq: int
+) -> Dictionary:
 	var next_state: Dictionary = hero_state.duplicate(true)
 	var next_last_seq: int = last_sent_skill_event_seq
 	if next_state.has("skill_event"):
@@ -77,13 +82,13 @@ func filter_skill_event_for_send(hero_state: Dictionary, last_sent_skill_event_s
 
 
 func should_send_hero_command(
-		mode_raw: String,
-		network_running: bool,
-		has_connected_peer: bool,
-		command: Dictionary,
-		last_sent_seq: int,
-		int_from_variant_fn: Callable
-	) -> Dictionary:
+	mode_raw: String,
+	network_running: bool,
+	has_connected_peer: bool,
+	command: Dictionary,
+	last_sent_seq: int,
+	int_from_variant_fn: Callable
+) -> Dictionary:
 	if mode_raw.strip_edges().to_lower() != "client":
 		return {"should_send": false, "next_last_sent_seq": last_sent_seq}
 	if not network_running or not has_connected_peer or command.is_empty():
@@ -99,13 +104,13 @@ func should_send_hero_command(
 
 
 func build_enemy_damage_request(
-		current_seq: int,
-		target_path: String,
-		amount: int,
-		max_range: float,
-		source: String,
-		context: Dictionary
-	) -> Dictionary:
+	current_seq: int,
+	target_path: String,
+	amount: int,
+	max_range: float,
+	source: String,
+	context: Dictionary
+) -> Dictionary:
 	var normalized_target_path: String = target_path.strip_edges()
 	var safe_amount: int = maxi(amount, 0)
 	if normalized_target_path.is_empty() or safe_amount <= 0:
@@ -117,7 +122,8 @@ func build_enemy_damage_request(
 	return {
 		"ok": true,
 		"next_seq": next_seq,
-		"event": {
+		"event":
+		{
 			"seq": next_seq,
 			"target_path": normalized_target_path,
 			"amount": safe_amount,
@@ -129,11 +135,8 @@ func build_enemy_damage_request(
 
 
 func build_equipment_action_request(
-		current_request_seq: int,
-		action: String,
-		payload: Dictionary,
-		baseline_state: Dictionary
-	) -> Dictionary:
+	current_request_seq: int, action: String, payload: Dictionary, baseline_state: Dictionary
+) -> Dictionary:
 	var action_text: String = action.strip_edges().to_lower()
 	if action_text.is_empty():
 		return {
@@ -144,7 +147,8 @@ func build_equipment_action_request(
 	return {
 		"ok": true,
 		"next_request_seq": next_request_seq,
-		"request": {
+		"request":
+		{
 			"action": action_text,
 			"request_seq": next_request_seq,
 			"payload": payload.duplicate(true),

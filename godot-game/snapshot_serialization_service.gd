@@ -2,78 +2,209 @@ extends RefCounted
 class_name SnapshotSerializationService
 
 const NETWORK_HERO_ALLOWED_KEYS := [
-	"pos", "yaw", "visible", "scale",
-	"hp", "max_hp", "mana", "max_mana",
-	"is_dead", "is_moving", "is_attacking",
-	"move_speed", "attack_range",
-	"hero_id", "hero_profile", "hero_selected", "hp_bar_anchor_height", "collision_profile_id", "projectile_origin_pos", "is_transformed",
-	"flash_cd", "haste_cd", "haste_active", "haste_left",
-	"r_cooldown", "skill_q_id", "skill_w_id", "skill_r_id",
-	"damage", "flash_damage", "flash_origin_damage_radius", "flash_destination_damage_radius",
-	"ranged_q_ray_damage", "ranged_q_ray_length",
-	"ranged_r_damage", "ranged_r_radius", "ranged_r_cast_max_distance",
-	"poison_damage_per_second", "poison_tick_interval", "attack_interval",
-	"physical_crit_chance", "physical_crit_multiplier", "spell_crit_multiplier",
-	"strength", "agility", "intelligence",
-	"anim_name", "anim_playing", "anim_speed",
-	"skill_event", "command_bus", "necromancy", "battle_banner", "battle_prep", "coin"
+	"pos",
+	"yaw",
+	"visible",
+	"scale",
+	"hp",
+	"max_hp",
+	"mana",
+	"max_mana",
+	"is_dead",
+	"is_moving",
+	"is_attacking",
+	"move_speed",
+	"attack_range",
+	"hero_id",
+	"hero_profile",
+	"hero_selected",
+	"hp_bar_anchor_height",
+	"collision_profile_id",
+	"projectile_origin_pos",
+	"is_transformed",
+	"flash_cd",
+	"haste_cd",
+	"haste_active",
+	"haste_left",
+	"r_cooldown",
+	"skill_q_id",
+	"skill_w_id",
+	"skill_r_id",
+	"damage",
+	"flash_damage",
+	"flash_origin_damage_radius",
+	"flash_destination_damage_radius",
+	"ranged_q_ray_damage",
+	"ranged_q_ray_length",
+	"ranged_r_damage",
+	"ranged_r_radius",
+	"ranged_r_cast_max_distance",
+	"poison_damage_per_second",
+	"poison_tick_interval",
+	"attack_interval",
+	"physical_crit_chance",
+	"physical_crit_multiplier",
+	"spell_crit_multiplier",
+	"strength",
+	"agility",
+	"intelligence",
+	"anim_name",
+	"anim_playing",
+	"anim_speed",
+	"skill_event",
+	"command_bus",
+	"necromancy",
+	"battle_banner",
+	"battle_prep",
+	"coin"
 ]
 
 const CLIENT_INPUT_HERO_ALLOWED_KEYS := [
-	"pos", "yaw", "visible", "scale",
-	"hp", "max_hp", "mana", "max_mana",
-	"is_dead", "is_moving", "is_attacking",
-	"move_speed", "attack_range",
-	"hero_id", "hero_profile", "hero_selected", "hp_bar_anchor_height", "collision_profile_id", "projectile_origin_pos", "is_transformed",
-	"flash_cd", "haste_cd", "haste_active", "haste_left",
-	"r_cooldown", "skill_q_id", "skill_w_id", "skill_r_id",
-	"damage", "flash_damage", "flash_origin_damage_radius", "flash_destination_damage_radius",
-	"ranged_q_ray_damage", "ranged_q_ray_length",
-	"ranged_r_damage", "ranged_r_radius", "ranged_r_cast_max_distance",
-	"poison_damage_per_second", "poison_tick_interval", "attack_interval",
-	"physical_crit_chance", "physical_crit_multiplier", "spell_crit_multiplier",
-	"strength", "agility", "intelligence",
-	"anim_name", "anim_playing", "anim_speed",
-	"skill_event", "necromancy", "battle_banner", "battle_prep", "coin"
+	"pos",
+	"yaw",
+	"visible",
+	"scale",
+	"hp",
+	"max_hp",
+	"mana",
+	"max_mana",
+	"is_dead",
+	"is_moving",
+	"is_attacking",
+	"move_speed",
+	"attack_range",
+	"hero_id",
+	"hero_profile",
+	"hero_selected",
+	"hp_bar_anchor_height",
+	"collision_profile_id",
+	"projectile_origin_pos",
+	"is_transformed",
+	"flash_cd",
+	"haste_cd",
+	"haste_active",
+	"haste_left",
+	"r_cooldown",
+	"skill_q_id",
+	"skill_w_id",
+	"skill_r_id",
+	"damage",
+	"flash_damage",
+	"flash_origin_damage_radius",
+	"flash_destination_damage_radius",
+	"ranged_q_ray_damage",
+	"ranged_q_ray_length",
+	"ranged_r_damage",
+	"ranged_r_radius",
+	"ranged_r_cast_max_distance",
+	"poison_damage_per_second",
+	"poison_tick_interval",
+	"attack_interval",
+	"physical_crit_chance",
+	"physical_crit_multiplier",
+	"spell_crit_multiplier",
+	"strength",
+	"agility",
+	"intelligence",
+	"anim_name",
+	"anim_playing",
+	"anim_speed",
+	"skill_event",
+	"necromancy",
+	"battle_banner",
+	"battle_prep",
+	"coin"
 ]
 
 const NETWORK_BOSS_ALLOWED_KEYS := [
-	"pos", "yaw", "visible",
-	"hp", "max_hp", "armor", "dead",
-	"damage_popup_seq", "damage_popup_amount", "damage_popup_source", "damage_popup_critical",
-	"is_moving", "is_attacking",
-	"casting_skill", "casting_skill2",
-	"attack_cooldown", "skill_cast_left", "skill_cooldown",
-	"engage_timer", "chase_timer", "target_lock_active",
-	"skill2_timer", "skill2_cooldown", "skill2_total_time", "skill2_hit_applied",
-	"skill2_hit_targets", "skill2_start_pos", "skill2_end_pos",
-	"current_hp_phase", "death_finalized",
-	"current_attack_index", "stop_attack_combo",
-	"engage_initialized", "was_in_engage_range", "engaged",
+	"pos",
+	"yaw",
+	"visible",
+	"hp",
+	"max_hp",
+	"armor",
+	"dead",
+	"damage_popup_seq",
+	"damage_popup_amount",
+	"damage_popup_source",
+	"damage_popup_critical",
+	"is_moving",
+	"is_attacking",
+	"casting_skill",
+	"casting_skill2",
+	"attack_cooldown",
+	"skill_cast_left",
+	"skill_cooldown",
+	"engage_timer",
+	"chase_timer",
+	"target_lock_active",
+	"skill2_timer",
+	"skill2_cooldown",
+	"skill2_total_time",
+	"skill2_hit_applied",
+	"skill2_hit_targets",
+	"skill2_start_pos",
+	"skill2_end_pos",
+	"current_hp_phase",
+	"death_finalized",
+	"current_attack_index",
+	"stop_attack_combo",
+	"engage_initialized",
+	"was_in_engage_range",
+	"engaged",
 	"pending_idle_after_animation",
-	"skill_warning_visible", "skill_warning_pos",
-	"anim_name", "anim_playing", "anim_speed"
+	"skill_warning_visible",
+	"skill_warning_pos",
+	"anim_name",
+	"anim_playing",
+	"anim_speed"
 ]
 
 const NETWORK_MOB_ALLOWED_KEYS := [
 	"id",
-	"pos", "yaw", "visible",
-	"hp", "max_hp", "armor", "dead",
-	"damage_popup_seq", "damage_popup_amount", "damage_popup_source", "damage_popup_critical",
-	"is_moving", "is_attacking",
-	"anim_name", "anim_playing", "anim_speed", "summon_kind"
+	"pos",
+	"yaw",
+	"visible",
+	"hp",
+	"max_hp",
+	"armor",
+	"dead",
+	"damage_popup_seq",
+	"damage_popup_amount",
+	"damage_popup_source",
+	"damage_popup_critical",
+	"is_moving",
+	"is_attacking",
+	"anim_name",
+	"anim_playing",
+	"anim_speed",
+	"summon_kind"
 ]
 
 const UNRELIABLE_WORLD_BOSS_ALLOWED_KEYS := [
-	"pos", "yaw", "visible",
-	"hp", "max_hp", "armor", "dead",
-	"damage_popup_seq", "damage_popup_amount", "damage_popup_source", "damage_popup_critical",
-	"is_moving", "is_attacking",
-	"casting_skill", "casting_skill2",
+	"pos",
+	"yaw",
+	"visible",
+	"hp",
+	"max_hp",
+	"armor",
+	"dead",
+	"damage_popup_seq",
+	"damage_popup_amount",
+	"damage_popup_source",
+	"damage_popup_critical",
+	"is_moving",
+	"is_attacking",
+	"casting_skill",
+	"casting_skill2",
 	"target_lock_active",
-	"current_hp_phase", "death_finalized",
-	"skill_warning_visible", "skill_warning_pos",
-	"anim_name", "anim_playing", "anim_speed"
+	"current_hp_phase",
+	"death_finalized",
+	"skill_warning_visible",
+	"skill_warning_pos",
+	"anim_name",
+	"anim_playing",
+	"anim_speed"
 ]
 
 
@@ -109,7 +240,7 @@ func build_world_snapshot(input: Dictionary) -> Dictionary:
 			var mobs_chunk: Array = []
 			for i in range(start_idx, end_idx):
 				mobs_chunk.append(all_mobs[i])
-			var sent_full_set: bool = (start_idx == 0 and end_idx >= total_mobs)
+			var sent_full_set: bool = start_idx == 0 and end_idx >= total_mobs
 			snapshot["mobs"] = mobs_chunk
 			snapshot["mobs_partial"] = not sent_full_set
 			snapshot["mobs_start"] = start_idx
@@ -126,7 +257,9 @@ func build_world_snapshot(input: Dictionary) -> Dictionary:
 	}
 
 
-func trim_unreliable_world_snapshot_to_mtu(snapshot: Dictionary, mtu_budget_bytes: int) -> Dictionary:
+func trim_unreliable_world_snapshot_to_mtu(
+	snapshot: Dictionary, mtu_budget_bytes: int
+) -> Dictionary:
 	var trimmed: Dictionary = snapshot.duplicate(true)
 	# Leave room for Godot RPC and ENet framing so the serialized payload stays under the actual MTU.
 	var envelope_margin_bytes: int = 320
@@ -142,7 +275,9 @@ func trim_unreliable_world_snapshot_to_mtu(snapshot: Dictionary, mtu_budget_byte
 	if current_bytes > safe_budget and trimmed.has("boss"):
 		var boss_variant: Variant = trimmed.get("boss", {})
 		if boss_variant is Dictionary:
-			trimmed["boss"] = filter_state_with_allowed_keys(boss_variant as Dictionary, UNRELIABLE_WORLD_BOSS_ALLOWED_KEYS)
+			trimmed["boss"] = filter_state_with_allowed_keys(
+				boss_variant as Dictionary, UNRELIABLE_WORLD_BOSS_ALLOWED_KEYS
+			)
 	current_bytes = estimate_payload_bytes(trimmed)
 	if current_bytes <= safe_budget:
 		return trimmed
@@ -178,7 +313,9 @@ func build_hero_snapshot(input: Dictionary) -> Dictionary:
 
 	var peer_latest_hero_state: Dictionary = _dict_copy(input.get("peer_latest_hero_state", {}))
 	var peer_latest_hero_command: Dictionary = _dict_copy(input.get("peer_latest_hero_command", {}))
-	var peer_latest_equipment_state: Dictionary = _dict_copy(input.get("peer_latest_equipment_state", {}))
+	var peer_latest_equipment_state: Dictionary = _dict_copy(
+		input.get("peer_latest_equipment_state", {})
+	)
 	var peers_payload: Dictionary = {}
 	for key_variant in peer_latest_hero_state.keys():
 		var peer_id: int = int(key_variant)
@@ -192,7 +329,11 @@ func build_hero_snapshot(input: Dictionary) -> Dictionary:
 				if cmd_variant is Dictionary:
 					peer_hero_state["command_bus"] = (cmd_variant as Dictionary).duplicate(true)
 			payload["hero"] = peer_hero_state
-		if include_equipment_state and bool(input.get("sync_equipment_state", false)) and peer_latest_equipment_state.has(peer_id):
+		if (
+			include_equipment_state
+			and bool(input.get("sync_equipment_state", false))
+			and peer_latest_equipment_state.has(peer_id)
+		):
 			payload["equipment"] = _dict_copy(peer_latest_equipment_state[peer_id])
 		peers_payload[str(peer_id)] = payload
 	snapshot["peers"] = peers_payload
@@ -209,7 +350,9 @@ func build_equipment_snapshot(input: Dictionary) -> Dictionary:
 	snapshot["host_peer_id"] = host_peer_id
 	if bool(input.get("sync_equipment_state", false)):
 		snapshot["host_equipment"] = _dict_copy(input.get("host_equipment_state", {}))
-	var peer_latest_equipment_state: Dictionary = _dict_copy(input.get("peer_latest_equipment_state", {}))
+	var peer_latest_equipment_state: Dictionary = _dict_copy(
+		input.get("peer_latest_equipment_state", {})
+	)
 	var peers_payload: Dictionary = {}
 	for key_variant in peer_latest_equipment_state.keys():
 		var peer_id: int = int(key_variant)
@@ -256,13 +399,11 @@ func filter_state_with_allowed_keys(full_state: Dictionary, allowed_keys: Array)
 	return filtered
 
 
-func build_client_input_bundle(current_seq: int, timestamp_ms: int, hero_state: Dictionary, packet_budget: int) -> Dictionary:
+func build_client_input_bundle(
+	current_seq: int, timestamp_ms: int, hero_state: Dictionary, packet_budget: int
+) -> Dictionary:
 	var next_seq: int = current_seq + 1
-	var bundle: Dictionary = {
-		"seq": next_seq,
-		"t_ms": timestamp_ms,
-		"hero": hero_state
-	}
+	var bundle: Dictionary = {"seq": next_seq, "t_ms": timestamp_ms, "hero": hero_state}
 	var safe_budget: int = clampi(packet_budget, 640, 1100)
 	if estimate_payload_bytes(bundle) > safe_budget:
 		bundle = trim_client_input_payload_for_budget(bundle, safe_budget)
@@ -280,23 +421,42 @@ func trim_client_input_payload_for_budget(payload: Dictionary, packet_budget: in
 	if not (hero_variant is Dictionary):
 		return trimmed
 	var hero_state: Dictionary = (hero_variant as Dictionary).duplicate(true)
-	var drop_order: PackedStringArray = PackedStringArray([
-		"necromancy", "battle_banner", "battle_prep", "coin",
-		"skill_event",
-		"flash_destination_damage_radius", "flash_origin_damage_radius",
-		"ranged_r_cast_max_distance", "ranged_q_ray_length",
-		"poison_tick_interval", "poison_damage_per_second",
-		"ranged_r_radius", "ranged_r_damage",
-		"ranged_q_ray_damage", "flash_damage",
-		"attack_interval", "attack_range",
-		"damage",
-		"physical_crit_chance", "physical_crit_multiplier", "spell_crit_multiplier",
-		"strength", "agility", "intelligence",
-		"hero_profile", "hero_selected", "hp_bar_anchor_height",
-		"is_transformed",
-		"skill_r_id", "skill_w_id", "skill_q_id",
-		"visible"
-	])
+	var drop_order: PackedStringArray = PackedStringArray(
+		[
+			"necromancy",
+			"battle_banner",
+			"battle_prep",
+			"coin",
+			"skill_event",
+			"flash_destination_damage_radius",
+			"flash_origin_damage_radius",
+			"ranged_r_cast_max_distance",
+			"ranged_q_ray_length",
+			"poison_tick_interval",
+			"poison_damage_per_second",
+			"ranged_r_radius",
+			"ranged_r_damage",
+			"ranged_q_ray_damage",
+			"flash_damage",
+			"attack_interval",
+			"attack_range",
+			"damage",
+			"physical_crit_chance",
+			"physical_crit_multiplier",
+			"spell_crit_multiplier",
+			"strength",
+			"agility",
+			"intelligence",
+			"hero_profile",
+			"hero_selected",
+			"hp_bar_anchor_height",
+			"is_transformed",
+			"skill_r_id",
+			"skill_w_id",
+			"skill_q_id",
+			"visible"
+		]
+	)
 	for key_variant in drop_order:
 		if estimate_payload_bytes(trimmed) <= packet_budget:
 			break

@@ -26,9 +26,13 @@ func _init(config: Dictionary = {}) -> void:
 	_blocked_shop_builds = _dict_copy(config.get("blocked_shop_builds", {}))
 	_item_secondary_builds = _dict_copy(config.get("item_secondary_builds", {}))
 	_blocked_shop_item_exact_names = _dict_copy(config.get("blocked_shop_item_exact_names", {}))
-	_blocked_shop_item_name_keywords = _array_copy(config.get("blocked_shop_item_name_keywords", []))
+	_blocked_shop_item_name_keywords = _array_copy(
+		config.get("blocked_shop_item_name_keywords", [])
+	)
 	_level_weights = _dict_copy(config.get("level_weights", {}))
-	_charge_bottle_appearance_item_names = _dict_copy(config.get("charge_bottle_appearance_item_names", {}))
+	_charge_bottle_appearance_item_names = _dict_copy(
+		config.get("charge_bottle_appearance_item_names", {})
+	)
 	_charge_bottle_shop_item_names = _dict_copy(config.get("charge_bottle_shop_item_names", {}))
 	_shop_item_count = _dict_copy(config.get("shop_item_count", {}))
 	_build_tabs = _array_copy(config.get("build_tabs", []))
@@ -84,7 +88,9 @@ func resolve_item_name(raw_item_name: String) -> String:
 	return override_name
 
 
-func resolve_item_build_name(item_name: String, raw_build_name: String, stat_text: String = "") -> String:
+func resolve_item_build_name(
+	item_name: String, raw_build_name: String, stat_text: String = ""
+) -> String:
 	var normalized_build: String = normalize_build_name(raw_build_name)
 	var override_variant: Variant = _item_build_overrides.get(item_name, null)
 	if override_variant != null:
@@ -152,7 +158,9 @@ func is_shop_offer_before_for_display(left_idx: int, right_idx: int, item_db: Ar
 	if left_level != right_level:
 		return left_level < right_level
 	var left_build: String = normalize_build_name(str(left_data.get("build", _default_build_name)))
-	var right_build: String = normalize_build_name(str(right_data.get("build", _default_build_name)))
+	var right_build: String = normalize_build_name(
+		str(right_data.get("build", _default_build_name))
+	)
 	var left_build_rank: int = get_shop_build_sort_rank(left_build)
 	var right_build_rank: int = get_shop_build_sort_rank(right_build)
 	if left_build_rank != right_build_rank:
@@ -260,7 +268,9 @@ func _get_charge_bottle_shop_bonus_count(inventory: Array, item_db: Array) -> in
 	return bonus_count
 
 
-func append_shop_candidate_with_runtime_weight(candidates: Array[int], item_idx: int, inventory: Array, item_db: Array) -> void:
+func append_shop_candidate_with_runtime_weight(
+	candidates: Array[int], item_idx: int, inventory: Array, item_db: Array
+) -> void:
 	candidates.append(item_idx)
 	if item_idx < 0 or item_idx >= item_db.size():
 		return

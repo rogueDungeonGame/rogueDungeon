@@ -65,15 +65,22 @@ const HeroStatsService := preload("res://hero_stats_service.gd")
 @export var transformed_attack_speed_multiplier: float = 2.0
 @export var transformed_attack_animation_1: String = "Attack - 1_GLTF"
 @export var transformed_attack_animation_2: String = "Attack - 2_GLTF"
-@export var transformed_model_scene: PackedScene = preload("res://placeholders/hero_transformed_2d.tscn")
-@export var flash_effect_scene: PackedScene = preload("res://effects/HeroWarden/FanOfKnivesCaster/FanOfKnivesCaster.glb")
+@export
+var transformed_model_scene: PackedScene = preload("res://placeholders/hero_transformed_2d.tscn")
+@export var flash_effect_scene: PackedScene = preload(
+	"res://effects/HeroWarden/FanOfKnivesCaster/FanOfKnivesCaster.glb"
+)
 @export var move_confirmation_scene: PackedScene = preload("res://modles/Confirmation.glb")
 @export var move_confirmation_scale: Vector3 = Vector3.ONE
 @export var move_confirmation_lifetime: float = 2.0
 @export var cursor_default_texture: Texture2D = preload("res://icons/passives/frame_00_r0c0.png")
-@export var cursor_enemy_texture: Texture2D = preload("res://icons/passives/frame_24_r3c0_red_variant.png")
-@export var cursor_attack_default_texture: Texture2D = preload("res://icons/passives/frame_19_r2c3.png")
-@export var cursor_attack_enemy_texture: Texture2D = preload("res://icons/passives/frame_23_r2c7_red_variant.png")
+@export
+var cursor_enemy_texture: Texture2D = preload("res://icons/passives/frame_24_r3c0_red_variant.png")
+@export
+var cursor_attack_default_texture: Texture2D = preload("res://icons/passives/frame_19_r2c3.png")
+@export var cursor_attack_enemy_texture: Texture2D = preload(
+	"res://icons/passives/frame_23_r2c7_red_variant.png"
+)
 @export var cursor_r_skill_texture: Texture2D
 @export var ranged_r_cursor_scale_multiplier: float = 1.5
 @export var ranged_r_ground_selector_enabled: bool = true
@@ -434,25 +441,23 @@ func _ready() -> void:
 	var initial_rotation := _hero.rotation
 	initial_rotation.z = 0.0
 	_hero.rotation = initial_rotation
-	
+
 	_nav_agent = NavigationAgent3D.new()
 	_nav_agent.path_desired_distance = 20.0
 	_nav_agent.target_desired_distance = 20.0
 	_hero.add_child(_nav_agent)
-	
+
 	_animation_player = _hero.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _animation_player == null:
 		push_warning("未在英雄中找到 AnimationPlayer 节点。")
 	_refresh_motion_animation_aliases()
-	
+
 	_recalculate_war3_stats(true)
 	_refresh_attack_animations()
 	_create_hp_bar()
 	_update_hp_bar()
 	_play_idle_animation()
-	_push_network_control_command("idle", {
-		"target_pos": _hero.global_position
-	})
+	_push_network_control_command("idle", {"target_pos": _hero.global_position})
 	_apply_mouse_cursor(false, false, false)
 
 
@@ -463,7 +468,9 @@ func _ensure_r_skill_runtime_resources() -> void:
 	if not _r_skill_missile_resource_checked and ranged_r_missile_scene == null:
 		ranged_r_missile_scene = _load_packed_scene_resource(R_SKILL_MISSILE_SCENE_PATH)
 		if ranged_r_missile_scene == null:
-			ranged_r_missile_scene = _load_packed_scene_resource(R_SKILL_MISSILE_SCENE_FALLBACK_PATH)
+			ranged_r_missile_scene = _load_packed_scene_resource(
+				R_SKILL_MISSILE_SCENE_FALLBACK_PATH
+			)
 	_r_skill_missile_resource_checked = true
 	if not _r_skill_impact_resource_checked and ranged_r_impact_scene == null:
 		ranged_r_impact_scene = _load_packed_scene_resource(R_SKILL_IMPACT_SCENE_PATH)
@@ -518,9 +525,13 @@ func _load_packed_scene_from_gltf_runtime(path: String) -> PackedScene:
 	if gltf_doc_obj == null or gltf_state_obj == null:
 		return null
 	var abs_path: String = ProjectSettings.globalize_path(path)
-	var err: int = _variant_to_int(gltf_doc_obj.call("append_from_file", abs_path, gltf_state_obj), ERR_CANT_OPEN)
+	var err: int = _variant_to_int(
+		gltf_doc_obj.call("append_from_file", abs_path, gltf_state_obj), ERR_CANT_OPEN
+	)
 	if err != OK:
-		err = _variant_to_int(gltf_doc_obj.call("append_from_file", path, gltf_state_obj), ERR_CANT_OPEN)
+		err = _variant_to_int(
+			gltf_doc_obj.call("append_from_file", path, gltf_state_obj), ERR_CANT_OPEN
+		)
 	if err != OK:
 		return null
 	var scene_variant: Variant = gltf_doc_obj.call("generate_scene", gltf_state_obj)
@@ -553,7 +564,9 @@ func _exit_tree() -> void:
 
 func _refresh_motion_animation_aliases() -> void:
 	_resolved_idle_animation = _resolve_motion_animation(idle_animation, ["stand", "idle", "wait"])
-	_resolved_walk_animation = _resolve_motion_animation(walk_animation, ["walk", "run", "move", "locomotion", "go"])
+	_resolved_walk_animation = _resolve_motion_animation(
+		walk_animation, ["walk", "run", "move", "locomotion", "go"]
+	)
 	_resolved_death_animation = _resolve_motion_animation(death_animation, ["death", "die"])
 
 
@@ -579,7 +592,10 @@ func _play_idle_animation() -> void:
 		_refresh_motion_animation_aliases()
 	if _resolved_idle_animation == "":
 		return
-	if _animation_player.is_playing() and String(_animation_player.current_animation) == _resolved_idle_animation:
+	if (
+		_animation_player.is_playing()
+		and String(_animation_player.current_animation) == _resolved_idle_animation
+	):
 		return
 	_animation_player.speed_scale = 1.0
 	var anim = _animation_player.get_animation(_resolved_idle_animation)
@@ -589,7 +605,9 @@ func _play_idle_animation() -> void:
 
 
 func _get_primary_attr_value() -> int:
-	return HeroStatsService.get_primary_attr_value(primary_attribute, strength, agility, intelligence)
+	return HeroStatsService.get_primary_attr_value(
+		primary_attribute, strength, agility, intelligence
+	)
 
 
 func _recalculate_war3_stats(reset_hp_mp: bool) -> void:
@@ -600,75 +618,85 @@ func _recalculate_war3_stats(reset_hp_mp: bool) -> void:
 		_base_move_speed = move_speed
 	if _base_attack_range <= 0.0:
 		_base_attack_range = attack_range
-	var computed: Dictionary = HeroStatsService.build_recalculated_stats({
-		"hero_level": lv,
-		"strength_base": strength_base,
-		"strength_growth": strength_growth,
-		"strength_growth_bonus": _talent_float("strength_growth_bonus", 0.0),
-		"agility_base": agility_base,
-		"agility_growth": agility_growth,
-		"agility_growth_bonus": _talent_float("agility_growth_bonus", 0.0),
-		"intelligence_base": intelligence_base,
-		"intelligence_growth": intelligence_growth,
-		"equip_strength_bonus": _equip_strength_bonus,
-		"equip_agility_bonus": _equip_agility_bonus,
-		"equip_intelligence_bonus": _equip_intelligence_bonus,
-		"battle_banner_applied_strength_bonus": _battle_banner_applied_strength_bonus,
-		"battle_banner_applied_agility_bonus": _battle_banner_applied_agility_bonus,
-		"battle_banner_applied_intelligence_bonus": _battle_banner_applied_intelligence_bonus,
-		"settlement_permanent_agility_bonus": _settlement_permanent_agility_bonus,
-		"settlement_permanent_intelligence_bonus": _settlement_permanent_intelligence_bonus,
-		"necro_bonus_int_from_flute": _necro_bonus_int_from_flute,
-		"base_hp_flat": base_hp_flat,
-		"equip_hp_bonus": _equip_hp_bonus,
-		"spark_permanent_hp_bonus_from_procs": _spark_permanent_hp_bonus_from_procs,
-		"charge_permanent_hp_bonus_from_procs": _charge_permanent_hp_bonus_from_procs,
-		"necro_bonus_max_hp_from_summons": _necro_bonus_max_hp_from_summons,
-		"settlement_permanent_hp_bonus": _settlement_permanent_hp_bonus,
-		"str_hp_per_point": STR_HP_PER_POINT,
-		"base_mana_flat": base_mana_flat,
-		"initial_mana_multiplier": initial_mana_multiplier,
-		"equip_mana_bonus": _equip_mana_bonus,
-		"int_mana_per_point": INT_MANA_PER_POINT,
-		"base_damage_flat": base_damage_flat,
-		"equip_damage_bonus": _equip_damage_bonus,
-		"battle_banner_applied_damage_bonus": _battle_banner_applied_damage_bonus,
-		"primary_attribute": primary_attribute,
-		"talent_flat_damage_bonus": _talent_int("flat_damage_bonus", 0),
-		"talent_damage_growth_per_level": _talent_int("damage_growth_per_level", 0),
-		"is_rifleman": _is_rifleman_hero(),
-		"rifleman_oil_passive_damage_bonus": RIFLEMAN_OIL_PASSIVE_DAMAGE_BONUS,
-		"base_armor_flat": base_armor_flat,
-		"equip_armor_bonus": _equip_armor_bonus,
-		"agi_armor_per_point": AGI_ARMOR_PER_POINT,
-		"settlement_raw_physical_crit_chance": _get_settlement_raw_physical_crit_chance(),
-		"settlement_dynamic_physical_crit_multiplier_bonus": _get_settlement_dynamic_physical_crit_multiplier_bonus_percent(_get_settlement_raw_physical_crit_chance()),
-		"is_warden": _is_warden_hero(),
-		"warden_dagger_crit_chance_bonus": WARDEN_DAGGER_CRIT_CHANCE_BONUS,
-		"talent_physical_crit_chance_bonus": _talent_float("physical_crit_chance_bonus", 0.0),
-		"base_physical_crit_multiplier": base_physical_crit_multiplier,
-		"equip_physical_crit_multiplier_bonus": _equip_physical_crit_multiplier_bonus,
-		"base_spell_crit_chance": base_spell_crit_chance,
-		"equip_spell_crit_chance_bonus": _equip_spell_crit_chance_bonus,
-		"base_spell_crit_multiplier": base_spell_crit_multiplier,
-		"equip_spell_crit_multiplier_bonus": _equip_spell_crit_multiplier_bonus,
-		"base_cooldown_reduction_percent": base_cooldown_reduction_percent,
-		"equip_cooldown_reduction_percent_bonus": _equip_cooldown_reduction_percent_bonus,
-		"max_cooldown_reduction_percent": MAX_COOLDOWN_REDUCTION_PERCENT,
-		"base_hp_regen_flat": base_hp_regen_flat,
-		"equip_hp_regen_bonus": _equip_hp_regen_bonus,
-		"str_hp_regen_per_point": STR_HP_REGEN_PER_POINT,
-		"base_mana_regen_flat": base_mana_regen_flat,
-		"int_mana_regen_per_point": INT_MANA_REGEN_PER_POINT,
-		"base_move_speed": _base_move_speed,
-		"equip_move_speed_bonus": _equip_move_speed_bonus,
-		"talent_move_speed_bonus_flat": _talent_float("move_speed_bonus_flat", 0.0),
-		"wc3_min_move_speed": WC3_MIN_MOVE_SPEED,
-		"wc3_max_move_speed": WC3_MAX_MOVE_SPEED,
-		"base_attack_range": _base_attack_range,
-		"equip_attack_range_bonus": _equip_attack_range_bonus,
-		"talent_attack_range_bonus_flat": _talent_float("attack_range_bonus_flat", 0.0),
-	})
+	var computed: Dictionary = (
+		HeroStatsService
+		. build_recalculated_stats(
+			{
+				"hero_level": lv,
+				"strength_base": strength_base,
+				"strength_growth": strength_growth,
+				"strength_growth_bonus": _talent_float("strength_growth_bonus", 0.0),
+				"agility_base": agility_base,
+				"agility_growth": agility_growth,
+				"agility_growth_bonus": _talent_float("agility_growth_bonus", 0.0),
+				"intelligence_base": intelligence_base,
+				"intelligence_growth": intelligence_growth,
+				"equip_strength_bonus": _equip_strength_bonus,
+				"equip_agility_bonus": _equip_agility_bonus,
+				"equip_intelligence_bonus": _equip_intelligence_bonus,
+				"battle_banner_applied_strength_bonus": _battle_banner_applied_strength_bonus,
+				"battle_banner_applied_agility_bonus": _battle_banner_applied_agility_bonus,
+				"battle_banner_applied_intelligence_bonus":
+				_battle_banner_applied_intelligence_bonus,
+				"settlement_permanent_agility_bonus": _settlement_permanent_agility_bonus,
+				"settlement_permanent_intelligence_bonus": _settlement_permanent_intelligence_bonus,
+				"necro_bonus_int_from_flute": _necro_bonus_int_from_flute,
+				"base_hp_flat": base_hp_flat,
+				"equip_hp_bonus": _equip_hp_bonus,
+				"spark_permanent_hp_bonus_from_procs": _spark_permanent_hp_bonus_from_procs,
+				"charge_permanent_hp_bonus_from_procs": _charge_permanent_hp_bonus_from_procs,
+				"necro_bonus_max_hp_from_summons": _necro_bonus_max_hp_from_summons,
+				"settlement_permanent_hp_bonus": _settlement_permanent_hp_bonus,
+				"str_hp_per_point": STR_HP_PER_POINT,
+				"base_mana_flat": base_mana_flat,
+				"initial_mana_multiplier": initial_mana_multiplier,
+				"equip_mana_bonus": _equip_mana_bonus,
+				"int_mana_per_point": INT_MANA_PER_POINT,
+				"base_damage_flat": base_damage_flat,
+				"equip_damage_bonus": _equip_damage_bonus,
+				"battle_banner_applied_damage_bonus": _battle_banner_applied_damage_bonus,
+				"primary_attribute": primary_attribute,
+				"talent_flat_damage_bonus": _talent_int("flat_damage_bonus", 0),
+				"talent_damage_growth_per_level": _talent_int("damage_growth_per_level", 0),
+				"is_rifleman": _is_rifleman_hero(),
+				"rifleman_oil_passive_damage_bonus": RIFLEMAN_OIL_PASSIVE_DAMAGE_BONUS,
+				"base_armor_flat": base_armor_flat,
+				"equip_armor_bonus": _equip_armor_bonus,
+				"agi_armor_per_point": AGI_ARMOR_PER_POINT,
+				"settlement_raw_physical_crit_chance": _get_settlement_raw_physical_crit_chance(),
+				"settlement_dynamic_physical_crit_multiplier_bonus":
+				_get_settlement_dynamic_physical_crit_multiplier_bonus_percent(
+					_get_settlement_raw_physical_crit_chance()
+				),
+				"is_warden": _is_warden_hero(),
+				"warden_dagger_crit_chance_bonus": WARDEN_DAGGER_CRIT_CHANCE_BONUS,
+				"talent_physical_crit_chance_bonus":
+				_talent_float("physical_crit_chance_bonus", 0.0),
+				"base_physical_crit_multiplier": base_physical_crit_multiplier,
+				"equip_physical_crit_multiplier_bonus": _equip_physical_crit_multiplier_bonus,
+				"base_spell_crit_chance": base_spell_crit_chance,
+				"equip_spell_crit_chance_bonus": _equip_spell_crit_chance_bonus,
+				"base_spell_crit_multiplier": base_spell_crit_multiplier,
+				"equip_spell_crit_multiplier_bonus": _equip_spell_crit_multiplier_bonus,
+				"base_cooldown_reduction_percent": base_cooldown_reduction_percent,
+				"equip_cooldown_reduction_percent_bonus": _equip_cooldown_reduction_percent_bonus,
+				"max_cooldown_reduction_percent": MAX_COOLDOWN_REDUCTION_PERCENT,
+				"base_hp_regen_flat": base_hp_regen_flat,
+				"equip_hp_regen_bonus": _equip_hp_regen_bonus,
+				"str_hp_regen_per_point": STR_HP_REGEN_PER_POINT,
+				"base_mana_regen_flat": base_mana_regen_flat,
+				"int_mana_regen_per_point": INT_MANA_REGEN_PER_POINT,
+				"base_move_speed": _base_move_speed,
+				"equip_move_speed_bonus": _equip_move_speed_bonus,
+				"talent_move_speed_bonus_flat": _talent_float("move_speed_bonus_flat", 0.0),
+				"wc3_min_move_speed": WC3_MIN_MOVE_SPEED,
+				"wc3_max_move_speed": WC3_MAX_MOVE_SPEED,
+				"base_attack_range": _base_attack_range,
+				"equip_attack_range_bonus": _equip_attack_range_bonus,
+				"talent_attack_range_bonus_flat": _talent_float("attack_range_bonus_flat", 0.0),
+			}
+		)
+	)
 	strength = int(computed.get("strength", strength))
 	agility = int(computed.get("agility", agility))
 	intelligence = int(computed.get("intelligence", intelligence))
@@ -677,10 +705,14 @@ func _recalculate_war3_stats(reset_hp_mp: bool) -> void:
 	damage_per_hit = int(computed.get("damage_per_hit", damage_per_hit))
 	armor = float(computed.get("armor", armor))
 	physical_crit_chance = float(computed.get("physical_crit_chance", physical_crit_chance))
-	physical_crit_multiplier = float(computed.get("physical_crit_multiplier", physical_crit_multiplier))
+	physical_crit_multiplier = float(
+		computed.get("physical_crit_multiplier", physical_crit_multiplier)
+	)
 	spell_crit_chance = float(computed.get("spell_crit_chance", spell_crit_chance))
 	spell_crit_multiplier = float(computed.get("spell_crit_multiplier", spell_crit_multiplier))
-	cooldown_reduction_percent_total = float(computed.get("cooldown_reduction_percent_total", cooldown_reduction_percent_total))
+	cooldown_reduction_percent_total = float(
+		computed.get("cooldown_reduction_percent_total", cooldown_reduction_percent_total)
+	)
 	hp_regen_per_second = float(computed.get("hp_regen_per_second", hp_regen_per_second))
 	mana_regen_per_second = float(computed.get("mana_regen_per_second", mana_regen_per_second))
 	move_speed = float(computed.get("move_speed", move_speed))
@@ -714,7 +746,9 @@ func apply_equipment_bonuses(bonuses: Dictionary) -> void:
 	_equip_spell_crit_chance_bonus = float(bonuses.get("spell_crit_chance", 0.0))
 	_equip_spell_crit_multiplier_bonus = float(bonuses.get("spell_crit_multiplier", 0.0))
 	_equip_spell_damage_percent_bonus = float(bonuses.get("spell_damage_percent", 0.0))
-	_equip_magic_damage_reduction_percent_bonus = float(bonuses.get("magic_damage_reduction_percent", 0.0))
+	_equip_magic_damage_reduction_percent_bonus = float(
+		bonuses.get("magic_damage_reduction_percent", 0.0)
+	)
 	var spark_effects_variant: Variant = bonuses.get("spark_effects", {})
 	if spark_effects_variant is Dictionary:
 		_equip_spark_effects = (spark_effects_variant as Dictionary).duplicate(true)
@@ -756,9 +790,15 @@ func apply_equipment_bonuses(bonuses: Dictionary) -> void:
 	_coin_revive_charges_used = clampi(_coin_revive_charges_used, 0, coin_revive_total)
 	if _battle_prep_effect_int("titan_helmet_count", 0) <= 0:
 		_battle_prep_fatal_guard_charges = 0
-	if _spark_effect_float("on_hit_attack_speed_bonus_percent", 0.0) <= 0.0 or _spark_effect_float("on_hit_attack_speed_bonus_duration_sec", 0.0) <= 0.0:
+	if (
+		_spark_effect_float("on_hit_attack_speed_bonus_percent", 0.0) <= 0.0
+		or _spark_effect_float("on_hit_attack_speed_bonus_duration_sec", 0.0) <= 0.0
+	):
 		_spark_attack_speed_stack_time_lefts.clear()
-	if _spark_effect_float("on_hit_spell_damage_bonus_percent", 0.0) <= 0.0 or _spark_effect_float("on_hit_spell_damage_bonus_duration_sec", 0.0) <= 0.0:
+	if (
+		_spark_effect_float("on_hit_spell_damage_bonus_percent", 0.0) <= 0.0
+		or _spark_effect_float("on_hit_spell_damage_bonus_duration_sec", 0.0) <= 0.0
+	):
 		_spark_spell_damage_buff_time_left = 0.0
 	if _spark_effect_float("soul_consume_attack_speed_permanent_bonus_per_use", 0.0) <= 0.0:
 		_spark_permanent_attack_speed_bonus_from_soul = 0.0
@@ -819,8 +859,12 @@ func _apply_profile_values(values: Dictionary) -> void:
 	base_attack_speed = float(values.get("base_attack_speed", base_attack_speed))
 	flash_max_distance = float(values.get("flash_max_distance", flash_max_distance))
 	flash_cooldown_time = float(values.get("flash_cooldown_time", flash_cooldown_time))
-	flash_origin_damage_radius = float(values.get("flash_origin_damage_radius", flash_origin_damage_radius))
-	flash_destination_damage_radius = float(values.get("flash_destination_damage_radius", flash_destination_damage_radius))
+	flash_origin_damage_radius = float(
+		values.get("flash_origin_damage_radius", flash_origin_damage_radius)
+	)
+	flash_destination_damage_radius = float(
+		values.get("flash_destination_damage_radius", flash_destination_damage_radius)
+	)
 	flash_damage = int(values.get("flash_damage", flash_damage))
 	flash_mana_cost = int(values.get("flash_mana_cost", flash_mana_cost))
 	haste_multiplier = float(values.get("haste_multiplier", haste_multiplier))
@@ -830,7 +874,9 @@ func _apply_profile_values(values: Dictionary) -> void:
 	poison_damage_per_second = int(values.get("poison_damage_per_second", poison_damage_per_second))
 	poison_duration = float(values.get("poison_duration", poison_duration))
 	poison_tick_interval = float(values.get("poison_tick_interval", poison_tick_interval))
-	passive_transform_attack_count = int(values.get("passive_transform_attack_count", passive_transform_attack_count))
+	passive_transform_attack_count = int(
+		values.get("passive_transform_attack_count", passive_transform_attack_count)
+	)
 	idle_animation = str(values.get("idle_animation", idle_animation))
 	walk_animation = str(values.get("walk_animation", walk_animation))
 	death_animation = str(values.get("death_animation", death_animation))
@@ -930,17 +976,25 @@ func _get_enemy_damage_bonus_percent(enemy: Node3D) -> float:
 	if enemy == null or not is_instance_valid(enemy):
 		return 0.0
 	var enemy_controller: Node = enemy.get_parent()
-	if enemy_controller != null and enemy_controller.has_method("get_incoming_damage_bonus_percent"):
+	if (
+		enemy_controller != null
+		and enemy_controller.has_method("get_incoming_damage_bonus_percent")
+	):
 		return maxf(float(enemy_controller.call("get_incoming_damage_bonus_percent")), 0.0)
 	var enemy_id: int = enemy.get_instance_id()
 	var entry_variant: Variant = _enemy_damage_bonus_runtime.get(enemy_id, {})
 	if not (entry_variant is Dictionary):
 		return 0.0
 	var entry: Dictionary = entry_variant
-	return maxf(float(entry.get("temporary_percent", 0.0)), 0.0) + maxf(float(entry.get("permanent_percent", 0.0)), 0.0)
+	return (
+		maxf(float(entry.get("temporary_percent", 0.0)), 0.0)
+		+ maxf(float(entry.get("permanent_percent", 0.0)), 0.0)
+	)
 
 
-func _apply_enemy_damage_bonus(enemy: Node3D, bonus_percent: float, duration_sec: float = 0.0, permanent: bool = false) -> void:
+func _apply_enemy_damage_bonus(
+	enemy: Node3D, bonus_percent: float, duration_sec: float = 0.0, permanent: bool = false
+) -> void:
 	if enemy == null or not is_instance_valid(enemy):
 		return
 	if bonus_percent <= 0.0:
@@ -989,7 +1043,10 @@ func _consume_warden_ring_attack() -> void:
 func _apply_warden_vengeance_heal_on_attack() -> void:
 	if not _is_warden_hero() or not _is_transformed:
 		return
-	var heal_amount: int = maxi(int(round(maxf(attack_speed_percent_total, 0.0) * WARDEN_VENGEANCE_HEAL_RATIO_PER_ATTACK)), 0)
+	var heal_amount: int = maxi(
+		int(round(maxf(attack_speed_percent_total, 0.0) * WARDEN_VENGEANCE_HEAL_RATIO_PER_ATTACK)),
+		0
+	)
 	_heal_self(heal_amount)
 
 
@@ -1001,20 +1058,37 @@ func _consume_rifleman_precision_trigger() -> bool:
 		return false
 	_rifleman_precision_counter = 0
 	if _haste_cooldown > 0.0:
-		var total_refund_ratio: float = clampf(RIFLEMAN_OIL_COOLDOWN_REFUND_RATIO + _talent_float("rifleman_w_refund_ratio_bonus", 0.0), 0.0, 0.95)
+		var total_refund_ratio: float = clampf(
+			(
+				RIFLEMAN_OIL_COOLDOWN_REFUND_RATIO
+				+ _talent_float("rifleman_w_refund_ratio_bonus", 0.0)
+			),
+			0.0,
+			0.95
+		)
 		_haste_cooldown = maxf(_haste_cooldown * maxf(1.0 - total_refund_ratio, 0.0), 0.0)
 	return true
 
 
-func _apply_rifleman_precision_bonus(enemy_controller: Node, enemy: Node3D, knockback_multiplier: float = 1.0) -> void:
+func _apply_rifleman_precision_bonus(
+	enemy_controller: Node, enemy: Node3D, knockback_multiplier: float = 1.0
+) -> void:
 	if enemy_controller == null or enemy == null:
 		return
-	var extra_damage_ratio: float = RIFLEMAN_PRECISION_EXTRA_DAMAGE_RATIO * _talent_float("rifleman_e_damage_multiplier", 1.0)
+	var extra_damage_ratio: float = (
+		RIFLEMAN_PRECISION_EXTRA_DAMAGE_RATIO * _talent_float("rifleman_e_damage_multiplier", 1.0)
+	)
 	extra_damage_ratio *= 1.0 + _talent_float("rifleman_precision_ignore_armor_damage_bonus", 0.0)
 	var extra_damage: int = maxi(int(round(float(damage_per_hit) * extra_damage_ratio)), 1)
-	var current_pos: Vector3 = _hero.global_position if _hero != null and is_instance_valid(_hero) else enemy.global_position
+	var current_pos: Vector3 = (
+		_hero.global_position
+		if _hero != null and is_instance_valid(_hero)
+		else enemy.global_position
+	)
 	var knockback_dir: Vector3 = (enemy.global_position - current_pos).normalized()
-	var knockback_distance: float = ranged_q_ray_knockback_distance * maxf(knockback_multiplier, 0.1)
+	var knockback_distance: float = (
+		ranged_q_ray_knockback_distance * maxf(knockback_multiplier, 0.1)
+	)
 	var knockback_duration: float = ranged_q_ray_knockback_duration
 	var knockback_priority: int = ranged_q_ray_knockback_priority
 	var request_context: Dictionary = {
@@ -1023,7 +1097,14 @@ func _apply_rifleman_precision_bonus(enemy_controller: Node, enemy: Node3D, knoc
 		"knockback_duration": knockback_duration,
 		"knockback_priority": knockback_priority
 	}
-	if _apply_enemy_damage_with_network(enemy_controller, enemy, extra_damage, attack_range + 60.0, "precision_attack", request_context):
+	if _apply_enemy_damage_with_network(
+		enemy_controller,
+		enemy,
+		extra_damage,
+		attack_range + 60.0,
+		"precision_attack",
+		request_context
+	):
 		_apply_q_ray_knockback_local_if_authority(
 			enemy_controller,
 			knockback_dir,
@@ -1043,7 +1124,11 @@ func apply_hero_profile_by_id(target_hero_id: int) -> void:
 func apply_hero_profile(profile_name: String) -> void:
 	_cache_melee_profile()
 	var normalized_profile: String = profile_name.strip_edges().to_lower()
-	var use_ranged_profile: bool = normalized_profile == "远程" or normalized_profile == "ranged" or profile_name.find("火枪手") >= 0
+	var use_ranged_profile: bool = (
+		normalized_profile == "远程"
+		or normalized_profile == "ranged"
+		or profile_name.find("火枪手") >= 0
+	)
 	if use_ranged_profile:
 		hero_id = HERO_ID_RANGED
 		hero_profile = "火枪手"
@@ -1059,31 +1144,34 @@ func apply_hero_profile(profile_name: String) -> void:
 		skill_r_id = SKILL_ID_R_RANGED_CLUSTER
 		skill_r_name = ranged_skill_r_name
 		skill_r_active = true
-		_apply_profile_values({
-			"move_speed": MAP_RIFLEMAN_MOVE_SPEED,
-			"attack_range": MAP_RIFLEMAN_ATTACK_RANGE,
-			"base_hp_flat": _resolve_profile_base_hp_flat(MAP_RIFLEMAN_MAX_HP),
-			"base_mana_flat": _resolve_profile_base_mana_flat(MAP_RIFLEMAN_MAX_MANA),
-			"base_attack_speed": _resolve_profile_base_attack_speed(MAP_RIFLEMAN_ATTACK_INTERVAL),
-			"flash_max_distance": ranged_flash_max_distance,
-			"flash_cooldown_time": ranged_flash_cooldown_time,
-			"flash_damage": ranged_flash_damage,
-			"flash_mana_cost": ranged_flash_mana_cost,
-			"haste_multiplier": ranged_haste_multiplier,
-			"haste_duration": ranged_haste_duration,
-			"haste_cooldown_time": ranged_haste_cooldown_time,
-			"haste_mana_cost": ranged_haste_mana_cost,
-			"poison_damage_per_second": ranged_poison_damage_per_second,
-			"poison_duration": ranged_poison_duration,
-			"poison_tick_interval": ranged_poison_tick_interval,
-			"passive_transform_attack_count": ranged_passive_transform_attack_count,
-			"idle_animation": ranged_idle_animation,
-			"walk_animation": ranged_walk_animation,
-			"death_animation": ranged_death_animation,
-			"attack_animation_1": ranged_attack_animation_1,
-			"attack_animation_2": ranged_attack_animation_2,
-			"attack_animation_3": ranged_attack_animation_3
-		})
+		_apply_profile_values(
+			{
+				"move_speed": MAP_RIFLEMAN_MOVE_SPEED,
+				"attack_range": MAP_RIFLEMAN_ATTACK_RANGE,
+				"base_hp_flat": _resolve_profile_base_hp_flat(MAP_RIFLEMAN_MAX_HP),
+				"base_mana_flat": _resolve_profile_base_mana_flat(MAP_RIFLEMAN_MAX_MANA),
+				"base_attack_speed":
+				_resolve_profile_base_attack_speed(MAP_RIFLEMAN_ATTACK_INTERVAL),
+				"flash_max_distance": ranged_flash_max_distance,
+				"flash_cooldown_time": ranged_flash_cooldown_time,
+				"flash_damage": ranged_flash_damage,
+				"flash_mana_cost": ranged_flash_mana_cost,
+				"haste_multiplier": ranged_haste_multiplier,
+				"haste_duration": ranged_haste_duration,
+				"haste_cooldown_time": ranged_haste_cooldown_time,
+				"haste_mana_cost": ranged_haste_mana_cost,
+				"poison_damage_per_second": ranged_poison_damage_per_second,
+				"poison_duration": ranged_poison_duration,
+				"poison_tick_interval": ranged_poison_tick_interval,
+				"passive_transform_attack_count": ranged_passive_transform_attack_count,
+				"idle_animation": ranged_idle_animation,
+				"walk_animation": ranged_walk_animation,
+				"death_animation": ranged_death_animation,
+				"attack_animation_1": ranged_attack_animation_1,
+				"attack_animation_2": ranged_attack_animation_2,
+				"attack_animation_3": ranged_attack_animation_3
+			}
+		)
 	else:
 		hero_id = HERO_ID_MELEE
 		hero_profile = "守望者"
@@ -1211,16 +1299,24 @@ func get_collision_profile_id() -> String:
 	var resolved_profile_id: String = _resolve_current_collision_profile_id()
 	if _current_collision_profile_id.is_empty():
 		return resolved_profile_id
-	if _current_collision_profile_id != resolved_profile_id and not _current_collision_profile.is_empty():
+	if (
+		_current_collision_profile_id != resolved_profile_id
+		and not _current_collision_profile.is_empty()
+	):
 		return resolved_profile_id
 	return _current_collision_profile_id
 
 
 func get_collision_profile() -> Dictionary:
 	var resolved_profile_id: String = _resolve_current_collision_profile_id()
-	if _current_collision_profile.is_empty() or _current_collision_profile_id != resolved_profile_id:
+	if (
+		_current_collision_profile.is_empty()
+		or _current_collision_profile_id != resolved_profile_id
+	):
 		_current_collision_profile = _build_collision_profile(resolved_profile_id)
-		_current_collision_profile_id = str(_current_collision_profile.get("profile_id", resolved_profile_id))
+		_current_collision_profile_id = str(
+			_current_collision_profile.get("profile_id", resolved_profile_id)
+		)
 	return _current_collision_profile.duplicate(true)
 
 
@@ -1327,7 +1423,9 @@ func _apply_collision_profile_to_hero(target_hero: Node3D, profile: Dictionary) 
 				collision_shape.shape = capsule
 			capsule.radius = maxf(float(profile.get("body_radius", melee_body_radius)), 0.0)
 			capsule.height = maxf(float(profile.get("body_height", melee_body_height)), 0.0)
-	collision_shape.position = Vector3(0.0, float(profile.get("body_offset_y", melee_body_offset_y)), 0.0)
+	collision_shape.position = Vector3(
+		0.0, float(profile.get("body_offset_y", melee_body_offset_y)), 0.0
+	)
 	var profile_name: String = str(profile.get("profile_id", COLLISION_PROFILE_MELEE))
 	target_hero.set_meta(COLLISION_PROFILE_ID_META_KEY, profile_name)
 	collision_body.set_meta(COLLISION_PROFILE_ID_META_KEY, profile_name)
@@ -1348,15 +1446,27 @@ func _ensure_hero_anchor_nodes(target_hero: Node3D, profile: Dictionary = {}) ->
 		anchor_root.name = ANCHOR_ROOT_NODE_NAME
 		target_hero.add_child(anchor_root)
 	var head_height: float = float(profile.get("head_anchor_height", hp_bar_height))
-	var projectile_origin_variant: Variant = profile.get("projectile_origin_offset", Vector3(0.0, head_height * 0.5, 0.0))
-	var projectile_origin_offset: Vector3 = projectile_origin_variant as Vector3 if projectile_origin_variant is Vector3 else Vector3(0.0, head_height * 0.5, 0.0)
+	var projectile_origin_variant: Variant = profile.get(
+		"projectile_origin_offset", Vector3(0.0, head_height * 0.5, 0.0)
+	)
+	var projectile_origin_offset: Vector3 = (
+		projectile_origin_variant as Vector3
+		if projectile_origin_variant is Vector3
+		else Vector3(0.0, head_height * 0.5, 0.0)
+	)
 	_ensure_anchor_node(anchor_root, HEAD_ANCHOR_NODE_NAME, Vector3(0.0, head_height, 0.0))
 	_ensure_anchor_node(anchor_root, PROJECTILE_ORIGIN_NODE_NAME, projectile_origin_offset)
-	_ensure_anchor_node(anchor_root, SHADOW_ANCHOR_NODE_NAME, Vector3(0.0, shadow_anchor_height, 0.0))
-	_ensure_anchor_node(anchor_root, SELECTION_ANCHOR_NODE_NAME, Vector3(0.0, selection_anchor_height, 0.0))
+	_ensure_anchor_node(
+		anchor_root, SHADOW_ANCHOR_NODE_NAME, Vector3(0.0, shadow_anchor_height, 0.0)
+	)
+	_ensure_anchor_node(
+		anchor_root, SELECTION_ANCHOR_NODE_NAME, Vector3(0.0, selection_anchor_height, 0.0)
+	)
 
 
-func _ensure_anchor_node(anchor_root: Node3D, anchor_name: String, default_position: Vector3) -> Node3D:
+func _ensure_anchor_node(
+	anchor_root: Node3D, anchor_name: String, default_position: Vector3
+) -> Node3D:
 	if anchor_root == null or not is_instance_valid(anchor_root):
 		return null
 	var anchor_node := anchor_root.get_node_or_null(anchor_name) as Node3D
@@ -1553,7 +1663,8 @@ func get_coin_sync_state() -> Dictionary:
 		"revive_available": _get_coin_available_revive_charges(),
 		"total_coin_layers": maxi(_coin_effect_int("total_coin_layers", 0), 0),
 		"revenge_spirit_count": maxi(_coin_effect_int("revenge_spirit_count", 0), 0),
-		"revenge_spirit_attack_percent": maxf(_coin_effect_float("revenge_spirit_attack_percent", 0.0), 0.0),
+		"revenge_spirit_attack_percent":
+		maxf(_coin_effect_float("revenge_spirit_attack_percent", 0.0), 0.0),
 	}
 
 
@@ -1565,7 +1676,13 @@ func _get_game_ui_node() -> Node:
 
 
 func _refresh_local_battle_phase_notifications() -> void:
-	var battle_phase_active: bool = _hero != null and is_instance_valid(_hero) and _hero.visible and not _is_dead and not _is_inside_start_area_recovery_zone()
+	var battle_phase_active: bool = (
+		_hero != null
+		and is_instance_valid(_hero)
+		and _hero.visible
+		and not _is_dead
+		and not _is_inside_start_area_recovery_zone()
+	)
 	if battle_phase_active == _local_battle_phase_active_notified:
 		return
 	_local_battle_phase_active_notified = battle_phase_active
@@ -1588,7 +1705,11 @@ func _get_settlement_crit_rate_multiplier() -> float:
 
 func _get_settlement_crit_pool() -> float:
 	return maxf(
-		base_physical_crit_chance + _equip_physical_crit_chance_bonus + _settlement_permanent_physical_crit_chance_bonus,
+		(
+			base_physical_crit_chance
+			+ _equip_physical_crit_chance_bonus
+			+ _settlement_permanent_physical_crit_chance_bonus
+		),
 		0.0
 	)
 
@@ -1597,7 +1718,9 @@ func _get_settlement_raw_physical_crit_chance() -> float:
 	return _get_settlement_crit_pool() * _get_settlement_crit_rate_multiplier()
 
 
-func _get_settlement_dynamic_physical_crit_multiplier_bonus_percent(raw_crit_chance: float = -1.0) -> float:
+func _get_settlement_dynamic_physical_crit_multiplier_bonus_percent(
+	raw_crit_chance: float = -1.0
+) -> float:
 	var effective_raw_crit: float = raw_crit_chance
 	if effective_raw_crit < 0.0:
 		effective_raw_crit = _get_settlement_raw_physical_crit_chance()
@@ -1622,7 +1745,9 @@ func _get_total_necro_summon_attack_bonus_percent() -> float:
 	var flat_bonus: float = maxf(_necro_effect_float("summon_attack_bonus_percent_flat", 0.0), 0.0)
 	if flat_bonus > 0.0:
 		return flat_bonus
-	var per_charge: float = maxf(_necro_effect_float("summon_attack_and_range_percent_per_charge", 0.0), 0.0)
+	var per_charge: float = maxf(
+		_necro_effect_float("summon_attack_and_range_percent_per_charge", 0.0), 0.0
+	)
 	return per_charge * float(maxi(_necro_charge_stacks, 0))
 
 
@@ -1630,7 +1755,9 @@ func _get_total_necro_summon_range_bonus_percent() -> float:
 	var flat_bonus: float = maxf(_necro_effect_float("summon_range_bonus_percent_flat", 0.0), 0.0)
 	if flat_bonus > 0.0:
 		return flat_bonus
-	var per_charge: float = maxf(_necro_effect_float("summon_attack_and_range_percent_per_charge", 0.0), 0.0)
+	var per_charge: float = maxf(
+		_necro_effect_float("summon_attack_and_range_percent_per_charge", 0.0), 0.0
+	)
 	return per_charge * float(maxi(_necro_charge_stacks, 0))
 
 
@@ -1668,7 +1795,12 @@ func _is_battle_prep_phase_active() -> bool:
 		return false
 	if _is_dead or not _hero.visible:
 		return false
-	if maxi(_battle_prep_effect_int("snake_ward_count", 0), 0) <= 0 and maxi(_battle_prep_effect_int("challenge_griffin_count", 0), 0) <= 0 and maxi(_battle_prep_effect_int("revive_charge_if_empty", 0), 0) <= 0 and maxi(_battle_prep_effect_int("titan_helmet_count", 0), 0) <= 0:
+	if (
+		maxi(_battle_prep_effect_int("snake_ward_count", 0), 0) <= 0
+		and maxi(_battle_prep_effect_int("challenge_griffin_count", 0), 0) <= 0
+		and maxi(_battle_prep_effect_int("revive_charge_if_empty", 0), 0) <= 0
+		and maxi(_battle_prep_effect_int("titan_helmet_count", 0), 0) <= 0
+	):
 		return false
 	return not _is_inside_start_area_recovery_zone()
 
@@ -1743,7 +1875,11 @@ func _refresh_battle_banner_applied_bonuses() -> void:
 
 	if _hero != null and is_instance_valid(_hero):
 		var net_ctrl: Node = _get_network_session_controller()
-		if net_ctrl != null and net_ctrl.has_method("get_synced_peer_ids") and net_ctrl.has_method("get_ui_peer_hero_state"):
+		if (
+			net_ctrl != null
+			and net_ctrl.has_method("get_synced_peer_ids")
+			and net_ctrl.has_method("get_ui_peer_hero_state")
+		):
 			var self_peer_id: int = 0
 			if net_ctrl.has_method("get_ui_self_peer_id"):
 				self_peer_id = int(net_ctrl.call("get_ui_self_peer_id"))
@@ -1753,7 +1889,9 @@ func _refresh_battle_banner_applied_bonuses() -> void:
 					var peer_id: int = int(peer_id_variant)
 					if peer_id <= 0 or peer_id == self_peer_id:
 						continue
-					var hero_state_variant: Variant = net_ctrl.call("get_ui_peer_hero_state", peer_id)
+					var hero_state_variant: Variant = net_ctrl.call(
+						"get_ui_peer_hero_state", peer_id
+					)
 					if not (hero_state_variant is Dictionary):
 						continue
 					var hero_state: Dictionary = hero_state_variant as Dictionary
@@ -1775,10 +1913,16 @@ func _refresh_battle_banner_applied_bonuses() -> void:
 						continue
 					total_strength_bonus += int(banner_state.get("emitted_strength_bonus", 0))
 					total_agility_bonus += int(banner_state.get("emitted_agility_bonus", 0))
-					total_intelligence_bonus += int(banner_state.get("emitted_intelligence_bonus", 0))
+					total_intelligence_bonus += int(
+						banner_state.get("emitted_intelligence_bonus", 0)
+					)
 					total_damage_bonus += int(banner_state.get("emitted_damage_bonus", 0))
-					total_attack_speed_bonus += float(banner_state.get("emitted_attack_speed_percent_bonus", 0.0))
-					total_spell_damage_bonus += float(banner_state.get("emitted_spell_damage_percent_bonus", 0.0))
+					total_attack_speed_bonus += float(
+						banner_state.get("emitted_attack_speed_percent_bonus", 0.0)
+					)
+					total_spell_damage_bonus += float(
+						banner_state.get("emitted_spell_damage_percent_bonus", 0.0)
+					)
 
 	var double_multiplier: float = _get_battle_banner_double_multiplier()
 	total_strength_bonus = int(round(float(total_strength_bonus) * double_multiplier))
@@ -1793,8 +1937,18 @@ func _refresh_battle_banner_applied_bonuses() -> void:
 	changed = changed or _battle_banner_applied_agility_bonus != total_agility_bonus
 	changed = changed or _battle_banner_applied_intelligence_bonus != total_intelligence_bonus
 	changed = changed or _battle_banner_applied_damage_bonus != total_damage_bonus
-	changed = changed or not is_equal_approx(_battle_banner_applied_attack_speed_percent_bonus, total_attack_speed_bonus)
-	changed = changed or not is_equal_approx(_battle_banner_applied_spell_damage_percent_bonus, total_spell_damage_bonus)
+	changed = (
+		changed
+		or not is_equal_approx(
+			_battle_banner_applied_attack_speed_percent_bonus, total_attack_speed_bonus
+		)
+	)
+	changed = (
+		changed
+		or not is_equal_approx(
+			_battle_banner_applied_spell_damage_percent_bonus, total_spell_damage_bonus
+		)
+	)
 
 	if not changed:
 		return
@@ -1812,14 +1966,34 @@ func _apply_battle_banner_pulses(pulse_count: int) -> void:
 	var safe_pulse_count: int = maxi(pulse_count, 0)
 	if safe_pulse_count <= 0:
 		return
-	_battle_banner_emitted_attack_speed_percent_bonus += float(_banner_effect_int("elf_banner_count", 0)) * _banner_effect_float("elf_attack_speed_percent_per_pulse", 5.0) * float(safe_pulse_count)
-	_battle_banner_emitted_damage_bonus += maxi(_banner_effect_int("kingdom_banner_count", 0), 0) * maxi(_banner_effect_int("kingdom_damage_per_pulse", 5), 0) * safe_pulse_count
-	_battle_banner_emitted_spell_damage_percent_bonus += float(_banner_effect_int("wasteland_banner_count", 0)) * _banner_effect_float("wasteland_spell_damage_percent_per_pulse", 2.0) * float(safe_pulse_count)
-	var heroic_all_attr_gain: int = maxi(_banner_effect_int("heroic_banner_count", 0), 0) * maxi(_banner_effect_int("heroic_all_attributes_per_pulse", 1), 0) * safe_pulse_count
+	_battle_banner_emitted_attack_speed_percent_bonus += (
+		float(_banner_effect_int("elf_banner_count", 0))
+		* _banner_effect_float("elf_attack_speed_percent_per_pulse", 5.0)
+		* float(safe_pulse_count)
+	)
+	_battle_banner_emitted_damage_bonus += (
+		maxi(_banner_effect_int("kingdom_banner_count", 0), 0)
+		* maxi(_banner_effect_int("kingdom_damage_per_pulse", 5), 0)
+		* safe_pulse_count
+	)
+	_battle_banner_emitted_spell_damage_percent_bonus += (
+		float(_banner_effect_int("wasteland_banner_count", 0))
+		* _banner_effect_float("wasteland_spell_damage_percent_per_pulse", 2.0)
+		* float(safe_pulse_count)
+	)
+	var heroic_all_attr_gain: int = (
+		maxi(_banner_effect_int("heroic_banner_count", 0), 0)
+		* maxi(_banner_effect_int("heroic_all_attributes_per_pulse", 1), 0)
+		* safe_pulse_count
+	)
 	_battle_banner_emitted_strength_bonus += heroic_all_attr_gain
 	_battle_banner_emitted_agility_bonus += heroic_all_attr_gain
 	_battle_banner_emitted_intelligence_bonus += heroic_all_attr_gain
-	_battle_banner_emitted_intelligence_bonus += maxi(_banner_effect_int("council_banner_count", 0), 0) * maxi(_banner_effect_int("council_intelligence_per_pulse", 3), 0) * safe_pulse_count
+	_battle_banner_emitted_intelligence_bonus += (
+		maxi(_banner_effect_int("council_banner_count", 0), 0)
+		* maxi(_banner_effect_int("council_intelligence_per_pulse", 3), 0)
+		* safe_pulse_count
+	)
 	_refresh_battle_banner_applied_bonuses()
 
 
@@ -1828,7 +2002,9 @@ func _compute_silvermoon_battle_prep_pulse_count() -> int:
 	if silvermoon_count <= 0:
 		return 0
 	var total_banner_count: int = maxi(_banner_effect_int("total_banner_count", 0), 0)
-	var multiplier: float = maxf(_banner_effect_float("silvermoon_battle_prep_multiplier", 1.25), 0.0)
+	var multiplier: float = maxf(
+		_banner_effect_float("silvermoon_battle_prep_multiplier", 1.25), 0.0
+	)
 	return maxi(int(round(float(total_banner_count * silvermoon_count) * multiplier)), 0)
 
 
@@ -1948,13 +2124,17 @@ func _apply_settlement_end_of_battle_effects() -> void:
 			changed = true
 
 		for _medal_idx in range(gold_medal_count):
-			var medal_hp_gain: int = maxi(int(round(float(current_agility + current_intelligence) * 0.2)), 200)
+			var medal_hp_gain: int = maxi(
+				int(round(float(current_agility + current_intelligence) * 0.2)), 200
+			)
 			if medal_hp_gain > 0:
 				_settlement_permanent_hp_bonus += medal_hp_gain
 				changed = true
 
 		for _lion_idx in range(lion_ring_count):
-			var lion_hp_gain: int = maxi(int(round(float(current_agility + current_intelligence) * 0.4)), 400)
+			var lion_hp_gain: int = maxi(
+				int(round(float(current_agility + current_intelligence) * 0.4)), 400
+			)
 			if lion_hp_gain > 0:
 				_settlement_permanent_hp_bonus += lion_hp_gain
 				changed = true
@@ -1968,7 +2148,9 @@ func _apply_necromancy_summon_events(summon_count: int) -> void:
 	if safe_count <= 0:
 		return
 	var hp_gain_per_summon: int = maxi(_necro_effect_int("book_max_hp_per_summon", 0), 0)
-	var flute_stack_gain_per_summon: int = maxi(_necro_effect_int("flute_stack_gain_per_summon", 0), 0)
+	var flute_stack_gain_per_summon: int = maxi(
+		_necro_effect_int("flute_stack_gain_per_summon", 0), 0
+	)
 	var flute_stacks_per_int: int = maxi(_necro_effect_int("flute_stacks_per_int", 7), 1)
 	var flute_int_per_threshold: int = maxi(_necro_effect_int("flute_int_per_threshold", 1), 1)
 	var changed: bool = false
@@ -1987,7 +2169,9 @@ func _apply_necromancy_summon_events(summon_count: int) -> void:
 
 
 func _register_necromancy_skill_cast() -> void:
-	var summon_power_gain: float = maxf(_necro_effect_float("summon_power_percent_per_spell_cast", 0.0), 0.0)
+	var summon_power_gain: float = maxf(
+		_necro_effect_float("summon_power_percent_per_spell_cast", 0.0), 0.0
+	)
 	if summon_power_gain <= 0.0:
 		return
 	_necro_summon_power_percent_from_spells += summon_power_gain
@@ -2003,12 +2187,21 @@ func _register_necromancy_basic_attack_charge_gain() -> void:
 
 func _on_necromancy_battle_phase_started() -> void:
 	_necro_charge_stacks = 0
-	var summon_count: int = maxi(_necro_effect_int("battle_prep_owl_count", 0), 0) + maxi(_necro_effect_int("battle_prep_tower_count", 0), 0)
+	var summon_count: int = (
+		maxi(_necro_effect_int("battle_prep_owl_count", 0), 0)
+		+ maxi(_necro_effect_int("battle_prep_tower_count", 0), 0)
+	)
 	_apply_necromancy_summon_events(summon_count)
 
 
 func _refresh_necromancy_battle_phase_state() -> void:
-	var battle_phase_active: bool = _hero != null and is_instance_valid(_hero) and _hero.visible and not _is_dead and not _is_inside_start_area_recovery_zone()
+	var battle_phase_active: bool = (
+		_hero != null
+		and is_instance_valid(_hero)
+		and _hero.visible
+		and not _is_dead
+		and not _is_inside_start_area_recovery_zone()
+	)
 	if battle_phase_active == _necro_last_battle_phase_active:
 		return
 	_necro_last_battle_phase_active = battle_phase_active
@@ -2019,7 +2212,11 @@ func _refresh_necromancy_battle_phase_state() -> void:
 			game_ui.call("notify_local_battle_phase_started")
 	else:
 		_apply_settlement_end_of_battle_effects()
-		if not _is_dead and game_ui != null and game_ui.has_method("notify_local_battle_phase_ended"):
+		if (
+			not _is_dead
+			and game_ui != null
+			and game_ui.has_method("notify_local_battle_phase_ended")
+		):
 			game_ui.call("notify_local_battle_phase_ended")
 		_necro_charge_stacks = 0
 
@@ -2053,14 +2250,20 @@ func _update_equipment_effect_timers(delta: float) -> void:
 
 func _register_spark_on_hit_bonuses() -> void:
 	var attack_speed_bonus: float = _spark_effect_float("on_hit_attack_speed_bonus_percent", 0.0)
-	var attack_speed_duration: float = _spark_effect_float("on_hit_attack_speed_bonus_duration_sec", 0.0)
+	var attack_speed_duration: float = _spark_effect_float(
+		"on_hit_attack_speed_bonus_duration_sec", 0.0
+	)
 	if attack_speed_bonus > 0.0 and attack_speed_duration > 0.0:
 		if _spark_attack_speed_stack_time_lefts.size() < 200:
 			_spark_attack_speed_stack_time_lefts.append(attack_speed_duration)
 	var spell_damage_bonus: float = _spark_effect_float("on_hit_spell_damage_bonus_percent", 0.0)
-	var spell_damage_duration: float = _spark_effect_float("on_hit_spell_damage_bonus_duration_sec", 0.0)
+	var spell_damage_duration: float = _spark_effect_float(
+		"on_hit_spell_damage_bonus_duration_sec", 0.0
+	)
 	if spell_damage_bonus > 0.0 and spell_damage_duration > 0.0:
-		_spark_spell_damage_buff_time_left = maxf(_spark_spell_damage_buff_time_left, spell_damage_duration)
+		_spark_spell_damage_buff_time_left = maxf(
+			_spark_spell_damage_buff_time_left, spell_damage_duration
+		)
 
 
 func _gain_spark_permanent_hp(amount: int) -> void:
@@ -2126,7 +2329,9 @@ func _heal_self(amount: int) -> void:
 	_update_hp_bar()
 
 
-func _apply_spark_aoe_damage(center: Vector3, damage: int, radius: float, hit_context: Dictionary = {}) -> void:
+func _apply_spark_aoe_damage(
+	center: Vector3, damage: int, radius: float, hit_context: Dictionary = {}
+) -> void:
 	if damage <= 0:
 		return
 	var safe_radius: float = maxf(radius, 1.0)
@@ -2168,26 +2373,42 @@ func _apply_spark_attack_effect_damage(primary_enemy: Node3D) -> void:
 		return
 
 	var effect_multiplier: float = maxf(_spark_effect_float("attack_effect_multiplier", 1.0), 1.0)
-	var low_hp_threshold: float = clampf(_spark_effect_float("attack_effect_low_hp_double_threshold", 0.0), 0.0, 1.0)
+	var low_hp_threshold: float = clampf(
+		_spark_effect_float("attack_effect_low_hp_double_threshold", 0.0), 0.0, 1.0
+	)
 	var should_double_low_hp_effect: bool = false
 	if low_hp_threshold > 0.0 and max_hp > 0:
 		should_double_low_hp_effect = float(_current_hp) <= float(max_hp) * low_hp_threshold
 
-	var flat_damage_component: float = maxf(_spark_effect_float("attack_effect_flat_damage", 0.0), 0.0)
+	var flat_damage_component: float = maxf(
+		_spark_effect_float("attack_effect_flat_damage", 0.0), 0.0
+	)
 	var heal_component: float = maxf(_spark_effect_float("attack_effect_flat_heal", 0.0), 0.0)
 	if should_double_low_hp_effect:
 		flat_damage_component *= 2.0
 		heal_component *= 2.0
 
 	var primary_base_damage: float = flat_damage_component
-	primary_base_damage += float(agility) * maxf(_spark_effect_float("attack_effect_agility_ratio", 0.0), 0.0)
-	primary_base_damage += maxf(attack_speed_percent_total, 0.0) * maxf(_spark_effect_float("attack_effect_attack_speed_ratio", 0.0), 0.0)
-	primary_base_damage += float(maxi(current_mana, 0)) * maxf(_spark_effect_float("attack_effect_current_mana_ratio", 0.0), 0.0)
-	var total_item_level_scale: float = maxf(_spark_effect_float("attack_effect_total_item_level_scale", 0.0), 0.0)
+	primary_base_damage += (
+		float(agility) * maxf(_spark_effect_float("attack_effect_agility_ratio", 0.0), 0.0)
+	)
+	primary_base_damage += (
+		maxf(attack_speed_percent_total, 0.0)
+		* maxf(_spark_effect_float("attack_effect_attack_speed_ratio", 0.0), 0.0)
+	)
+	primary_base_damage += (
+		float(maxi(current_mana, 0))
+		* maxf(_spark_effect_float("attack_effect_current_mana_ratio", 0.0), 0.0)
+	)
+	var total_item_level_scale: float = maxf(
+		_spark_effect_float("attack_effect_total_item_level_scale", 0.0), 0.0
+	)
 	var inventory_level_sum: int = maxi(_spark_effect_int("inventory_level_sum", 0), 0)
 	primary_base_damage += total_item_level_scale * float(inventory_level_sum)
 
-	var primary_damage_result: Dictionary = _compute_spell_damage_result(int(round(primary_base_damage * effect_multiplier)))
+	var primary_damage_result: Dictionary = _compute_spell_damage_result(
+		int(round(primary_base_damage * effect_multiplier))
+	)
 	var primary_damage: int = _get_damage_amount(primary_damage_result)
 	if primary_damage > 0:
 		_apply_enemy_damage_with_network(
@@ -2206,12 +2427,21 @@ func _apply_spark_attack_effect_damage(primary_enemy: Node3D) -> void:
 	if hp_ratio_aoe <= 0.0:
 		return
 	var aoe_base_damage: float = float(maxi(max_hp, 0)) * hp_ratio_aoe
-	var aoe_damage_result: Dictionary = _compute_spell_damage_result(int(round(aoe_base_damage * effect_multiplier)))
+	var aoe_damage_result: Dictionary = _compute_spell_damage_result(
+		int(round(aoe_base_damage * effect_multiplier))
+	)
 	var aoe_damage: int = _get_damage_amount(aoe_damage_result)
 	if aoe_damage <= 0:
 		return
-	var aoe_radius: float = maxf(_spark_effect_float("attack_effect_aoe_radius", SPARK_DEFAULT_AOE_RADIUS), 1.0)
-	_apply_spark_aoe_damage(primary_enemy.global_position, aoe_damage, aoe_radius, _build_damage_hit_context(aoe_damage_result))
+	var aoe_radius: float = maxf(
+		_spark_effect_float("attack_effect_aoe_radius", SPARK_DEFAULT_AOE_RADIUS), 1.0
+	)
+	_apply_spark_aoe_damage(
+		primary_enemy.global_position,
+		aoe_damage,
+		aoe_radius,
+		_build_damage_hit_context(aoe_damage_result)
+	)
 
 
 func _refresh_start_area_recovery_zone() -> void:
@@ -2225,9 +2455,13 @@ func _refresh_start_area_recovery_zone() -> void:
 			_has_start_area_recovery_zone = true
 	if owner_node.has_method("get_start_area_full_recovery_radius"):
 		var radius_variant: Variant = owner_node.call("get_start_area_full_recovery_radius")
-		_start_area_full_recovery_radius_runtime = _variant_to_positive_float(radius_variant, _start_area_full_recovery_radius_runtime)
+		_start_area_full_recovery_radius_runtime = _variant_to_positive_float(
+			radius_variant, _start_area_full_recovery_radius_runtime
+		)
 	if _start_area_full_recovery_radius_runtime <= 0.0:
-		_start_area_full_recovery_radius_runtime = maxf(start_area_full_recovery_radius_fallback, 0.0)
+		_start_area_full_recovery_radius_runtime = maxf(
+			start_area_full_recovery_radius_fallback, 0.0
+		)
 
 
 func _is_inside_start_area_recovery_zone() -> bool:
@@ -2332,7 +2566,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if _input_locked_by_ui:
 		return
-	
+
 	if event is InputEventKey:
 		var key_event := event as InputEventKey
 		if key_event.keycode == KEY_A and key_event.pressed and not key_event.echo:
@@ -2342,7 +2576,9 @@ func _input(event: InputEvent) -> void:
 			_update_mouse_cursor_icon()
 			return
 		if key_event.keycode == KEY_Q and key_event.pressed and not key_event.echo:
-			var can_cast_q: bool = skill_q_id == SKILL_ID_Q_FLASH or skill_q_id == SKILL_ID_Q_RANGED_SHOT
+			var can_cast_q: bool = (
+				skill_q_id == SKILL_ID_Q_FLASH or skill_q_id == SKILL_ID_Q_RANGED_SHOT
+			)
 			var has_q_mana: bool = current_mana >= maxi(flash_mana_cost, 0)
 			if can_cast_q and _flash_cooldown <= 0.0 and has_q_mana:
 				_flash_mode = true
@@ -2360,7 +2596,12 @@ func _input(event: InputEvent) -> void:
 				_activate_evasive_step()
 			return
 		if key_event.keycode == KEY_R and key_event.pressed and not key_event.echo:
-			if skill_r_active and _is_ranged_hero() and _r_cooldown <= 0.0 and current_mana >= maxi(ranged_r_mana_cost, 0):
+			if (
+				skill_r_active
+				and _is_ranged_hero()
+				and _r_cooldown <= 0.0
+				and current_mana >= maxi(ranged_r_mana_cost, 0)
+			):
 				_r_skill_mode = true
 				_flash_mode = false
 				_attack_mode = false
@@ -2375,7 +2616,7 @@ func _input(event: InputEvent) -> void:
 			else:
 				_stop_move_hold_active = false
 			return
-	
+
 	if event is InputEventMouseButton:
 		var mouse_event := event as InputEventMouseButton
 		if mouse_event.button_index == MOUSE_BUTTON_RIGHT and mouse_event.pressed:
@@ -2391,7 +2632,9 @@ func _input(event: InputEvent) -> void:
 			_handle_flash_click()
 			_flash_mode = false
 			_update_mouse_cursor_icon()
-		elif mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed and _r_skill_mode:
+		elif (
+			mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed and _r_skill_mode
+		):
 			get_viewport().set_input_as_handled()
 			_handle_r_skill_click()
 			_r_skill_mode = false
@@ -2459,11 +2702,10 @@ func _handle_left_click() -> void:
 			hit_name = hit_node.name
 			hit_path = str(hit_node.get_path())
 			shop_owner_peer_id = _resolve_shop_owner_peer_id_from_node(hit_node)
-		shop_click_debug_last_result = "hit=%s path=%s in_shop=%s" % [
-			hit_name,
-			hit_path,
-			"true" if shop_owner_peer_id > 0 else "false"
-		]
+		shop_click_debug_last_result = (
+			"hit=%s path=%s in_shop=%s"
+			% [hit_name, hit_path, "true" if shop_owner_peer_id > 0 else "false"]
+		)
 		if shop_owner_peer_id > 0:
 			shop_clicked_owner_peer_id = shop_owner_peer_id
 			shop_click_debug_last_result += " owner=%d" % shop_clicked_owner_peer_id
@@ -2486,15 +2728,15 @@ func _handle_right_click() -> void:
 	var camera := get_viewport().get_camera_3d()
 	if camera == null:
 		return
-	
+
 	var mouse_pos := get_viewport().get_mouse_position()
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_dir := camera.project_ray_normal(mouse_pos)
-	
+
 	var space_state := get_world_3d().direct_space_state
 	var query := _create_interaction_ray_query(ray_origin, ray_origin + ray_dir * 10000)
 	var result := space_state.intersect_ray(query)
-	
+
 	if result and result.collider:
 		var collider: Node = result.collider as Node
 		var shop_owner_peer_id: int = _resolve_shop_owner_peer_id_from_node(collider)
@@ -2505,9 +2747,7 @@ func _handle_right_click() -> void:
 			_focus_lock = false
 			_target_position = _get_ground_position(mouse_pos)
 			_has_move_target = true
-			_push_network_control_command("move_to", {
-				"target_pos": _target_position
-			})
+			_push_network_control_command("move_to", {"target_pos": _target_position})
 			_spawn_move_confirmation_effect(_target_position)
 			return
 		var clicked_enemy := _resolve_enemy_from_collider(collider)
@@ -2515,10 +2755,13 @@ func _handle_right_click() -> void:
 			_target_enemy = clicked_enemy
 			_has_move_target = false
 			_focus_lock = false
-			_push_network_control_command("chase_target", {
-				"target_path": str(clicked_enemy.get_path()),
-				"target_pos": clicked_enemy.global_position
-			})
+			_push_network_control_command(
+				"chase_target",
+				{
+					"target_path": str(clicked_enemy.get_path()),
+					"target_pos": clicked_enemy.global_position
+				}
+			)
 		else:
 			var click_pos: Vector3 = _get_ground_position(mouse_pos)
 			_interrupt_attack_for_move()
@@ -2526,9 +2769,7 @@ func _handle_right_click() -> void:
 			_focus_lock = false
 			_target_position = Vector3(click_pos.x, _plane_height, click_pos.z)
 			_has_move_target = true
-			_push_network_control_command("move_to", {
-				"target_pos": _target_position
-			})
+			_push_network_control_command("move_to", {"target_pos": _target_position})
 			_spawn_move_confirmation_effect(_target_position)
 	else:
 		_interrupt_attack_for_move()
@@ -2536,9 +2777,7 @@ func _handle_right_click() -> void:
 		_focus_lock = false
 		_target_position = _get_ground_position(mouse_pos)
 		_has_move_target = true
-		_push_network_control_command("move_to", {
-			"target_pos": _target_position
-		})
+		_push_network_control_command("move_to", {"target_pos": _target_position})
 		_spawn_move_confirmation_effect(_target_position)
 
 
@@ -2554,7 +2793,11 @@ func _handle_flash_click() -> void:
 	if skill_q_id == SKILL_ID_Q_RANGED_SHOT:
 		_cast_ranged_q(target)
 		return
-	var had_enemy_target: bool = _target_enemy != null and is_instance_valid(_target_enemy) and not _is_enemy_dead(_target_enemy)
+	var had_enemy_target: bool = (
+		_target_enemy != null
+		and is_instance_valid(_target_enemy)
+		and not _is_enemy_dead(_target_enemy)
+	)
 	var current := _hero.global_position
 	var direction := target - current
 	direction.y = 0.0
@@ -2574,17 +2817,19 @@ func _handle_flash_click() -> void:
 	if _is_warden_hero():
 		var phantom_ratio: float = _talent_float("q_origin_echo_ratio", 0.0)
 		if phantom_ratio > 0.0:
-			_apply_flash_area_damage(current, flash_origin_damage_radius, int(round(float(q_damage) * phantom_ratio)), "flash_origin_echo")
-	_flash_cooldown = _compute_skill_cooldown(flash_cooldown_time * _talent_float("q_cooldown_multiplier", 1.0))
-	_push_network_skill_event("q", skill_q_id, {
-		"from_pos": current,
-		"to_pos": target,
-		"yaw": _hero.rotation.y
-	})
-	_push_network_control_command("cast_skill", {
-		"skill_id": skill_q_id,
-		"target_pos": target
-	})
+			_apply_flash_area_damage(
+				current,
+				flash_origin_damage_radius,
+				int(round(float(q_damage) * phantom_ratio)),
+				"flash_origin_echo"
+			)
+	_flash_cooldown = _compute_skill_cooldown(
+		flash_cooldown_time * _talent_float("q_cooldown_multiplier", 1.0)
+	)
+	_push_network_skill_event(
+		"q", skill_q_id, {"from_pos": current, "to_pos": target, "yaw": _hero.rotation.y}
+	)
+	_push_network_control_command("cast_skill", {"skill_id": skill_q_id, "target_pos": target})
 	_stop_animation()
 	if had_enemy_target:
 		_resume_enemy_target_after_skill()
@@ -2619,17 +2864,20 @@ func _cast_ranged_r(target: Vector3) -> void:
 		impact_pos.y = _plane_height
 	_face_toward(impact_pos)
 	_spawn_ranged_r_projectile_and_impact(start_pos, impact_pos)
-	_r_cooldown = _compute_skill_cooldown(ranged_r_cooldown_time * _talent_float("r_cooldown_multiplier", 1.0))
-	_push_network_skill_event("r", skill_r_id, {
-		"from_pos": start_pos,
-		"to_pos": impact_pos,
-		"radius": maxf(ranged_r_radius, 0.0),
-		"visual_scale": _get_ranged_r_impact_scale_multiplier()
-	})
-	_push_network_control_command("cast_skill", {
-		"skill_id": skill_r_id,
-		"target_pos": impact_pos
-	})
+	_r_cooldown = _compute_skill_cooldown(
+		ranged_r_cooldown_time * _talent_float("r_cooldown_multiplier", 1.0)
+	)
+	_push_network_skill_event(
+		"r",
+		skill_r_id,
+		{
+			"from_pos": start_pos,
+			"to_pos": impact_pos,
+			"radius": maxf(ranged_r_radius, 0.0),
+			"visual_scale": _get_ranged_r_impact_scale_multiplier()
+		}
+	)
+	_push_network_control_command("cast_skill", {"skill_id": skill_r_id, "target_pos": impact_pos})
 
 
 func _spawn_ranged_r_projectile_and_impact(start_pos: Vector3, impact_pos: Vector3) -> void:
@@ -2645,14 +2893,14 @@ func _spawn_ranged_r_projectile_and_impact(start_pos: Vector3, impact_pos: Vecto
 	var min_flight: float = maxf(ranged_r_projectile_min_flight_time, 0.02)
 	var flight_duration: float = maxf(flight_distance / speed, min_flight)
 	if ranged_r_missile_scene == null:
-		get_tree().create_timer(flight_duration).timeout.connect(func() -> void:
-			_spawn_ranged_r_bombardment(impact_pos, start_pos)
+		get_tree().create_timer(flight_duration).timeout.connect(
+			func() -> void: _spawn_ranged_r_bombardment(impact_pos, start_pos)
 		)
 		return
 	var projectile := ranged_r_missile_scene.instantiate() as Node3D
 	if projectile == null:
-		get_tree().create_timer(flight_duration).timeout.connect(func() -> void:
-			_spawn_ranged_r_bombardment(impact_pos, start_pos)
+		get_tree().create_timer(flight_duration).timeout.connect(
+			func() -> void: _spawn_ranged_r_bombardment(impact_pos, start_pos)
 		)
 		return
 	host.add_child(projectile)
@@ -2663,23 +2911,26 @@ func _spawn_ranged_r_projectile_and_impact(start_pos: Vector3, impact_pos: Vecto
 	var tween: Tween = create_tween()
 	tween.set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(projectile, "global_position", impact_pos, flight_duration)
-	tween.finished.connect(func() -> void:
-		if projectile != null and is_instance_valid(projectile):
-			projectile.queue_free()
-		_spawn_ranged_r_bombardment(impact_pos, start_pos)
+	tween.finished.connect(
+		func() -> void:
+			if projectile != null and is_instance_valid(projectile):
+				projectile.queue_free()
+			_spawn_ranged_r_bombardment(impact_pos, start_pos)
 	)
 
 
 func _spawn_ranged_r_bombardment(center: Vector3, cast_origin: Vector3) -> void:
-	var tick_count: int = maxi(RIFLEMAN_BOMBARDMENT_TICK_COUNT + _talent_int("r_tick_count_bonus", 0), 1)
+	var tick_count: int = maxi(
+		RIFLEMAN_BOMBARDMENT_TICK_COUNT + _talent_int("r_tick_count_bonus", 0), 1
+	)
 	var tick_interval: float = maxf(RIFLEMAN_BOMBARDMENT_TICK_INTERVAL_SEC, 0.05)
 	_spawn_ranged_r_impact_effect(center)
 	for tick_idx in range(tick_count):
 		var delay_sec: float = float(tick_idx) * tick_interval
 		var hit_center: Vector3 = center
 		var hit_origin: Vector3 = cast_origin
-		get_tree().create_timer(delay_sec).timeout.connect(func() -> void:
-			_apply_ranged_r_area_damage(hit_center, hit_origin)
+		get_tree().create_timer(delay_sec).timeout.connect(
+			func() -> void: _apply_ranged_r_area_damage(hit_center, hit_origin)
 		)
 
 
@@ -2701,14 +2952,19 @@ func _spawn_ranged_r_impact_effect(impact_pos: Vector3) -> void:
 	effect_root.scale = Vector3.ONE * _get_ranged_r_impact_scale_multiplier()
 	effect_root.add_child(effect)
 	effect.position = Vector3.ZERO
-	var duration: float = _play_one_shot_effect_animation(effect, "Birth", RANGED_R_LOGIC_POINT_LIFETIME_SEC)
-	get_tree().create_timer(duration).timeout.connect(func() -> void:
-		if effect_root != null and is_instance_valid(effect_root):
-			effect_root.queue_free()
+	var duration: float = _play_one_shot_effect_animation(
+		effect, "Birth", RANGED_R_LOGIC_POINT_LIFETIME_SEC
+	)
+	get_tree().create_timer(duration).timeout.connect(
+		func() -> void:
+			if effect_root != null and is_instance_valid(effect_root):
+				effect_root.queue_free()
 	)
 
 
-func _play_one_shot_effect_animation(effect: Node3D, preferred_animation: String = "", forced_duration_sec: float = -1.0) -> float:
+func _play_one_shot_effect_animation(
+	effect: Node3D, preferred_animation: String = "", forced_duration_sec: float = -1.0
+) -> float:
 	var duration: float = 0.8
 	if forced_duration_sec > 0.0:
 		duration = maxf(forced_duration_sec, 0.05)
@@ -2740,7 +2996,9 @@ func _play_one_shot_effect_animation(effect: Node3D, preferred_animation: String
 
 func _apply_ranged_r_area_damage(center: Vector3, cast_origin: Vector3) -> void:
 	var radius: float = maxf(ranged_r_radius + _talent_float("r_radius_bonus_flat", 0.0), 0.0)
-	var damage: int = maxi(int(round(float(ranged_r_damage) * _talent_float("r_damage_multiplier", 1.0))), 0)
+	var damage: int = maxi(
+		int(round(float(ranged_r_damage) * _talent_float("r_damage_multiplier", 1.0))), 0
+	)
 	if radius <= 0.0 or damage <= 0:
 		return
 	var request_context: Dictionary = {
@@ -2772,13 +3030,23 @@ func _apply_ranged_r_area_damage(center: Vector3, cast_origin: Vector3) -> void:
 		if hit_controllers.has(controller_id):
 			continue
 		hit_controllers[controller_id] = true
-		var r_armor_shred_percent: float = _talent_float("rifleman_r_permanent_armor_shred_percent", 0.0)
-		if _submit_enemy_damage_with_confirmation(enemy_controller, enemy, damage, -1.0, "r_cluster", request_context, {
-			"kind": "attack_count_only",
-			"attack_count": 1,
-			"armor_shred_percent": r_armor_shred_percent,
-			"armor_shred_permanent": true
-		}):
+		var r_armor_shred_percent: float = _talent_float(
+			"rifleman_r_permanent_armor_shred_percent", 0.0
+		)
+		if _submit_enemy_damage_with_confirmation(
+			enemy_controller,
+			enemy,
+			damage,
+			-1.0,
+			"r_cluster",
+			request_context,
+			{
+				"kind": "attack_count_only",
+				"attack_count": 1,
+				"armor_shred_percent": r_armor_shred_percent,
+				"armor_shred_permanent": true
+			}
+		):
 			_add_attack_count(1)
 
 
@@ -2794,27 +3062,26 @@ func _cast_ranged_q(target: Vector3) -> void:
 	if direction.length() <= 0.01:
 		direction = Vector3.FORWARD
 	direction = direction.normalized()
-	var ray_length: float = maxf(ranged_q_ray_length + _talent_float("q_distance_bonus_flat", 0.0), 1.0)
+	var ray_length: float = maxf(
+		ranged_q_ray_length + _talent_float("q_distance_bonus_flat", 0.0), 1.0
+	)
 	var ray_end: Vector3 = current + direction * ray_length
 	ray_end.y = current.y
 
 	_face_toward(current + direction * 10.0)
 	_spawn_ranged_q_ray(current, ray_end)
 	_apply_ranged_q_ray_damage(current, ray_end)
-	_push_network_skill_event("q", skill_q_id, {
-		"from_pos": current,
-		"to_pos": ray_end,
-		"yaw": _hero.rotation.y
-	})
-	_push_network_control_command("cast_skill", {
-		"skill_id": skill_q_id,
-		"target_pos": ray_end
-	})
+	_push_network_skill_event(
+		"q", skill_q_id, {"from_pos": current, "to_pos": ray_end, "yaw": _hero.rotation.y}
+	)
+	_push_network_control_command("cast_skill", {"skill_id": skill_q_id, "target_pos": ray_end})
 	_interrupt_attack_for_move()
 	_has_move_target = false
 	_is_moving = false
 	_perform_ranged_q_backstep(-direction)
-	_flash_cooldown = _compute_skill_cooldown(flash_cooldown_time * _talent_float("q_cooldown_multiplier", 1.0))
+	_flash_cooldown = _compute_skill_cooldown(
+		flash_cooldown_time * _talent_float("q_cooldown_multiplier", 1.0)
+	)
 
 
 func _perform_ranged_q_backstep(
@@ -2830,7 +3097,9 @@ func _perform_ranged_q_backstep(
 	if safe_back_dir.length() <= 0.01:
 		return
 	safe_back_dir = safe_back_dir.normalized()
-	var safe_distance: float = maxf(custom_distance if custom_distance >= 0.0 else ranged_q_backstep_distance, 0.0)
+	var safe_distance: float = maxf(
+		custom_distance if custom_distance >= 0.0 else ranged_q_backstep_distance, 0.0
+	)
 	if safe_distance <= 0.0:
 		return
 
@@ -2839,7 +3108,9 @@ func _perform_ranged_q_backstep(
 	intended_target.y = _plane_height
 	var final_target: Vector3 = intended_target
 	if not ignore_obstacle_avoidance:
-		final_target = _compute_next_move_with_obstacle_avoidance(current, intended_target, safe_distance)
+		final_target = _compute_next_move_with_obstacle_avoidance(
+			current, intended_target, safe_distance
+		)
 	final_target.y = _plane_height
 	_target_position = final_target
 
@@ -2847,7 +3118,9 @@ func _perform_ranged_q_backstep(
 		_ranged_q_backstep_tween.kill()
 	_ranged_q_backstep_tween = null
 
-	var duration: float = maxf(custom_duration if custom_duration >= 0.0 else ranged_q_backstep_duration, 0.01)
+	var duration: float = maxf(
+		custom_duration if custom_duration >= 0.0 else ranged_q_backstep_duration, 0.01
+	)
 	_ranged_q_backstep_active = true
 	_ranged_q_backstep_total_time = duration
 	_ranged_q_backstep_time_left = duration
@@ -2870,7 +3143,9 @@ func _update_ranged_q_backstep(delta: float) -> void:
 	var progress: float = 1.0 - (_ranged_q_backstep_time_left / total_time)
 	var clamped_progress: float = clampf(progress, 0.0, 1.0)
 	var eased_progress: float = clamped_progress * clamped_progress * (3.0 - 2.0 * clamped_progress)
-	var next_pos: Vector3 = _ranged_q_backstep_start_pos.lerp(_ranged_q_backstep_end_pos, eased_progress)
+	var next_pos: Vector3 = _ranged_q_backstep_start_pos.lerp(
+		_ranged_q_backstep_end_pos, eased_progress
+	)
 	next_pos.y = _plane_height
 	_hero.global_position = next_pos
 	_target_position = next_pos
@@ -2889,7 +3164,9 @@ func _apply_ranged_q_ray_damage(ray_start: Vector3, ray_end: Vector3) -> void:
 	if ray_len <= 0.01:
 		return
 	var ray_dir: Vector3 = ray_vec / ray_len
-	var safe_damage: int = maxi(int(round(float(ranged_q_ray_damage) * _talent_float("q_damage_multiplier", 1.0))), 0)
+	var safe_damage: int = maxi(
+		int(round(float(ranged_q_ray_damage) * _talent_float("q_damage_multiplier", 1.0))), 0
+	)
 	if safe_damage <= 0:
 		return
 	var knockback_distance: float = maxf(ranged_q_ray_knockback_distance, 0.0)
@@ -2936,21 +3213,44 @@ func _apply_ranged_q_ray_damage(ray_start: Vector3, ray_end: Vector3) -> void:
 			continue
 		hit_controllers[controller_id] = true
 		var q_armor_shred_percent: float = _talent_float("rifleman_q_armor_shred_percent", 0.0)
-		if _submit_enemy_damage_with_confirmation(enemy_controller, enemy, safe_damage, ray_len + 40.0, "q_ray", request_context, {
-			"kind": "q_ray",
-			"attack_count": 1,
-			"precision_triggered": precision_triggered,
-			"precision_knockback_multiplier": RIFLEMAN_PRECISION_Q_KNOCKBACK_MULTIPLIER,
-			"armor_shred_percent": q_armor_shred_percent,
-			"armor_shred_duration_sec": _talent_float("rifleman_q_armor_shred_duration_sec", 10.0)
-		}):
+		if _submit_enemy_damage_with_confirmation(
+			enemy_controller,
+			enemy,
+			safe_damage,
+			ray_len + 40.0,
+			"q_ray",
+			request_context,
+			{
+				"kind": "q_ray",
+				"attack_count": 1,
+				"precision_triggered": precision_triggered,
+				"precision_knockback_multiplier": RIFLEMAN_PRECISION_Q_KNOCKBACK_MULTIPLIER,
+				"armor_shred_percent": q_armor_shred_percent,
+				"armor_shred_duration_sec":
+				_talent_float("rifleman_q_armor_shred_duration_sec", 10.0)
+			}
+		):
 			if precision_triggered:
-				_apply_rifleman_precision_bonus(enemy_controller, enemy, RIFLEMAN_PRECISION_Q_KNOCKBACK_MULTIPLIER)
-			_apply_q_ray_knockback_local_if_authority(enemy_controller, ray_dir, knockback_distance, knockback_duration, knockback_priority)
+				_apply_rifleman_precision_bonus(
+					enemy_controller, enemy, RIFLEMAN_PRECISION_Q_KNOCKBACK_MULTIPLIER
+				)
+			_apply_q_ray_knockback_local_if_authority(
+				enemy_controller,
+				ray_dir,
+				knockback_distance,
+				knockback_duration,
+				knockback_priority
+			)
 			_add_attack_count(1)
 
 
-func _apply_q_ray_knockback_local_if_authority(enemy_controller: Node, knockback_dir: Vector3, distance: float, duration_sec: float, priority: int) -> void:
+func _apply_q_ray_knockback_local_if_authority(
+	enemy_controller: Node,
+	knockback_dir: Vector3,
+	distance: float,
+	duration_sec: float,
+	priority: int
+) -> void:
 	if enemy_controller == null:
 		return
 	var net_ctrl: Node = _get_network_session_controller()
@@ -2965,16 +3265,21 @@ func _apply_q_ray_knockback_local_if_authority(enemy_controller: Node, knockback
 	planar_dir.y = 0.0
 	if planar_dir.length_squared() <= 0.0001:
 		return
-	enemy_controller.call("apply_knockback", planar_dir.normalized(), distance, clampf(duration_sec, 0.05, 0.5), maxi(priority, 0))
+	enemy_controller.call(
+		"apply_knockback",
+		planar_dir.normalized(),
+		distance,
+		clampf(duration_sec, 0.05, 0.5),
+		maxi(priority, 0)
+	)
 
 
-func _apply_flash_area_damage(center: Vector3, radius: float, damage: int, source: String = "flash") -> void:
+func _apply_flash_area_damage(
+	center: Vector3, radius: float, damage: int, source: String = "flash"
+) -> void:
 	if radius <= 0.0 or damage <= 0:
 		return
-	var request_context: Dictionary = {
-		"center": center,
-		"radius": radius
-	}
+	var request_context: Dictionary = {"center": center, "radius": radius}
 	var hit_controllers: Dictionary = {}
 	var candidates := get_tree().get_nodes_in_group(enemy_group_name)
 	for candidate in candidates:
@@ -3007,10 +3312,7 @@ func _apply_flash_area_damage(center: Vector3, radius: float, damage: int, sourc
 			radius + 40.0,
 			source,
 			_merge_damage_hit_context(request_context, damage_result),
-			{
-				"kind": "attack_count_only",
-				"attack_count": 1
-			}
+			{"kind": "attack_count_only", "attack_count": 1}
 		):
 			_add_attack_count(1)
 
@@ -3026,19 +3328,18 @@ func _activate_haste() -> void:
 		return
 	_haste_active = true
 	_haste_time_left = haste_duration + _talent_float("w_duration_bonus_sec", 0.0)
-	_haste_cooldown = _compute_skill_cooldown(haste_cooldown_time * _talent_float("w_cooldown_multiplier", 1.0))
+	_haste_cooldown = _compute_skill_cooldown(
+		haste_cooldown_time * _talent_float("w_cooldown_multiplier", 1.0)
+	)
 	if _is_warden_hero():
-		_warden_ring_attacks_left = WARDEN_RING_MAX_ATTACKS + _talent_int("warden_w_attack_count_bonus", 0)
+		_warden_ring_attacks_left = (
+			WARDEN_RING_MAX_ATTACKS + _talent_int("warden_w_attack_count_bonus", 0)
+		)
 	var event_pos: Vector3 = Vector3.ZERO
 	if _hero != null:
 		event_pos = _hero.global_position
-	_push_network_skill_event("w", skill_w_id, {
-		"pos": event_pos
-	})
-	_push_network_control_command("cast_skill", {
-		"skill_id": skill_w_id,
-		"target_pos": event_pos
-	})
+	_push_network_skill_event("w", skill_w_id, {"pos": event_pos})
+	_push_network_control_command("cast_skill", {"skill_id": skill_w_id, "target_pos": event_pos})
 	_sync_walk_animation_speed_if_needed()
 
 
@@ -3066,13 +3367,8 @@ func _activate_evasive_step() -> void:
 	var event_pos: Vector3 = Vector3.ZERO
 	if _hero != null and is_instance_valid(_hero):
 		event_pos = _hero.global_position
-	_push_network_skill_event("e", skill_e_id, {
-		"pos": event_pos
-	})
-	_push_network_control_command("cast_skill", {
-		"skill_id": skill_e_id,
-		"target_pos": event_pos
-	})
+	_push_network_skill_event("e", skill_e_id, {"pos": event_pos})
+	_push_network_control_command("cast_skill", {"skill_id": skill_e_id, "target_pos": event_pos})
 
 
 func _push_network_control_command(command_type: String, extra: Dictionary = {}) -> void:
@@ -3081,9 +3377,7 @@ func _push_network_control_command(command_type: String, extra: Dictionary = {})
 		normalized_type = "idle"
 	_network_command_seq += 1
 	var payload: Dictionary = {
-		"seq": _network_command_seq,
-		"type": normalized_type,
-		"t_ms": Time.get_ticks_msec()
+		"seq": _network_command_seq, "type": normalized_type, "t_ms": Time.get_ticks_msec()
 	}
 	if _hero != null and is_instance_valid(_hero):
 		payload["target_pos"] = _hero.global_position
@@ -3104,7 +3398,9 @@ func get_network_command_state() -> Dictionary:
 	return _network_last_command.duplicate(true)
 
 
-func _push_network_skill_event(event_type: String, event_skill_id: int, extra: Dictionary = {}) -> void:
+func _push_network_skill_event(
+	event_type: String, event_skill_id: int, extra: Dictionary = {}
+) -> void:
 	_network_skill_event_seq += 1
 	var payload: Dictionary = {
 		"seq": _network_skill_event_seq,
@@ -3126,13 +3422,13 @@ func _apply_poison_to_enemy(enemy: Node3D) -> void:
 	var enemy_controller: Node = enemy.get_parent()
 	if enemy_controller == null or not _can_receive_skill_damage(enemy_controller):
 		return
-	var safe_duration: float = maxf(poison_duration + _talent_float("w_poison_duration_bonus_sec", 0.0), 0.1)
+	var safe_duration: float = maxf(
+		poison_duration + _talent_float("w_poison_duration_bonus_sec", 0.0), 0.1
+	)
 	var safe_tick_interval: float = maxf(poison_tick_interval, 0.05)
 	var target_id: int = enemy.get_instance_id()
 	var entry: Dictionary = {
-		"node": enemy,
-		"time_left": safe_duration,
-		"tick_left": safe_tick_interval
+		"node": enemy, "time_left": safe_duration, "tick_left": safe_tick_interval
 	}
 	_poison_targets[target_id] = entry
 
@@ -3143,21 +3439,38 @@ func _apply_poison_tick_damage(enemy: Node3D) -> void:
 	if _is_enemy_dead(enemy):
 		return
 	var enemy_controller: Node = enemy.get_parent()
-	if enemy_controller != null and enemy_controller.has_method("apply_damage") and _can_receive_skill_damage(enemy_controller):
+	if (
+		enemy_controller != null
+		and enemy_controller.has_method("apply_damage")
+		and _can_receive_skill_damage(enemy_controller)
+	):
 		var poison_multiplier: float = _talent_float("w_poison_damage_multiplier", 1.0)
-		var damage_result: Dictionary = _compute_spell_damage_result(int(round(float(poison_damage_per_second) * poison_multiplier)))
+		var damage_result: Dictionary = _compute_spell_damage_result(
+			int(round(float(poison_damage_per_second) * poison_multiplier))
+		)
 		var final_damage: int = _get_damage_amount(damage_result)
-		if _submit_enemy_damage_with_confirmation(enemy_controller, enemy, final_damage, -1.0, "poison", _build_damage_hit_context(damage_result), {
-			"kind": "attack_count_only",
-			"attack_count": 1,
-			"retarget_on_kill": true
-		}):
+		if _submit_enemy_damage_with_confirmation(
+			enemy_controller,
+			enemy,
+			final_damage,
+			-1.0,
+			"poison",
+			_build_damage_hit_context(damage_result),
+			{"kind": "attack_count_only", "attack_count": 1, "retarget_on_kill": true}
+		):
 			_add_attack_count(1)
 			if _target_enemy == enemy and _is_enemy_dead(enemy):
 				_acquire_next_enemy_target_after_kill()
 
 
-func _apply_enemy_damage_with_network(enemy_controller: Node, enemy: Node3D, damage: int, max_range: float, source: String, context: Dictionary = {}) -> bool:
+func _apply_enemy_damage_with_network(
+	enemy_controller: Node,
+	enemy: Node3D,
+	damage: int,
+	max_range: float,
+	source: String,
+	context: Dictionary = {}
+) -> bool:
 	if enemy_controller == null:
 		return false
 	var safe_damage: int = _sanitize_network_damage_amount(enemy, damage)
@@ -3176,7 +3489,14 @@ func _apply_enemy_damage_with_network(enemy_controller: Node, enemy: Node3D, dam
 				target_path = str(enemy_controller.get_path())
 			if target_path.is_empty():
 				return false
-			var accepted_variant: Variant = net_ctrl.call("request_enemy_damage_from_client", target_path, safe_damage, max_range, source, context)
+			var accepted_variant: Variant = net_ctrl.call(
+				"request_enemy_damage_from_client",
+				target_path,
+				safe_damage,
+				max_range,
+				source,
+				context
+			)
 			return bool(accepted_variant)
 	if enemy_controller.has_method("apply_damage"):
 		var attacker: Node3D = null
@@ -3207,7 +3527,15 @@ func _build_enemy_damage_target_path(enemy_controller: Node, enemy: Node3D) -> S
 	return target_path
 
 
-func _submit_enemy_damage_with_confirmation(enemy_controller: Node, enemy: Node3D, damage: int, max_range: float, source: String, context: Dictionary = {}, pending_confirmation: Dictionary = {}) -> bool:
+func _submit_enemy_damage_with_confirmation(
+	enemy_controller: Node,
+	enemy: Node3D,
+	damage: int,
+	max_range: float,
+	source: String,
+	context: Dictionary = {},
+	pending_confirmation: Dictionary = {}
+) -> bool:
 	if enemy_controller == null:
 		return false
 	var net_ctrl: Node = _get_network_session_controller()
@@ -3222,10 +3550,20 @@ func _submit_enemy_damage_with_confirmation(enemy_controller: Node, enemy: Node3
 			var safe_damage: int = _sanitize_network_damage_amount(enemy, damage)
 			if safe_damage <= 0:
 				return false
-			var sent_variant: Variant = net_ctrl.call("request_enemy_damage_from_client", target_path, safe_damage, max_range, source, context)
+			var sent_variant: Variant = net_ctrl.call(
+				"request_enemy_damage_from_client",
+				target_path,
+				safe_damage,
+				max_range,
+				source,
+				context
+			)
 			if not bool(sent_variant):
 				return false
-			if not pending_confirmation.is_empty() and net_ctrl.has_method("get_last_sent_enemy_damage_request_seq"):
+			if (
+				not pending_confirmation.is_empty()
+				and net_ctrl.has_method("get_last_sent_enemy_damage_request_seq")
+			):
 				var request_seq: int = int(net_ctrl.call("get_last_sent_enemy_damage_request_seq"))
 				if request_seq >= 0:
 					var pending_entry: Dictionary = pending_confirmation.duplicate(true)
@@ -3233,7 +3571,9 @@ func _submit_enemy_damage_with_confirmation(enemy_controller: Node, enemy: Node3
 					pending_entry["target_path"] = target_path
 					_pending_damage_confirmations[request_seq] = pending_entry
 			return false
-	return _apply_enemy_damage_with_network(enemy_controller, enemy, damage, max_range, source, context)
+	return _apply_enemy_damage_with_network(
+		enemy_controller, enemy, damage, max_range, source, context
+	)
 
 
 func _resolve_enemy_from_damage_target_path(target_path: String) -> Node3D:
@@ -3284,7 +3624,9 @@ func _apply_confirmed_enemy_damage_effects(pending: Dictionary) -> void:
 
 
 func _apply_confirmed_attack_count_only_effects(pending: Dictionary) -> void:
-	var target_enemy: Node3D = _resolve_enemy_from_damage_target_path(str(pending.get("target_path", "")))
+	var target_enemy: Node3D = _resolve_enemy_from_damage_target_path(
+		str(pending.get("target_path", ""))
+	)
 	_apply_confirmed_enemy_armor_shred(target_enemy, pending)
 	var attack_count_gain: int = maxi(int(pending.get("attack_count", 0)), 0)
 	if attack_count_gain > 0:
@@ -3295,9 +3637,15 @@ func _apply_confirmed_attack_count_only_effects(pending: Dictionary) -> void:
 
 
 func _apply_confirmed_q_ray_effects(pending: Dictionary) -> void:
-	var target_enemy: Node3D = _resolve_enemy_from_damage_target_path(str(pending.get("target_path", "")))
+	var target_enemy: Node3D = _resolve_enemy_from_damage_target_path(
+		str(pending.get("target_path", ""))
+	)
 	_apply_confirmed_enemy_armor_shred(target_enemy, pending)
-	if bool(pending.get("precision_triggered", false)) and target_enemy != null and is_instance_valid(target_enemy):
+	if (
+		bool(pending.get("precision_triggered", false))
+		and target_enemy != null
+		and is_instance_valid(target_enemy)
+	):
 		var enemy_controller: Node = target_enemy.get_parent()
 		if enemy_controller != null and enemy_controller.has_method("apply_damage"):
 			_apply_rifleman_precision_bonus(
@@ -3311,7 +3659,9 @@ func _apply_confirmed_q_ray_effects(pending: Dictionary) -> void:
 
 
 func _apply_confirmed_basic_attack_effects(pending: Dictionary) -> void:
-	var target_enemy: Node3D = _resolve_enemy_from_damage_target_path(str(pending.get("target_path", "")))
+	var target_enemy: Node3D = _resolve_enemy_from_damage_target_path(
+		str(pending.get("target_path", ""))
+	)
 	_register_necromancy_basic_attack_charge_gain()
 	_register_spark_on_hit_bonuses()
 	_apply_spark_permanent_on_hit_progress()
@@ -3337,7 +3687,11 @@ func _apply_confirmed_basic_attack_effects(pending: Dictionary) -> void:
 	if target_enemy != null and is_instance_valid(target_enemy):
 		var armor_shred_percent: float = _talent_float("warden_armor_shred_on_hit_percent", 0.0)
 		if armor_shred_percent > 0.0:
-			_apply_enemy_damage_bonus(target_enemy, armor_shred_percent, _talent_float("warden_armor_shred_duration_sec", 5.0))
+			_apply_enemy_damage_bonus(
+				target_enemy,
+				armor_shred_percent,
+				_talent_float("warden_armor_shred_duration_sec", 5.0)
+			)
 		if _should_apply_warden_poison_on_basic_attack():
 			_apply_poison_to_enemy(target_enemy)
 	if _is_warden_hero() and _haste_active:
@@ -3382,7 +3736,10 @@ func begin_network_attack_lock_after_reposition(timeout_ms: int = 1200) -> void:
 		return
 	if str(net_ctrl.get("network_mode")).strip_edges().to_lower() != "client":
 		return
-	if not net_ctrl.has_method("get_last_sent_client_input_seq") or not net_ctrl.has_method("get_last_acknowledged_client_input_seq"):
+	if (
+		not net_ctrl.has_method("get_last_sent_client_input_seq")
+		or not net_ctrl.has_method("get_last_acknowledged_client_input_seq")
+	):
 		return
 	var required_ack_seq: int = int(net_ctrl.call("get_last_sent_client_input_seq"))
 	var current_ack_seq: int = int(net_ctrl.call("get_last_acknowledged_client_input_seq"))
@@ -3434,7 +3791,9 @@ func _compute_spell_damage(base_damage_amount: int) -> int:
 
 
 func _compute_physical_damage_result(base_damage_amount: int) -> Dictionary:
-	return HeroStatsService.compute_physical_damage_result(base_damage_amount, physical_crit_chance, physical_crit_multiplier)
+	return HeroStatsService.compute_physical_damage_result(
+		base_damage_amount, physical_crit_chance, physical_crit_multiplier
+	)
 
 
 func _compute_spell_damage_result(base_damage_amount: int) -> Dictionary:
@@ -3451,9 +3810,7 @@ func _get_damage_amount(damage_result: Dictionary) -> int:
 
 
 func _build_damage_hit_context(damage_result: Dictionary) -> Dictionary:
-	return {
-		"is_critical": bool(damage_result.get("is_critical", false))
-	}
+	return {"is_critical": bool(damage_result.get("is_critical", false))}
 
 
 func _merge_damage_hit_context(base_context: Dictionary, damage_result: Dictionary) -> Dictionary:
@@ -3492,7 +3849,12 @@ func _update_poison_effects(delta: float) -> void:
 			if enemy == null or not is_instance_valid(enemy) or _is_enemy_dead(enemy):
 				break
 
-		if enemy == null or not is_instance_valid(enemy) or _is_enemy_dead(enemy) or time_left <= 0.0:
+		if (
+			enemy == null
+			or not is_instance_valid(enemy)
+			or _is_enemy_dead(enemy)
+			or time_left <= 0.0
+		):
 			remove_ids.append(target_id)
 			continue
 
@@ -3518,7 +3880,11 @@ func _add_attack_count(value: int = 1) -> void:
 func _resume_enemy_target_after_skill() -> void:
 	if _hero == null:
 		return
-	if _target_enemy == null or not is_instance_valid(_target_enemy) or _is_enemy_dead(_target_enemy):
+	if (
+		_target_enemy == null
+		or not is_instance_valid(_target_enemy)
+		or _is_enemy_dead(_target_enemy)
+	):
 		return
 
 	var distance: float = _distance_xz(_hero.global_position, _target_enemy.global_position)
@@ -3534,10 +3900,13 @@ func _resume_enemy_target_after_skill() -> void:
 		_is_moving = true
 		_nav_agent.target_position = _target_enemy.global_position
 		_play_walk_animation()
-		_push_network_control_command("chase_target", {
-			"target_path": str(_target_enemy.get_path()),
-			"target_pos": _target_enemy.global_position
-		})
+		_push_network_control_command(
+			"chase_target",
+			{
+				"target_path": str(_target_enemy.get_path()),
+				"target_pos": _target_enemy.global_position
+			}
+		)
 
 
 func _check_passive_transform() -> void:
@@ -3611,7 +3980,14 @@ func _transform_model() -> void:
 	_refresh_motion_animation_aliases()
 	var transform_heal: int = _talent_int("transform_enter_heal_flat", 0)
 	if transform_heal > 0:
-		transform_heal += int(round(float(maxi(max_hp - _current_hp, 0)) * _talent_float("transform_enter_missing_hp_heal_ratio", 0.0)))
+		transform_heal += int(
+			round(
+				(
+					float(maxi(max_hp - _current_hp, 0))
+					* _talent_float("transform_enter_missing_hp_heal_ratio", 0.0)
+				)
+			)
+		)
 		_heal_self(transform_heal)
 	_attack_count = 0
 	_update_attack_count_label()
@@ -3682,7 +4058,11 @@ func _resume_after_transform_cancel(was_attacking: bool) -> void:
 	_is_moving = false
 
 	var has_enemy_target: bool = false
-	if _target_enemy != null and is_instance_valid(_target_enemy) and not _is_enemy_dead(_target_enemy):
+	if (
+		_target_enemy != null
+		and is_instance_valid(_target_enemy)
+		and not _is_enemy_dead(_target_enemy)
+	):
 		has_enemy_target = true
 
 	if has_enemy_target:
@@ -3828,11 +4208,11 @@ func _handle_attack_click() -> void:
 	var camera := get_viewport().get_camera_3d()
 	if camera == null:
 		return
-	
+
 	var mouse_pos := get_viewport().get_mouse_position()
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_dir := camera.project_ray_normal(mouse_pos)
-	
+
 	var space_state := get_world_3d().direct_space_state
 	var query := _create_interaction_ray_query(ray_origin, ray_origin + ray_dir * 10000)
 	var result := space_state.intersect_ray(query)
@@ -3846,13 +4226,19 @@ func _handle_attack_click() -> void:
 	if selected_enemy == null:
 		var nearest_enemy: Node3D = _find_nearest_enemy()
 		if nearest_enemy != null:
-			var nearest_distance: float = _distance_xz(_hero.global_position, nearest_enemy.global_position)
+			var nearest_distance: float = _distance_xz(
+				_hero.global_position, nearest_enemy.global_position
+			)
 			if nearest_distance <= attack_range:
 				selected_enemy = nearest_enemy
 			elif nearest_distance <= engage_range:
 				selected_enemy = nearest_enemy
 
-	if selected_enemy != null and is_instance_valid(selected_enemy) and not _is_enemy_dead(selected_enemy):
+	if (
+		selected_enemy != null
+		and is_instance_valid(selected_enemy)
+		and not _is_enemy_dead(selected_enemy)
+	):
 		_issue_attack_target_order(selected_enemy, true)
 	else:
 		# A 键攻击点击未命中且附近没有可索敌目标时，取消当前攻击目标。
@@ -3865,7 +4251,12 @@ func _handle_attack_click() -> void:
 
 
 func _issue_attack_target_order(target_enemy: Node3D, lock_focus: bool = true) -> void:
-	if _hero == null or target_enemy == null or not is_instance_valid(target_enemy) or _is_enemy_dead(target_enemy):
+	if (
+		_hero == null
+		or target_enemy == null
+		or not is_instance_valid(target_enemy)
+		or _is_enemy_dead(target_enemy)
+	):
 		return
 
 	_target_enemy = target_enemy
@@ -3886,36 +4277,39 @@ func _issue_attack_target_order(target_enemy: Node3D, lock_focus: bool = true) -
 			_start_attack()
 		else:
 			_play_idle_animation()
-			_push_network_control_command("attack_target", {
-				"target_path": str(target_enemy.get_path()),
-				"target_pos": target_enemy.global_position
-			})
+			_push_network_control_command(
+				"attack_target",
+				{
+					"target_path": str(target_enemy.get_path()),
+					"target_pos": target_enemy.global_position
+				}
+			)
 		return
 
 	_nav_agent.target_position = target_enemy.global_position
 	_is_moving = true
 	_play_walk_animation()
-	_push_network_control_command("chase_target", {
-		"target_path": str(target_enemy.get_path()),
-		"target_pos": target_enemy.global_position
-	})
+	_push_network_control_command(
+		"chase_target",
+		{"target_path": str(target_enemy.get_path()), "target_pos": target_enemy.global_position}
+	)
 
 
 func _get_ground_position(mouse_pos: Vector2) -> Vector3:
 	var camera := get_viewport().get_camera_3d()
 	if camera == null:
 		return _hero.global_position
-	
+
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_dir := camera.project_ray_normal(mouse_pos)
-	
+
 	if absf(ray_dir.y) < 0.0001:
 		return _hero.global_position
-	
+
 	var t := (_plane_height - ray_origin.y) / ray_dir.y
 	if t < 0.0:
 		return _hero.global_position
-	
+
 	return ray_origin + ray_dir * t
 
 
@@ -3940,9 +4334,7 @@ func _move_directly_toward_target(target_pos: Vector3, delta: float) -> void:
 	if not _is_moving:
 		_is_moving = true
 		_play_walk_animation()
-		_push_network_control_command("move_to", {
-			"target_pos": _target_position
-		})
+		_push_network_control_command("move_to", {"target_pos": _target_position})
 
 
 func _apply_stop_movement_order() -> void:
@@ -3974,7 +4366,7 @@ func _process(delta: float) -> void:
 		_create_attack_count_label()
 	if hero_level != _last_stat_level:
 		_recalculate_war3_stats(false)
-	
+
 	if _attack_cooldown > 0.0:
 		_attack_cooldown -= delta
 	if _flash_cooldown > 0.0:
@@ -4013,7 +4405,9 @@ func _process(delta: float) -> void:
 		if _transform_time_left <= 0.0:
 			_revert_transform_model()
 	if _attack_count_label != null and _attack_count_label.visible:
-		_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
+		_attack_count_label.position = Vector3(
+			0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0
+		)
 	if _ranged_q_backstep_active:
 		_update_ranged_q_backstep(delta)
 		return
@@ -4023,26 +4417,30 @@ func _process(delta: float) -> void:
 		_apply_stop_movement_order()
 		return
 	_stop_move_hold_active = false
-	
+
 	_update_auto_attack_target()
-	
+
 	if _is_attacking:
-		if _target_enemy == null or not is_instance_valid(_target_enemy) or _is_enemy_dead(_target_enemy):
+		if (
+			_target_enemy == null
+			or not is_instance_valid(_target_enemy)
+			or _is_enemy_dead(_target_enemy)
+		):
 			_interrupt_attack_for_chase()
 			_target_enemy = null
 			_focus_lock = false
 			return
-		
+
 		_face_toward(_target_enemy.global_position)
-		
+
 		var attack_distance := _distance_xz(_hero.global_position, _target_enemy.global_position)
 		if attack_distance > attack_range:
 			_interrupt_attack_for_chase()
-		
+
 		return
-	
+
 	var current := _hero.global_position
-	
+
 	if _has_move_target:
 		var dist_to_target := _distance_xz(current, _target_position)
 		if dist_to_target < 20.0:
@@ -4060,21 +4458,21 @@ func _process(delta: float) -> void:
 				var next_nav := _nav_agent.get_next_path_position()
 				if _distance_xz(next_nav, current) > 1.0:
 					move_target = next_nav
-			var next := _compute_next_move_with_obstacle_avoidance(current, move_target, _get_current_move_speed() * delta, delta)
+			var next := _compute_next_move_with_obstacle_avoidance(
+				current, move_target, _get_current_move_speed() * delta, delta
+			)
 			next.y = _plane_height
 			_hero.global_position = next
 			_look_at_target(move_target)
-			
+
 			if not _is_moving:
 				_is_moving = true
 				_play_walk_animation()
-				_push_network_control_command("move_to", {
-					"target_pos": _target_position
-				})
+				_push_network_control_command("move_to", {"target_pos": _target_position})
 	elif _target_enemy != null and is_instance_valid(_target_enemy):
 		var enemy_pos := _target_enemy.global_position
 		var distance := _distance_xz(current, enemy_pos)
-		
+
 		if distance > engage_range and not _focus_lock:
 			_target_enemy = null
 			_focus_lock = false
@@ -4083,7 +4481,7 @@ func _process(delta: float) -> void:
 				_stop_animation()
 				_push_network_control_command("idle")
 			return
-		
+
 		if distance > attack_range:
 			_nav_agent.target_position = enemy_pos
 			var move_target := enemy_pos
@@ -4091,19 +4489,24 @@ func _process(delta: float) -> void:
 				var next_nav := _nav_agent.get_next_path_position()
 				if _distance_xz(next_nav, current) > 1.0:
 					move_target = next_nav
-			var next := _compute_next_move_with_obstacle_avoidance(current, move_target, _get_current_move_speed() * delta, delta)
+			var next := _compute_next_move_with_obstacle_avoidance(
+				current, move_target, _get_current_move_speed() * delta, delta
+			)
 			next.y = _plane_height
 			_hero.global_position = next
 			_look_at_target(move_target)
-			
+
 			if not _is_moving:
 				_is_moving = true
 				_play_walk_animation()
 				if _target_enemy != null and is_instance_valid(_target_enemy):
-					_push_network_control_command("chase_target", {
-						"target_path": str(_target_enemy.get_path()),
-						"target_pos": _target_enemy.global_position
-					})
+					_push_network_control_command(
+						"chase_target",
+						{
+							"target_path": str(_target_enemy.get_path()),
+							"target_pos": _target_enemy.global_position
+						}
+					)
 		else:
 			if _is_moving:
 				_is_moving = false
@@ -4145,7 +4548,10 @@ func _get_ranged_r_impact_scale_multiplier() -> float:
 
 
 func _set_r_skill_ground_selector_visible(visible: bool) -> void:
-	if _r_skill_ground_selector_root == null or not is_instance_valid(_r_skill_ground_selector_root):
+	if (
+		_r_skill_ground_selector_root == null
+		or not is_instance_valid(_r_skill_ground_selector_root)
+	):
 		return
 	_r_skill_ground_selector_root.visible = visible
 
@@ -4154,7 +4560,10 @@ func _ensure_r_skill_ground_selector_node(host: Node) -> void:
 	var host_3d := host as Node3D
 	if host_3d == null:
 		return
-	if _r_skill_ground_selector_root != null and not is_instance_valid(_r_skill_ground_selector_root):
+	if (
+		_r_skill_ground_selector_root != null
+		and not is_instance_valid(_r_skill_ground_selector_root)
+	):
 		_r_skill_ground_selector_root = null
 		_r_skill_ground_selector_mesh = null
 		_r_skill_ground_selector_material = null
@@ -4175,7 +4584,9 @@ func _ensure_r_skill_ground_selector_node(host: Node) -> void:
 		selector_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		selector_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		selector_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-		selector_material.albedo_color = Color(1.0, 1.0, 1.0, clampf(ranged_r_ground_selector_alpha, 0.05, 1.0))
+		selector_material.albedo_color = Color(
+			1.0, 1.0, 1.0, clampf(ranged_r_ground_selector_alpha, 0.05, 1.0)
+		)
 		selector_mesh.material_override = selector_material
 		selector_root.add_child(selector_mesh)
 		host_3d.add_child(selector_root)
@@ -4192,7 +4603,12 @@ func _ensure_r_skill_ground_selector_node(host: Node) -> void:
 
 
 func _update_r_skill_ground_selector() -> void:
-	if not ranged_r_ground_selector_enabled or not _r_skill_mode or not skill_r_active or not _is_ranged_hero():
+	if (
+		not ranged_r_ground_selector_enabled
+		or not _r_skill_mode
+		or not skill_r_active
+		or not _is_ranged_hero()
+	):
 		_set_r_skill_ground_selector_visible(false)
 		return
 	if cursor_r_skill_texture == null and not _r_skill_cursor_resource_checked:
@@ -4203,7 +4619,10 @@ func _update_r_skill_ground_selector() -> void:
 		_set_r_skill_ground_selector_visible(false)
 		return
 	_ensure_r_skill_ground_selector_node(host)
-	if _r_skill_ground_selector_root == null or not is_instance_valid(_r_skill_ground_selector_root):
+	if (
+		_r_skill_ground_selector_root == null
+		or not is_instance_valid(_r_skill_ground_selector_root)
+	):
 		return
 	var mouse_pos: Vector2 = get_viewport().get_mouse_position()
 	var center: Vector3 = _get_ground_position(mouse_pos)
@@ -4218,8 +4637,13 @@ func _update_r_skill_ground_selector() -> void:
 			_r_skill_ground_selector_mesh.mesh = quad
 		var diameter: float = maxf(ranged_r_radius * 2.0, 1.0)
 		quad.size = Vector2(diameter, diameter)
-	if _r_skill_ground_selector_material != null and is_instance_valid(_r_skill_ground_selector_material):
-		_r_skill_ground_selector_material.albedo_color = Color(1.0, 1.0, 1.0, clampf(ranged_r_ground_selector_alpha, 0.05, 1.0))
+	if (
+		_r_skill_ground_selector_material != null
+		and is_instance_valid(_r_skill_ground_selector_material)
+	):
+		_r_skill_ground_selector_material.albedo_color = Color(
+			1.0, 1.0, 1.0, clampf(ranged_r_ground_selector_alpha, 0.05, 1.0)
+		)
 		var selector_texture: Texture2D = cursor_r_skill_texture
 		if selector_texture != _r_skill_ground_selector_texture_source:
 			_r_skill_ground_selector_material.albedo_texture = selector_texture
@@ -4233,7 +4657,11 @@ func _get_r_skill_cursor_visual_texture() -> Texture2D:
 		_r_skill_cursor_visual_scale_cached = -1.0
 		return null
 	var target_scale: float = _get_ranged_r_visual_scale_multiplier()
-	if _r_skill_cursor_visual_texture != null and _r_skill_cursor_visual_source == cursor_r_skill_texture and is_equal_approx(_r_skill_cursor_visual_scale_cached, target_scale):
+	if (
+		_r_skill_cursor_visual_texture != null
+		and _r_skill_cursor_visual_source == cursor_r_skill_texture
+		and is_equal_approx(_r_skill_cursor_visual_scale_cached, target_scale)
+	):
 		return _r_skill_cursor_visual_texture
 	_r_skill_cursor_visual_source = cursor_r_skill_texture
 	_r_skill_cursor_visual_scale_cached = target_scale
@@ -4278,8 +4706,19 @@ func _is_mouse_over_enemy() -> bool:
 	return enemy != null and not _is_enemy_dead(enemy)
 
 
-func _apply_mouse_cursor(use_enemy_cursor: bool, attack_mode_cursor: bool, selected_cursor_mode: bool, r_skill_cursor_mode: bool = false) -> void:
-	if _cursor_initialized and use_enemy_cursor == _using_enemy_cursor and attack_mode_cursor == _using_attack_cursor and selected_cursor_mode == _using_selected_cursor and r_skill_cursor_mode == _using_r_skill_cursor:
+func _apply_mouse_cursor(
+	use_enemy_cursor: bool,
+	attack_mode_cursor: bool,
+	selected_cursor_mode: bool,
+	r_skill_cursor_mode: bool = false
+) -> void:
+	if (
+		_cursor_initialized
+		and use_enemy_cursor == _using_enemy_cursor
+		and attack_mode_cursor == _using_attack_cursor
+		and selected_cursor_mode == _using_selected_cursor
+		and r_skill_cursor_mode == _using_r_skill_cursor
+	):
 		return
 	_cursor_initialized = true
 	_using_enemy_cursor = use_enemy_cursor
@@ -4296,18 +4735,27 @@ func _apply_mouse_cursor(use_enemy_cursor: bool, attack_mode_cursor: bool, selec
 				cursor_r_skill_texture = _load_texture_resource_or_file(R_SKILL_CURSOR_TEXTURE_PATH)
 				_r_skill_cursor_resource_checked = true
 			var visual_cursor: Texture2D = _get_r_skill_cursor_visual_texture()
-			target_cursor = visual_cursor if visual_cursor != null else cursor_attack_default_texture
+			target_cursor = (
+				visual_cursor if visual_cursor != null else cursor_attack_default_texture
+			)
 			if visual_cursor != null:
 				applied_hotspot = visual_cursor.get_size() * 0.5
 	elif selected_cursor_mode:
-		target_cursor = cursor_attack_enemy_texture if use_enemy_cursor else cursor_attack_default_texture
+		target_cursor = (
+			cursor_attack_enemy_texture if use_enemy_cursor else cursor_attack_default_texture
+		)
 	elif attack_mode_cursor:
-		target_cursor = cursor_attack_enemy_texture if use_enemy_cursor else cursor_attack_default_texture
+		target_cursor = (
+			cursor_attack_enemy_texture if use_enemy_cursor else cursor_attack_default_texture
+		)
 	else:
 		target_cursor = cursor_enemy_texture if use_enemy_cursor else cursor_default_texture
 	if target_cursor != null:
 		var cursor_size: Vector2 = target_cursor.get_size()
-		if cursor_size.x > float(MAX_CURSOR_TEXTURE_SIZE) or cursor_size.y > float(MAX_CURSOR_TEXTURE_SIZE):
+		if (
+			cursor_size.x > float(MAX_CURSOR_TEXTURE_SIZE)
+			or cursor_size.y > float(MAX_CURSOR_TEXTURE_SIZE)
+		):
 			target_cursor = cursor_attack_default_texture
 			applied_hotspot = cursor_hotspot
 		Input.set_custom_mouse_cursor(target_cursor, Input.CURSOR_ARROW, applied_hotspot)
@@ -4340,19 +4788,22 @@ func _start_attack() -> void:
 		_is_attacking = false
 		_invalidate_pending_attack_damage()
 		return
-	
+
 	_is_attacking = true
 	_has_move_target = false
 	_current_attack_index = 0
 	if _target_enemy != null and is_instance_valid(_target_enemy):
-		_push_network_control_command("attack_target", {
-			"target_path": str(_target_enemy.get_path()),
-			"target_pos": _target_enemy.global_position
-		})
-	
+		_push_network_control_command(
+			"attack_target",
+			{
+				"target_path": str(_target_enemy.get_path()),
+				"target_pos": _target_enemy.global_position
+			}
+		)
+
 	if not _animation_player.animation_finished.is_connected(_on_attack_finished):
 		_animation_player.animation_finished.connect(_on_attack_finished)
-	
+
 	_play_current_attack_animation()
 
 
@@ -4385,7 +4836,10 @@ func _play_walk_animation() -> void:
 	if _resolved_walk_animation == "":
 		return
 	var walk_speed_scale: float = _get_walk_animation_speed_scale()
-	if _animation_player.is_playing() and String(_animation_player.current_animation) == _resolved_walk_animation:
+	if (
+		_animation_player.is_playing()
+		and String(_animation_player.current_animation) == _resolved_walk_animation
+	):
 		_animation_player.speed_scale = walk_speed_scale
 		return
 	_animation_player.speed_scale = walk_speed_scale
@@ -4398,14 +4852,14 @@ func _play_walk_animation() -> void:
 func _play_current_attack_animation() -> void:
 	if _animation_player == null:
 		return
-	
+
 	if _current_attack_index >= _attack_animations.size():
 		_is_attacking = false
 		_invalidate_pending_attack_damage()
 		return
-	
+
 	var anim_name = _attack_animations[_current_attack_index]
-	
+
 	if not _animation_player.has_animation(anim_name):
 		push_warning("未找到攻击动画: " + anim_name)
 		_current_attack_index += 1
@@ -4415,19 +4869,19 @@ func _play_current_attack_animation() -> void:
 			_is_attacking = false
 			_invalidate_pending_attack_damage()
 		return
-	
+
 	var anim = _animation_player.get_animation(anim_name)
 	if anim != null:
 		anim.loop_mode = Animation.LOOP_NONE
-	
+
 	_animation_player.play(anim_name, -1.0, _get_attack_speed_scale(), false)
 	_schedule_attack_damage_for_current_animation(anim)
 
 
-func _on_attack_finished(anim_name: StringName) -> void:
+func _on_attack_finished(_anim_name: StringName) -> void:
 	if _is_attacking:
 		_current_attack_index += 1
-		
+
 		if _current_attack_index < _attack_animations.size():
 			_play_current_attack_animation()
 		else:
@@ -4460,18 +4914,17 @@ func _is_obstacle_collider(collider: Node) -> bool:
 	return CombatSceneUtils.is_obstacle_collider(collider)
 
 
-func _is_move_segment_blocked(from_pos: Vector3, to_pos: Vector3, probe_half_width: float, probe_height: float) -> bool:
+func _is_move_segment_blocked(
+	from_pos: Vector3, to_pos: Vector3, probe_half_width: float, probe_height: float
+) -> bool:
 	return CombatSceneUtils.is_move_segment_blocked(
-		get_world_3d(),
-		from_pos,
-		to_pos,
-		probe_half_width,
-		probe_height,
-		OBSTACLE_RAY_MASK
+		get_world_3d(), from_pos, to_pos, probe_half_width, probe_height, OBSTACLE_RAY_MASK
 	)
 
 
-func _compute_next_move_with_obstacle_avoidance(current: Vector3, move_target: Vector3, max_step: float, delta: float = 0.0) -> Vector3:
+func _compute_next_move_with_obstacle_avoidance(
+	current: Vector3, move_target: Vector3, max_step: float, delta: float = 0.0
+) -> Vector3:
 	var to_target: Vector3 = move_target - current
 	to_target.y = 0.0
 	if to_target.length() <= 0.01 or max_step <= 0.0:
@@ -4484,10 +4937,18 @@ func _compute_next_move_with_obstacle_avoidance(current: Vector3, move_target: V
 		var side_vec: Vector3 = forward_dir.cross(Vector3.UP)
 		if side_vec.length() > 0.001:
 			side_vec = side_vec.normalized()
-			steer_dir = (forward_dir + side_vec * _dynamic_detour_side * maxf(dynamic_detour_side_strength, 0.0)).normalized()
+			steer_dir = (
+				(
+					forward_dir
+					+ side_vec * _dynamic_detour_side * maxf(dynamic_detour_side_strength, 0.0)
+				)
+				. normalized()
+			)
 		_dynamic_detour_time_left = maxf(_dynamic_detour_time_left - delta, 0.0)
 	var direct_next: Vector3 = current + steer_dir * step
-	var dynamic_blocked: bool = _is_dynamic_unit_blocking_segment(current, direct_next, maxf(dynamic_blocker_avoid_radius, 32.0))
+	var dynamic_blocked: bool = _is_dynamic_unit_blocking_segment(
+		current, direct_next, maxf(dynamic_blocker_avoid_radius, 32.0)
+	)
 	if not _is_move_segment_blocked(current, direct_next, 42.0, 38.0) and not dynamic_blocked:
 		return direct_next
 	if dynamic_detour_enabled and delta > 0.0 and _dynamic_detour_time_left <= 0.0:
@@ -4500,7 +4961,9 @@ func _compute_next_move_with_obstacle_avoidance(current: Vector3, move_target: V
 		var candidate_dir: Vector3 = forward_dir.rotated(Vector3.UP, deg_to_rad(angle_deg))
 		var candidate_next: Vector3 = current + candidate_dir * step
 		var blocked_static: bool = _is_move_segment_blocked(current, candidate_next, 42.0, 38.0)
-		var blocked_dynamic: bool = _is_dynamic_unit_blocking_segment(current, candidate_next, maxf(dynamic_blocker_avoid_radius, 32.0))
+		var blocked_dynamic: bool = _is_dynamic_unit_blocking_segment(
+			current, candidate_next, maxf(dynamic_blocker_avoid_radius, 32.0)
+		)
 		if blocked_static or blocked_dynamic:
 			continue
 		var remain: Vector3 = move_target - candidate_next
@@ -4515,7 +4978,9 @@ func _compute_next_move_with_obstacle_avoidance(current: Vector3, move_target: V
 	return best_next
 
 
-func _is_dynamic_unit_blocking_segment(from_pos: Vector3, to_pos: Vector3, probe_radius: float) -> bool:
+func _is_dynamic_unit_blocking_segment(
+	from_pos: Vector3, to_pos: Vector3, probe_radius: float
+) -> bool:
 	if _hero == null:
 		return false
 	var seg: Vector3 = to_pos - from_pos
@@ -4560,40 +5025,44 @@ func _update_auto_attack_target() -> void:
 		return
 
 	if _focus_lock:
-		if _target_enemy != null and is_instance_valid(_target_enemy) and not _is_enemy_dead(_target_enemy):
+		if (
+			_target_enemy != null
+			and is_instance_valid(_target_enemy)
+			and not _is_enemy_dead(_target_enemy)
+		):
 			return
 		_focus_lock = false
-	
+
 	# 玩家下达了移动指令时，不自动切回攻击目标
 	if _has_move_target:
 		return
-	
+
 	var enemy := _find_nearest_enemy()
 	if enemy == null:
 		_was_in_enemy_engage_range = false
 		_last_auto_enemy = null
 		_auto_aggro_initialized = true
 		return
-	
+
 	var distance := _distance_xz(_hero.global_position, enemy.global_position)
 	var enemy_engage_range := _get_enemy_engage_range(enemy)
 	var in_enemy_engage_range := distance <= enemy_engage_range
-	
+
 	# 首帧只记录状态，避免开局就在范围内时自动开打
 	if not _auto_aggro_initialized:
 		_auto_aggro_initialized = true
 		_was_in_enemy_engage_range = in_enemy_engage_range
 		_last_auto_enemy = enemy
 		return
-	
+
 	if in_enemy_engage_range and (not _was_in_enemy_engage_range or _last_auto_enemy != enemy):
 		_target_enemy = enemy
 		_has_move_target = false
-		_push_network_control_command("chase_target", {
-			"target_path": str(enemy.get_path()),
-			"target_pos": enemy.global_position
-		})
-	
+		_push_network_control_command(
+			"chase_target",
+			{"target_path": str(enemy.get_path()), "target_pos": enemy.global_position}
+		)
+
 	_was_in_enemy_engage_range = in_enemy_engage_range
 	_last_auto_enemy = enemy
 
@@ -4601,7 +5070,7 @@ func _update_auto_attack_target() -> void:
 func _interrupt_attack_for_move() -> void:
 	if not _is_attacking:
 		return
-	
+
 	_is_attacking = false
 	_invalidate_pending_attack_damage()
 	_current_attack_index = 0
@@ -4612,7 +5081,7 @@ func _interrupt_attack_for_move() -> void:
 func _interrupt_attack_for_chase() -> void:
 	if not _is_attacking:
 		return
-	
+
 	_is_attacking = false
 	_invalidate_pending_attack_damage()
 	_current_attack_index = 0
@@ -4640,12 +5109,15 @@ func _schedule_attack_damage_for_current_animation(anim: Animation) -> void:
 		_try_apply_damage_to_enemy_if_timing_matches(schedule_id, expected_attack_index)
 		return
 	var timer: SceneTreeTimer = get_tree().create_timer(delay_sec)
-	timer.timeout.connect(func() -> void:
-		_try_apply_damage_to_enemy_if_timing_matches(schedule_id, expected_attack_index)
+	timer.timeout.connect(
+		func() -> void:
+			_try_apply_damage_to_enemy_if_timing_matches(schedule_id, expected_attack_index)
 	)
 
 
-func _try_apply_damage_to_enemy_if_timing_matches(schedule_id: int, expected_attack_index: int) -> void:
+func _try_apply_damage_to_enemy_if_timing_matches(
+	schedule_id: int, expected_attack_index: int
+) -> void:
 	if schedule_id != _attack_damage_schedule_id:
 		return
 	if not _is_attacking:
@@ -4662,16 +5134,16 @@ func _invalidate_pending_attack_damage() -> void:
 func _try_apply_damage_to_enemy() -> void:
 	if _target_enemy == null or not is_instance_valid(_target_enemy):
 		return
-	
+
 	if _is_enemy_dead(_target_enemy):
 		_acquire_next_enemy_target_after_kill()
 		return
-	
+
 	if not _is_ranged_hero():
 		var distance := _distance_xz(_hero.global_position, _target_enemy.global_position)
 		if distance > attack_range:
 			return
-	
+
 	var enemy_controller := _target_enemy.get_parent()
 	if enemy_controller != null and enemy_controller.has_method("apply_damage"):
 		var damage_result: Dictionary = _compute_physical_damage_result(damage_per_hit)
@@ -4683,10 +5155,7 @@ func _try_apply_damage_to_enemy() -> void:
 			attack_range + 30.0,
 			"basic_attack",
 			_build_damage_hit_context(damage_result),
-			{
-				"kind": "basic_attack",
-				"attack_count": 1
-			}
+			{"kind": "basic_attack", "attack_count": 1}
 		):
 			_register_necromancy_basic_attack_charge_gain()
 			_register_spark_on_hit_bonuses()
@@ -4698,7 +5167,9 @@ func _try_apply_damage_to_enemy() -> void:
 			if precision_triggered:
 				_apply_rifleman_precision_bonus(enemy_controller, _target_enemy)
 			_add_attack_count(1)
-			var w_cdr_refund_sec: float = _talent_float("warden_w_cooldown_refund_on_attack_sec", 0.0)
+			var w_cdr_refund_sec: float = _talent_float(
+				"warden_w_cooldown_refund_on_attack_sec", 0.0
+			)
 			if w_cdr_refund_sec > 0.0 and _haste_cooldown > 0.0:
 				_haste_cooldown = maxf(_haste_cooldown - w_cdr_refund_sec, 0.0)
 			var mana_gain_on_attack: int = _talent_int("warden_e_mana_gain_on_attack", 0)
@@ -4706,7 +5177,11 @@ func _try_apply_damage_to_enemy() -> void:
 				current_mana = mini(current_mana + mana_gain_on_attack, max_mana)
 			var armor_shred_percent: float = _talent_float("warden_armor_shred_on_hit_percent", 0.0)
 			if armor_shred_percent > 0.0:
-				_apply_enemy_damage_bonus(_target_enemy, armor_shred_percent, _talent_float("warden_armor_shred_duration_sec", 5.0))
+				_apply_enemy_damage_bonus(
+					_target_enemy,
+					armor_shred_percent,
+					_talent_float("warden_armor_shred_duration_sec", 5.0)
+				)
 			if _should_apply_warden_poison_on_basic_attack():
 				_apply_poison_to_enemy(_target_enemy)
 			if _is_warden_hero() and _haste_active:
@@ -4752,7 +5227,12 @@ func _find_nearest_enemy_in_engage_range() -> Node3D:
 	return nearest
 
 
-func apply_damage(amount: int, ignore_armor: bool = false, attacker: Node3D = null, damage_type: String = "physical") -> void:
+func apply_damage(
+	amount: int,
+	ignore_armor: bool = false,
+	attacker: Node3D = null,
+	damage_type: String = "physical"
+) -> void:
 	if _is_dead:
 		return
 	if _is_transformed and amount > 0:
@@ -4788,7 +5268,7 @@ func apply_damage(amount: int, ignore_armor: bool = false, attacker: Node3D = nu
 	_update_hp_bar()
 	if final_damage > 0 and _current_hp > 0:
 		_retarget_to_attacker(attacker)
-	
+
 	if _current_hp <= 0:
 		_die()
 
@@ -4815,10 +5295,10 @@ func _retarget_to_attacker(attacker: Node3D) -> void:
 	if _is_attacking:
 		_interrupt_attack_for_chase()
 	_face_toward(target_enemy.global_position)
-	_push_network_control_command("chase_target", {
-		"target_path": str(target_enemy.get_path()),
-		"target_pos": target_enemy.global_position
-	})
+	_push_network_control_command(
+		"chase_target",
+		{"target_path": str(target_enemy.get_path()), "target_pos": target_enemy.global_position}
+	)
 
 
 func is_dead() -> bool:
@@ -4868,7 +5348,7 @@ func prepare_for_next_floor() -> void:
 func _die() -> void:
 	if _is_dead:
 		return
-	
+
 	_is_dead = true
 	_necro_last_battle_phase_active = false
 	_necro_charge_stacks = 0
@@ -4905,13 +5385,16 @@ func _die() -> void:
 	_slow_percent = 0.0
 	_slow_time_left = 0.0
 	_push_network_control_command("dead")
-	
+
 	if _animation_player != null:
 		_animation_player.stop()
 		_animation_player.speed_scale = 1.0
 		if _resolved_death_animation == "":
 			_refresh_motion_animation_aliases()
-		if _resolved_death_animation != "" and _animation_player.has_animation(_resolved_death_animation):
+		if (
+			_resolved_death_animation != ""
+			and _animation_player.has_animation(_resolved_death_animation)
+		):
 			var anim = _animation_player.get_animation(_resolved_death_animation)
 			if anim != null:
 				anim.loop_mode = Animation.LOOP_NONE
@@ -4975,17 +5458,25 @@ func _refresh_hp_bar_anchor_height_and_positions() -> void:
 	if _attack_count_label != null and is_instance_valid(_attack_count_label):
 		var attack_label_anchor_y: float = _resolve_anchor_local_y(_hero, HEAD_ANCHOR_NODE_NAME)
 		if attack_label_anchor_y > 0.0:
-			_attack_count_label.position = Vector3(0.0, attack_label_anchor_y + attack_count_label_height_offset, 0.0)
+			_attack_count_label.position = Vector3(
+				0.0, attack_label_anchor_y + attack_count_label_height_offset, 0.0
+			)
 		else:
-			_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
+			_attack_count_label.position = Vector3(
+				0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0
+			)
 
 
 func _sync_hp_bar_follow_and_facing() -> void:
 	var head_anchor := _get_anchor_node(_hero, HEAD_ANCHOR_NODE_NAME)
 	if head_anchor != null and is_instance_valid(head_anchor):
-		CombatSceneUtils.sync_top_level_billboard_to_camera(_hp_bar, head_anchor, 0.0, get_viewport())
+		CombatSceneUtils.sync_top_level_billboard_to_camera(
+			_hp_bar, head_anchor, 0.0, get_viewport()
+		)
 		return
-	CombatSceneUtils.sync_top_level_billboard_to_camera(_hp_bar, _hero, _hp_bar_anchor_height, get_viewport())
+	CombatSceneUtils.sync_top_level_billboard_to_camera(
+		_hp_bar, _hero, _hp_bar_anchor_height, get_viewport()
+	)
 
 
 func _compute_node_mesh_height(root_node: Node3D) -> float:
@@ -5018,9 +5509,13 @@ func _create_attack_count_label() -> void:
 	_attack_count_label.visible = _should_show_attack_count_label()
 	var attack_label_anchor_y: float = _resolve_anchor_local_y(_hero, HEAD_ANCHOR_NODE_NAME)
 	if attack_label_anchor_y > 0.0:
-		_attack_count_label.position = Vector3(0.0, attack_label_anchor_y + attack_count_label_height_offset, 0.0)
+		_attack_count_label.position = Vector3(
+			0.0, attack_label_anchor_y + attack_count_label_height_offset, 0.0
+		)
 	else:
-		_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
+		_attack_count_label.position = Vector3(
+			0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0
+		)
 	_hero.add_child(_attack_count_label)
 	_update_attack_count_label()
 
@@ -5040,9 +5535,13 @@ func _update_attack_count_label() -> void:
 		_attack_count_label.text = "%d" % current_count
 	var attack_label_anchor_y: float = _resolve_anchor_local_y(_hero, HEAD_ANCHOR_NODE_NAME)
 	if attack_label_anchor_y > 0.0:
-		_attack_count_label.position = Vector3(0.0, attack_label_anchor_y + attack_count_label_height_offset, 0.0)
+		_attack_count_label.position = Vector3(
+			0.0, attack_label_anchor_y + attack_count_label_height_offset, 0.0
+		)
 	else:
-		_attack_count_label.position = Vector3(0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0)
+		_attack_count_label.position = Vector3(
+			0.0, _hp_bar_anchor_height + attack_count_label_height_offset, 0.0
+		)
 
 
 func _is_enemy_dead(enemy: Node3D) -> bool:
@@ -5085,8 +5584,7 @@ func _get_attack_speed_scale() -> float:
 
 func _get_attack_interval() -> float:
 	return HeroStatsService.get_attack_interval(
-		_get_attack_speed_scale(),
-		_spark_effect_float("attack_interval_reduction_sec", 0.0)
+		_get_attack_speed_scale(), _spark_effect_float("attack_interval_reduction_sec", 0.0)
 	)
 
 
@@ -5100,19 +5598,23 @@ func _get_effective_cooldown_reduction_percent() -> float:
 
 func _compute_skill_cooldown(base_cooldown: float) -> float:
 	return HeroStatsService.compute_skill_cooldown(
-		base_cooldown,
-		cooldown_reduction_percent_total,
-		MAX_COOLDOWN_REDUCTION_PERCENT
+		base_cooldown, cooldown_reduction_percent_total, MAX_COOLDOWN_REDUCTION_PERCENT
 	)
 
 
 func _get_armor_damage_multiplier() -> float:
-	return HeroStatsService.get_armor_damage_multiplier(armor, ARMOR_K_MELEE_DEFAULT, NEGATIVE_ARMOR_BASE_MELEE_DEFAULT)
+	return HeroStatsService.get_armor_damage_multiplier(
+		armor, ARMOR_K_MELEE_DEFAULT, NEGATIVE_ARMOR_BASE_MELEE_DEFAULT
+	)
 
 
 func _get_magic_damage_multiplier() -> float:
 	return HeroStatsService.get_magic_damage_multiplier(
-		magic_immunity_rate + _equip_magic_damage_reduction_percent_bonus + _talent_float("magic_damage_reduction_percent_bonus", 0.0)
+		(
+			magic_immunity_rate
+			+ _equip_magic_damage_reduction_percent_bonus
+			+ _talent_float("magic_damage_reduction_percent_bonus", 0.0)
+		)
 	)
 
 
@@ -5129,12 +5631,12 @@ func _finalize_death() -> void:
 	if _death_finalized:
 		return
 	_death_finalized = true
-	
+
 	if _hp_bar != null:
 		_hp_bar.visible = false
 	if _attack_count_label != null:
 		_attack_count_label.visible = false
-	
+
 	if _hero != null:
 		_hero.visible = false
 
@@ -5144,13 +5646,13 @@ func _find_nearest_enemy() -> Node3D:
 		return null
 	var nearest: Node3D = null
 	var nearest_distance := INF
-	
+
 	var candidates := get_tree().get_nodes_in_group(enemy_group_name)
 	for candidate in candidates:
 		var collider := candidate as Node3D
 		if collider == null:
 			continue
-		
+
 		var enemy := collider.get_parent() as Node3D
 		if enemy == null:
 			continue
@@ -5158,12 +5660,12 @@ func _find_nearest_enemy() -> Node3D:
 			continue
 		if _is_enemy_dead(enemy):
 			continue
-		
+
 		var distance := _distance_xz(_hero.global_position, enemy.global_position)
 		if distance < nearest_distance:
 			nearest_distance = distance
 			nearest = enemy
-	
+
 	return nearest
 
 
@@ -5175,5 +5677,5 @@ func _get_enemy_engage_range(enemy: Node3D) -> float:
 		var value = ai_node.get("engage_range")
 		if value is float or value is int:
 			return float(value)
-	
+
 	return engage_range

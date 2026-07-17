@@ -11,7 +11,13 @@ var _option_pressed_callback: Callable = Callable()
 var _border_color: Color = Color(0.9, 0.8, 0.4, 1.0)
 
 
-func build(root: Control, option_count: int, border_color: Color, subtitle_color: Color, option_pressed_callback: Callable) -> void:
+func build(
+	root: Control,
+	option_count: int,
+	border_color: Color,
+	subtitle_color: Color,
+	option_pressed_callback: Callable
+) -> void:
 	if root == null or not is_instance_valid(root):
 		return
 	if _overlay != null and is_instance_valid(_overlay):
@@ -90,7 +96,12 @@ func build(root: Control, option_count: int, border_color: Color, subtitle_color
 		_buttons.append(button)
 
 
-func show_options(options: Array, pending_choice_count: int, selected_counts: Dictionary, title: String = "Talent Choice") -> void:
+func show_options(
+	options: Array,
+	pending_choice_count: int,
+	selected_counts: Dictionary,
+	title: String = "Talent Choice"
+) -> void:
 	if _overlay == null or not is_instance_valid(_overlay):
 		return
 	_overlay.visible = true
@@ -107,7 +118,9 @@ func show_options(options: Array, pending_choice_count: int, selected_counts: Di
 			continue
 		button.visible = true
 		var option_variant: Variant = options[i]
-		var option: Dictionary = option_variant as Dictionary if option_variant is Dictionary else {}
+		var option: Dictionary = (
+			option_variant as Dictionary if option_variant is Dictionary else {}
+		)
 		var option_id: String = str(option.get("id", ""))
 		var option_title: String = str(option.get("title", option_id))
 		var option_desc: String = str(option.get("desc", ""))
@@ -134,15 +147,25 @@ func _on_option_pressed(option_index: int) -> void:
 	_option_pressed_callback.call(option_index)
 
 
-func _apply_option_button_theme(button: Button, border_color: Color, option_index: int, picked_count: int = 0) -> void:
+func _apply_option_button_theme(
+	button: Button, border_color: Color, option_index: int, picked_count: int = 0
+) -> void:
 	if button == null:
 		return
 	var accent: Color = _get_option_accent_color(option_index, border_color)
 	var bonus_border: int = 1 if picked_count > 0 else 0
-	button.add_theme_stylebox_override("normal", _build_option_style(accent, 0.84, 0.92, 2 + bonus_border))
-	button.add_theme_stylebox_override("hover", _build_option_style(accent.lightened(0.08), 0.92, 1.0, 3 + bonus_border))
-	button.add_theme_stylebox_override("pressed", _build_option_style(accent.lightened(0.14), 0.98, 1.0, 4 + bonus_border))
-	button.add_theme_stylebox_override("focus", _build_option_style(accent.lightened(0.18), 0.95, 1.0, 4 + bonus_border))
+	button.add_theme_stylebox_override(
+		"normal", _build_option_style(accent, 0.84, 0.92, 2 + bonus_border)
+	)
+	button.add_theme_stylebox_override(
+		"hover", _build_option_style(accent.lightened(0.08), 0.92, 1.0, 3 + bonus_border)
+	)
+	button.add_theme_stylebox_override(
+		"pressed", _build_option_style(accent.lightened(0.14), 0.98, 1.0, 4 + bonus_border)
+	)
+	button.add_theme_stylebox_override(
+		"focus", _build_option_style(accent.lightened(0.18), 0.95, 1.0, 4 + bonus_border)
+	)
 
 
 func _get_option_accent_color(option_index: int, border_color: Color) -> Color:
@@ -157,13 +180,12 @@ func _get_option_accent_color(option_index: int, border_color: Color) -> Color:
 			return border_color
 
 
-func _build_option_style(accent: Color, fill_alpha: float, border_alpha: float, border_width: int) -> StyleBoxFlat:
+func _build_option_style(
+	accent: Color, fill_alpha: float, border_alpha: float, border_width: int
+) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(
-		0.035 + accent.r * 0.10,
-		0.04 + accent.g * 0.08,
-		0.055 + accent.b * 0.12,
-		fill_alpha
+		0.035 + accent.r * 0.10, 0.04 + accent.g * 0.08, 0.055 + accent.b * 0.12, fill_alpha
 	)
 	style.border_color = Color(accent.r, accent.g, accent.b, border_alpha)
 	style.set_border_width_all(maxi(border_width, 2))

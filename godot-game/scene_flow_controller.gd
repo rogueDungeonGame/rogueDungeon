@@ -67,7 +67,8 @@ const SHOP_INTERACTION_ONLY_LAYER: int = 1 << 1
 @export var hero_spawn_role_bias_max: float = 180.0
 @export var gate_above_shop_distance: float = 500.0
 @export var gate_offset: Vector3 = Vector3.ZERO
-@export_file("*.png", "*.jpg", "*.jpeg", "*.webp") var start_area_floor_texture_path: String = "res://effects/ground/StartAreaFloor.png"
+@export_file("*.png", "*.jpg", "*.jpeg", "*.webp")
+var start_area_floor_texture_path: String = "res://effects/ground/StartAreaFloor.png"
 @export var start_area_floor_y_offset: float = 0.4
 @export var start_area_floor_uv_tiling: float = 14.0
 @export var start_area_floor_extra_margin: float = 120.0
@@ -159,14 +160,9 @@ func _setup_battle_map_layout() -> void:
 	if _battle_map_layout_applied:
 		return
 
-	var map_size := Vector2(
-		maxf(battle_map_size_xz.x, 100.0),
-		maxf(battle_map_size_xz.y, 100.0)
-	)
+	var map_size := Vector2(maxf(battle_map_size_xz.x, 100.0), maxf(battle_map_size_xz.y, 100.0))
 	var map_center := Vector3(
-		battle_map_origin_xz.x + map_size.x * 0.5,
-		0.0,
-		battle_map_origin_xz.y + map_size.y * 0.5
+		battle_map_origin_xz.x + map_size.x * 0.5, 0.0, battle_map_origin_xz.y + map_size.y * 0.5
 	)
 
 	_shift_initial_battle_map_content(map_center)
@@ -227,9 +223,7 @@ func _configure_battle_map_floor(map_center: Vector3, map_size: Vector2) -> void
 		var floor_material := floor.get_surface_override_material(0) as StandardMaterial3D
 		if floor_material != null:
 			floor_material.uv1_scale = Vector3(
-				maxf(map_size.x / 500.0, 1.0),
-				maxf(map_size.y / 500.0, 1.0),
-				1.0
+				maxf(map_size.x / 500.0, 1.0), maxf(map_size.y / 500.0, 1.0), 1.0
 			)
 
 	var nav_root := get_node_or_null(navigation_region_path) as Node3D
@@ -261,9 +255,11 @@ func _setup_outside_region_fill(map_size: Vector2) -> void:
 	var bound_half_x: float = float(start_bounds.get("bound_half_x", _get_shop_half_size_x()))
 	var north_depth: float = float(start_bounds.get("north_depth", _get_shop_half_size_z()))
 	var south_depth: float = float(start_bounds.get("south_depth", _get_shop_half_size_z()))
-	var thickness: float = float(start_bounds.get("thickness", maxf(start_area_wall_thickness, 20.0)))
+	var thickness: float = float(
+		start_bounds.get("thickness", maxf(start_area_wall_thickness, 20.0))
+	)
 	var margin: float = maxf(start_area_floor_extra_margin, 0.0)
-	var start_half_width: float = (bound_half_x + margin + thickness * 0.5)
+	var start_half_width: float = bound_half_x + margin + thickness * 0.5
 	var start_half_depth: float = (north_depth + south_depth + margin * 2.0 + thickness) * 0.5
 	var start_center_z: float = start_center.z + (south_depth - north_depth) * 0.5
 
@@ -272,8 +268,12 @@ func _setup_outside_region_fill(map_size: Vector2) -> void:
 	var fill_max_x: float = maxf(battle_max_x, start_center.x + start_half_width) + fill_margin
 	var fill_min_z: float = minf(battle_min_z, start_center_z - start_half_depth) - fill_margin
 	var fill_max_z: float = maxf(battle_max_z, start_center_z + start_half_depth) + fill_margin
-	var fill_size := Vector2(maxf(fill_max_x - fill_min_x, 64.0), maxf(fill_max_z - fill_min_z, 64.0))
-	var fill_center := Vector3((fill_min_x + fill_max_x) * 0.5, 0.0, (fill_min_z + fill_max_z) * 0.5)
+	var fill_size := Vector2(
+		maxf(fill_max_x - fill_min_x, 64.0), maxf(fill_max_z - fill_min_z, 64.0)
+	)
+	var fill_center := Vector3(
+		(fill_min_x + fill_max_x) * 0.5, 0.0, (fill_min_z + fill_max_z) * 0.5
+	)
 
 	var floor := get_node_or_null("Floor") as MeshInstance3D
 	var floor_y: float = -0.5
@@ -378,7 +378,9 @@ func _build_battle_map_bounds(obstacles_root: Node3D, map_size: Vector2) -> void
 	)
 
 
-func _create_invisible_wall(parent: Node3D, wall_name: String, world_pos: Vector3, box_size: Vector3) -> void:
+func _create_invisible_wall(
+	parent: Node3D, wall_name: String, world_pos: Vector3, box_size: Vector3
+) -> void:
 	if parent == null:
 		return
 	var body := StaticBody3D.new()
@@ -438,7 +440,9 @@ func _build_battle_map_fence_lines(obstacles_root: Node3D) -> void:
 	)
 
 
-func _build_battle_map_fence_segment(parent: Node3D, from_xz: Vector2, to_xz: Vector2, yaw_degrees: float) -> void:
+func _build_battle_map_fence_segment(
+	parent: Node3D, from_xz: Vector2, to_xz: Vector2, yaw_degrees: float
+) -> void:
 	if parent == null:
 		return
 	var delta: Vector2 = to_xz - from_xz
@@ -490,7 +494,9 @@ func _create_battle_map_fence(parent: Node3D, world_pos: Vector3, yaw_degrees: f
 	var collision := CollisionShape3D.new()
 	collision.name = "Col"
 	collision.shape = shape
-	collision.position = Vector3(0.0, maxf(battle_map_fence_height_offset * fence_scale_multiplier, shape.size.y * 0.5), 0.0)
+	collision.position = Vector3(
+		0.0, maxf(battle_map_fence_height_offset * fence_scale_multiplier, shape.size.y * 0.5), 0.0
+	)
 	collision.rotation_degrees = Vector3(0.0, yaw_degrees, 0.0)
 	body.add_child(collision)
 
@@ -500,7 +506,11 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey:
 		var key_event := event as InputEventKey
-		if key_event.pressed and not key_event.echo and (key_event.keycode == KEY_1 or key_event.keycode == KEY_KP_1):
+		if (
+			key_event.pressed
+			and not key_event.echo
+			and (key_event.keycode == KEY_1 or key_event.keycode == KEY_KP_1)
+		):
 			var now_ms: int = Time.get_ticks_msec()
 			var elapsed_ms: int = now_ms - _last_refocus_key_time_ms
 			_last_refocus_key_time_ms = now_ms
@@ -560,7 +570,9 @@ func _start_camera_height_tween(camera: Camera3D) -> void:
 	var duration: float = maxf(camera_height_anim_duration, 0.01)
 	_camera_height_tween = create_tween()
 	_camera_height_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_camera_height_tween.tween_method(Callable(self, "_apply_camera_height"), from_h, to_h, duration)
+	_camera_height_tween.tween_method(
+		Callable(self, "_apply_camera_height"), from_h, to_h, duration
+	)
 
 
 func _apply_camera_height(height: float) -> void:
@@ -731,17 +743,13 @@ func _show_hero_select_ui() -> void:
 	var melee_btn := Button.new()
 	melee_btn.text = "1号 %s" % melee_hero_name
 	melee_btn.custom_minimum_size = Vector2(160, 52)
-	melee_btn.pressed.connect(func() -> void:
-		_on_hero_selected(false)
-	)
+	melee_btn.pressed.connect(func() -> void: _on_hero_selected(false))
 	btn_row.add_child(melee_btn)
 
 	var ranged_btn := Button.new()
 	ranged_btn.text = "2号 %s" % ranged_hero_name
 	ranged_btn.custom_minimum_size = Vector2(160, 52)
-	ranged_btn.pressed.connect(func() -> void:
-		_on_hero_selected(true)
-	)
+	ranged_btn.pressed.connect(func() -> void: _on_hero_selected(true))
 	btn_row.add_child(ranged_btn)
 
 
@@ -864,7 +872,10 @@ func _connect_boss_controller_signals() -> void:
 	var boss_controller: Node = boss_model.get_parent()
 	if boss_controller == null:
 		return
-	if boss_controller.has_signal("boss_defeated") and not boss_controller.is_connected("boss_defeated", Callable(self, "_on_boss_defeated")):
+	if (
+		boss_controller.has_signal("boss_defeated")
+		and not boss_controller.is_connected("boss_defeated", Callable(self, "_on_boss_defeated"))
+	):
 		boss_controller.connect("boss_defeated", Callable(self, "_on_boss_defeated"))
 
 
@@ -881,7 +892,9 @@ func _build_current_floor_profile() -> Dictionary:
 
 func _apply_floor_state_locally(floor_index: int, reset_units: bool) -> void:
 	_current_floor_index = clampi(floor_index, 1, maxi(total_floor_count, 1))
-	var profile: Dictionary = FLOOR_BALANCE_SCRIPT.build_floor_profile(_current_floor_index, floor_difficulty)
+	var profile: Dictionary = FLOOR_BALANCE_SCRIPT.build_floor_profile(
+		_current_floor_index, floor_difficulty
+	)
 	if reset_units:
 		_configure_floor_randomized_hostiles(_current_floor_index)
 	var boss_controller: Node = _get_boss_controller_node()
@@ -889,7 +902,9 @@ func _apply_floor_state_locally(floor_index: int, reset_units: bool) -> void:
 		boss_controller.call("apply_floor_profile", profile, reset_units)
 	var spawner: Node = get_node_or_null(NodePath("TaurenSpawner"))
 	if spawner != null:
-		var should_spawn_local_mobs: bool = not (_network_role == "client" and multiplayer.multiplayer_peer != null)
+		var should_spawn_local_mobs: bool = not (
+			_network_role == "client" and multiplayer.multiplayer_peer != null
+		)
 		if reset_units and should_spawn_local_mobs and spawner.has_method("reset_for_floor"):
 			spawner.call("reset_for_floor", profile)
 		elif reset_units and spawner.has_method("clear_units"):
@@ -931,7 +946,9 @@ func _refresh_floor_overlay() -> void:
 	if _run_completed:
 		_floor_overlay_label.text = "Floor %d / %d  Cleared" % [total_floors, total_floors]
 		return
-	_floor_overlay_label.text = "Floor %d / %d  %s" % [_current_floor_index, total_floors, difficulty_name]
+	_floor_overlay_label.text = (
+		"Floor %d / %d  %s" % [_current_floor_index, total_floors, difficulty_name]
+	)
 
 
 func _process_floor_clear_resolution() -> void:
@@ -946,7 +963,11 @@ func _process_floor_clear_resolution() -> void:
 
 func _are_all_hostiles_cleared() -> bool:
 	var boss_controller: Node = _get_boss_controller_node()
-	if boss_controller != null and boss_controller.has_method("is_dead") and not bool(boss_controller.call("is_dead")):
+	if (
+		boss_controller != null
+		and boss_controller.has_method("is_dead")
+		and not bool(boss_controller.call("is_dead"))
+	):
 		return false
 	var spawner: Node = get_node_or_null(NodePath("TaurenSpawner"))
 	if spawner != null and spawner.has_method("has_living_units"):
@@ -986,29 +1007,49 @@ func _apply_floor_clear_rewards() -> void:
 	for peer_id in player_ids:
 		if peer_id <= 0:
 			continue
-		if peer_id != _resolve_local_shop_owner_peer_id() and ui.has_method("authority_handle_equipment_action"):
+		if (
+			peer_id != _resolve_local_shop_owner_peer_id()
+			and ui.has_method("authority_handle_equipment_action")
+		):
 			var baseline_state: Dictionary = {}
 			if net_ctrl != null and net_ctrl.has_method("get_ui_peer_equipment_state"):
-				var baseline_variant: Variant = net_ctrl.call("get_ui_peer_equipment_state", peer_id)
+				var baseline_variant: Variant = net_ctrl.call(
+					"get_ui_peer_equipment_state", peer_id
+				)
 				if baseline_variant is Dictionary:
 					baseline_state = (baseline_variant as Dictionary).duplicate(true)
 			var request: Dictionary = {
-				"action": "battle_phase_ended",
-				"request_seq": -1,
-				"payload": {}
+				"action": "battle_phase_ended", "request_seq": -1, "payload": {}
 			}
-			var commit_variant: Variant = ui.call("authority_handle_equipment_action", peer_id, request, baseline_state)
+			var commit_variant: Variant = ui.call(
+				"authority_handle_equipment_action", peer_id, request, baseline_state
+			)
 			if commit_variant is Dictionary:
 				var commit: Dictionary = commit_variant
 				var state_variant: Variant = commit.get("state", null)
-				if state_variant is Dictionary and net_ctrl != null and net_ctrl.has_method("host_override_peer_equipment_state"):
-					net_ctrl.call("host_override_peer_equipment_state", peer_id, state_variant as Dictionary)
+				if (
+					state_variant is Dictionary
+					and net_ctrl != null
+					and net_ctrl.has_method("host_override_peer_equipment_state")
+				):
+					net_ctrl.call(
+						"host_override_peer_equipment_state", peer_id, state_variant as Dictionary
+					)
 		var reward_gold: int = _get_floor_clear_gold_reward(peer_id)
 		if reward_gold <= 0:
 			continue
-		var reward_state_variant: Variant = ui.call("authority_grant_gold_reward", peer_id, reward_gold)
-		if reward_state_variant is Dictionary and peer_id != _resolve_local_shop_owner_peer_id() and net_ctrl != null and net_ctrl.has_method("host_override_peer_equipment_state"):
-			net_ctrl.call("host_override_peer_equipment_state", peer_id, reward_state_variant as Dictionary)
+		var reward_state_variant: Variant = ui.call(
+			"authority_grant_gold_reward", peer_id, reward_gold
+		)
+		if (
+			reward_state_variant is Dictionary
+			and peer_id != _resolve_local_shop_owner_peer_id()
+			and net_ctrl != null
+			and net_ctrl.has_method("host_override_peer_equipment_state")
+		):
+			net_ctrl.call(
+				"host_override_peer_equipment_state", peer_id, reward_state_variant as Dictionary
+			)
 
 
 func _get_floor_clear_gold_reward(peer_id: int) -> int:
@@ -1057,7 +1098,9 @@ func _configure_floor_randomized_hostiles(floor_index: int) -> void:
 	boss_rng.seed = _build_battle_map_spawn_seed(floor_index, 11)
 	var boss_controller: Node = _get_boss_controller_node()
 	if boss_controller != null and boss_controller.has_method("set_spawn_origin"):
-		var boss_pos := _pick_random_battle_map_position(boss_rng, maxf(battle_map_boss_spawn_margin, 0.0))
+		var boss_pos := _pick_random_battle_map_position(
+			boss_rng, maxf(battle_map_boss_spawn_margin, 0.0)
+		)
 		var boss_yaw: float = boss_rng.randf_range(-PI, PI)
 		boss_controller.call("set_spawn_origin", boss_pos, boss_yaw, true)
 
@@ -1065,7 +1108,9 @@ func _configure_floor_randomized_hostiles(floor_index: int) -> void:
 	if spawner != null:
 		var spawner_rng := RandomNumberGenerator.new()
 		spawner_rng.seed = _build_battle_map_spawn_seed(floor_index, 29)
-		spawner.global_position = _pick_random_battle_map_position(spawner_rng, maxf(battle_map_mob_spawn_margin, 0.0))
+		spawner.global_position = _pick_random_battle_map_position(
+			spawner_rng, maxf(battle_map_mob_spawn_margin, 0.0)
+		)
 		if spawner.has_method("configure_spawn_rect"):
 			spawner.call(
 				"configure_spawn_rect",
@@ -1077,7 +1122,9 @@ func _configure_floor_randomized_hostiles(floor_index: int) -> void:
 
 
 func _build_battle_map_spawn_seed(floor_index: int, salt: int) -> int:
-	var seed_text: String = "battle_spawn_%d_%d_%d" % [battle_map_spawn_seed_base, floor_index, salt]
+	var seed_text: String = (
+		"battle_spawn_%d_%d_%d" % [battle_map_spawn_seed_base, floor_index, salt]
+	)
 	var seed: int = int(hash(seed_text)) & 0x7fffffff
 	if seed <= 0:
 		return 1
@@ -1085,10 +1132,7 @@ func _build_battle_map_spawn_seed(floor_index: int, salt: int) -> int:
 
 
 func _get_battle_map_size() -> Vector2:
-	return Vector2(
-		maxf(battle_map_size_xz.x, 100.0),
-		maxf(battle_map_size_xz.y, 100.0)
-	)
+	return Vector2(maxf(battle_map_size_xz.x, 100.0), maxf(battle_map_size_xz.y, 100.0))
 
 
 func _pick_random_battle_map_position(rng: RandomNumberGenerator, margin: float = 0.0) -> Vector3:
@@ -1136,13 +1180,17 @@ func _apply_shop_availability_for_floor(floor_index: int) -> void:
 		ui.call("set_shop_access_enabled", enabled)
 
 
-func _apply_shop_root_availability(shop_root: Node, enabled: bool, owner_peer_id: int, slot_index: int) -> void:
+func _apply_shop_root_availability(
+	shop_root: Node, enabled: bool, owner_peer_id: int, slot_index: int
+) -> void:
 	if shop_root == null:
 		return
 	_apply_shop_root_availability_recursive(shop_root, enabled, owner_peer_id, slot_index)
 
 
-func _apply_shop_root_availability_recursive(node: Node, enabled: bool, owner_peer_id: int, slot_index: int) -> void:
+func _apply_shop_root_availability_recursive(
+	node: Node, enabled: bool, owner_peer_id: int, slot_index: int
+) -> void:
 	if node == null:
 		return
 	if node is Node3D:
@@ -1153,14 +1201,20 @@ func _apply_shop_root_availability_recursive(node: Node, enabled: bool, owner_pe
 	if collision_node != null:
 		if enabled:
 			if collision_node.has_meta(SHOP_COLLISION_LAYER_META_KEY):
-				collision_node.collision_layer = int(collision_node.get_meta(SHOP_COLLISION_LAYER_META_KEY))
+				collision_node.collision_layer = int(
+					collision_node.get_meta(SHOP_COLLISION_LAYER_META_KEY)
+				)
 			if collision_node.has_meta(SHOP_COLLISION_MASK_META_KEY):
-				collision_node.collision_mask = int(collision_node.get_meta(SHOP_COLLISION_MASK_META_KEY))
+				collision_node.collision_mask = int(
+					collision_node.get_meta(SHOP_COLLISION_MASK_META_KEY)
+				)
 			collision_node.collision_layer = SHOP_INTERACTION_ONLY_LAYER
 			collision_node.collision_mask = 0
 		else:
 			if not collision_node.has_meta(SHOP_COLLISION_LAYER_META_KEY):
-				collision_node.set_meta(SHOP_COLLISION_LAYER_META_KEY, collision_node.collision_layer)
+				collision_node.set_meta(
+					SHOP_COLLISION_LAYER_META_KEY, collision_node.collision_layer
+				)
 			if not collision_node.has_meta(SHOP_COLLISION_MASK_META_KEY):
 				collision_node.set_meta(SHOP_COLLISION_MASK_META_KEY, collision_node.collision_mask)
 			collision_node.collision_layer = 0
@@ -1397,7 +1451,9 @@ func _setup_start_area_air_walls() -> void:
 	_request_navigation_rebake()
 
 
-func _create_air_wall(parent: Node3D, wall_name: String, world_pos: Vector3, box_size: Vector3) -> void:
+func _create_air_wall(
+	parent: Node3D, wall_name: String, world_pos: Vector3, box_size: Vector3
+) -> void:
 	if parent == null:
 		return
 	var body := StaticBody3D.new()
@@ -1517,9 +1573,7 @@ func _reset_hero_controller_state(hero_position: Vector3) -> void:
 	if hero_controller.has_method("_stop_animation"):
 		hero_controller.call("_stop_animation")
 	if hero_controller.has_method("_push_network_control_command"):
-		hero_controller.call("_push_network_control_command", "idle", {
-			"target_pos": hero_position
-		})
+		hero_controller.call("_push_network_control_command", "idle", {"target_pos": hero_position})
 	if hero_controller.has_method("_notify_network_local_hero_ready"):
 		hero_controller.call("_notify_network_local_hero_ready")
 	if hero_controller.has_method("begin_network_attack_lock_after_reposition"):
@@ -1590,7 +1644,13 @@ func _parse_network_role_from_cmdline() -> void:
 		if key.begins_with("--"):
 			key = key.substr(2)
 		value = value.strip_edges().to_lower()
-		if key == "net" or key == "network" or key == "mode" or key == "net-mode" or key == "net_mode":
+		if (
+			key == "net"
+			or key == "network"
+			or key == "mode"
+			or key == "net-mode"
+			or key == "net_mode"
+		):
 			if value == "host" or value == "client" or value == "offline":
 				_network_role = value
 				return
@@ -1687,12 +1747,10 @@ func _refresh_shop_owner_bindings(force: bool = false) -> void:
 			self_peer_id = multiplayer.get_unique_id()
 		var room_peer_ids: Array[int] = _collect_active_peer_ids_for_boss_entry()
 		print(
-			"[shop-bind] role=%s self=%d owners=%s room=%s" % [
-				_network_role,
-				self_peer_id,
-				str(_shop_owner_peer_ids),
-				str(room_peer_ids)
-			]
+			(
+				"[shop-bind] role=%s self=%d owners=%s room=%s"
+				% [_network_role, self_peer_id, str(_shop_owner_peer_ids), str(room_peer_ids)]
+			)
 		)
 	var nav_root := get_node_or_null(navigation_region_path) as Node3D
 	var primary_shop := get_node_or_null(shop_path) as Node3D
@@ -1702,7 +1760,9 @@ func _refresh_shop_owner_bindings(force: bool = false) -> void:
 		var shop_root: Node3D = _get_shop_root_for_slot(nav_root, primary_shop, slot_index)
 		if shop_root == null:
 			continue
-		_apply_shop_owner_metadata(shop_root, _resolve_shop_owner_peer_id_by_slot(slot_index), slot_index)
+		_apply_shop_owner_metadata(
+			shop_root, _resolve_shop_owner_peer_id_by_slot(slot_index), slot_index
+		)
 
 
 func _resolve_shop_owner_peer_ids(slot_count: int) -> Array[int]:
@@ -1798,11 +1858,15 @@ func get_start_area_full_recovery_radius() -> float:
 
 
 func _get_boss_battle_entry_position(boss_anchor: Vector3) -> Vector3:
-	var role_offset: Vector3 = _get_network_spawn_extra_offset() * maxf(boss_battle_role_offset_scale, 0.0)
+	var role_offset: Vector3 = (
+		_get_network_spawn_extra_offset() * maxf(boss_battle_role_offset_scale, 0.0)
+	)
 	return boss_anchor + boss_entry_offset + role_offset
 
 
-func _resolve_local_boss_entry_position(boss_anchor: Vector3, entry_positions: Dictionary) -> Vector3:
+func _resolve_local_boss_entry_position(
+	boss_anchor: Vector3, entry_positions: Dictionary
+) -> Vector3:
 	if not entry_positions.is_empty():
 		var local_peer_id: int = 1
 		if multiplayer.multiplayer_peer != null:
@@ -1814,10 +1878,16 @@ func _resolve_local_boss_entry_position(boss_anchor: Vector3, entry_positions: D
 			pos_variant = entry_positions[str(local_peer_id)]
 		if pos_variant is Vector3:
 			var candidate: Vector3 = pos_variant
-			var max_allowed_distance: float = maxf(
-				maxf(boss_entry_random_max_radius, boss_entry_random_min_radius),
-				Vector2(boss_entry_offset.x, boss_entry_offset.z).length() + maxf(boss_entry_random_min_distance, 0.0)
-			) + 240.0
+			var max_allowed_distance: float = (
+				maxf(
+					maxf(boss_entry_random_max_radius, boss_entry_random_min_radius),
+					(
+						Vector2(boss_entry_offset.x, boss_entry_offset.z).length()
+						+ maxf(boss_entry_random_min_distance, 0.0)
+					)
+				)
+				+ 240.0
+			)
 			if candidate.distance_to(boss_anchor) <= max_allowed_distance:
 				return candidate
 	return _get_boss_battle_entry_position(boss_anchor)
@@ -1841,8 +1911,12 @@ func _build_boss_battle_entry_positions(boss_anchor: Vector3) -> Dictionary:
 		var half_step_angle: float = PI / float(peer_count)
 		var sin_value: float = sin(half_step_angle)
 		if sin_value > 0.001:
-			required_radius_for_spacing = maxf(required_radius_for_spacing, min_distance / (2.0 * sin_value))
-	var entry_radius: float = clampf(required_radius_for_spacing, base_radius, configured_max_radius)
+			required_radius_for_spacing = maxf(
+				required_radius_for_spacing, min_distance / (2.0 * sin_value)
+			)
+	var entry_radius: float = clampf(
+		required_radius_for_spacing, base_radius, configured_max_radius
+	)
 	var start_angle: float = atan2(base_offset_xz.y, base_offset_xz.x)
 	if base_offset_xz.length_squared() <= 0.0001:
 		start_angle = -PI * 0.5
@@ -1850,7 +1924,9 @@ func _build_boss_battle_entry_positions(boss_anchor: Vector3) -> Dictionary:
 	for i in range(peer_count):
 		var peer_id: int = peer_ids[i]
 		var angle: float = start_angle + TAU * (float(i) / float(peer_count))
-		var candidate: Vector3 = center + Vector3(cos(angle) * entry_radius, 0.0, sin(angle) * entry_radius)
+		var candidate: Vector3 = (
+			center + Vector3(cos(angle) * entry_radius, 0.0, sin(angle) * entry_radius)
+		)
 		result[peer_id] = candidate
 	return result
 

@@ -10,7 +10,9 @@ const EQUIPMENT_EFFECTS_SERVICE_SCRIPT := preload("res://equipment_effects_servi
 const SHOP_PANEL_CONTROLLER_SCRIPT := preload("res://shop_panel_controller.gd")
 const OBSERVE_SYNC_SERVICE_SCRIPT := preload("res://observe_sync_service.gd")
 const HUD_SLOT_ITEM_GOLD_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/slot_item_gold.png")
-const HUD_SKILL_BUTTON_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/skill_button_frame.png")
+const HUD_SKILL_BUTTON_TEXTURE := preload(
+	"res://ui/hud_assets/rogue_dungeon/skill_button_frame.png"
+)
 
 var _owner: Node = null
 var _hero_ctrl: Node = null
@@ -84,7 +86,9 @@ const DESTROY_DEFAULT_STRENGTH_GROWTH: float = 2.5
 const DESTROY_DEFAULT_AGILITY_GROWTH: float = 2.0
 const DESTROY_DEFAULT_INTELLIGENCE_GROWTH: float = 1.8
 
-const BUILD_TABS := ["全部", "摧毁", "负债", "神器", "泰坦", "通灵", "战旗", "备战", "结算", "充能", "咒文", "火花", "硬币", "无派系"]
+const BUILD_TABS := [
+	"全部", "摧毁", "负债", "神器", "泰坦", "通灵", "战旗", "备战", "结算", "充能", "咒文", "火花", "硬币", "无派系"
+]
 const BUILD_ALIAS_MAP := {
 	"初始": "无派系",
 	"过渡": "无派系",
@@ -322,7 +326,7 @@ func _get_charge_bottle_shop_bonus_count(inventory: Array) -> int:
 	var bonus_count: int = 0
 	for slot_idx in range(inventory.size()):
 		var item_idx: int = int(inventory[slot_idx])
-		if item_idx < 0 or item_idx >= ITEM_DB.size():
+		if item_idx < 0 or item_idx >= item_db.size():
 			continue
 		var item_name: String = _get_item_name_by_index(item_idx)
 		if CHARGE_BOTTLE_APPEARANCE_ITEM_NAMES.has(item_name):
@@ -330,8 +334,12 @@ func _get_charge_bottle_shop_bonus_count(inventory: Array) -> int:
 	return bonus_count
 
 
-func _append_shop_candidate_with_runtime_weight(candidates: Array[int], item_idx: int, inventory: Array) -> void:
-	_get_shop_catalog_helper().append_shop_candidate_with_runtime_weight(candidates, item_idx, inventory, ITEM_DB)
+func _append_shop_candidate_with_runtime_weight(
+	candidates: Array[int], item_idx: int, inventory: Array
+) -> void:
+	_get_shop_catalog_helper().append_shop_candidate_with_runtime_weight(
+		candidates, item_idx, inventory, item_db
+	)
 
 
 const RECIPES := [
@@ -344,11 +352,10 @@ const RECIPES := [
 	{"inputs": {"霜火之珠": 1}, "output": "霜火皇冠", "extra_cost": 500},
 ]
 
-var ITEM_DB: Array = [
+var item_db: Array = [
 	{"name": "木盾", "icon": "BTNThornShield.png", "stat": "Lv1 | +3护甲 +50生命", "build": "初始"},
 	{"name": "小刀", "icon": "BTNClawsOfAttack.png", "stat": "Lv1 | +5攻击力", "build": "初始"},
 	{"name": "勇气勋章", "icon": "BTNMedalionOfCourage.png", "stat": "Lv1 | +2全属性", "build": "初始"},
-
 	{"name": "生命护符", "icon": "BTNAmulet.png", "stat": "Lv1 | +150生命 喂宝珠垫子", "build": "过渡"},
 	{"name": "橡果", "icon": "BTNAcorn.png", "stat": "Lv1 | +100生命 7级道具垫子", "build": "过渡"},
 	{"name": "小树枝", "icon": "BTNEnchantedGemstone.png", "stat": "Lv2 | +1全属性 嫖6商店", "build": "过渡"},
@@ -357,14 +364,42 @@ var ITEM_DB: Array = [
 	{"name": "窃魂灵翁", "icon": "BTNSoulGem.png", "stat": "Lv3 | 击杀+灵魂 +2全属性/层", "build": "过渡"},
 	{"name": "雄鹰戒指", "icon": "BTNRingJadeFalcon.png", "stat": "Lv3 | +5敏 结算+100HP", "build": "过渡"},
 	{"name": "私人贷卷", "icon": "BTNScroll.png", "stat": "Lv3 | 贷款200金 每波还息", "build": "过渡"},
-
-	{"name": "空洞宝珠", "icon": "BTNSoulGem.png", "stat": "Lv4 | +18智力 以器养器：在你摧毁一个装备后，+1层数。 在你摧毁一个装备后，如果你有3层层数，进化为邪灵宝珠。 结算效果会在每轮战斗结束后触发", "build": "摧毁"},
-	{"name": "回收锤", "icon": "BTNDivineShieldOff.png", "stat": "Lv5 | +14力量 +18智力 +300生命值 回收：摧毁一个装备后，获得摧毁目标等级*2的随机属性（可能是力量，敏捷，或智力）", "build": "摧毁"},
-	{"name": "血羽之心", "icon": "BTNPhilosophersStone.png", "stat": "Lv6 | +15力量 +10敏捷 +28智力 秘力：在你摧毁一个其他道具后，血羽之心获得等同于该道具的道具等级。", "build": "摧毁"},
-	{"name": "骨制风铃", "icon": "BTNBoneChimes.png", "stat": "Lv4 | +20攻击力 +30%攻击速度 +5三围 摧毁：提高你的基础三围属性（白字），使其不低于你的总道具等级。 摧毁效果会在道具被摧毁时触发", "build": "摧毁"},
-	{"name": "邪灵宝珠", "icon": "BTNOrb.png", "stat": "Lv7 | +32智力 邪珠：该道具等级相当于你献祭的道具总等级。 该道具每级提供额外4%的魔法伤害加成。", "build": "摧毁"},
-	{"name": "万宝锤", "icon": "BTNwbc.png", "stat": "Lv3 | +8力量 +250生命值 砸！：当你摧毁一个装备后，永久提高装备等级*20点生命值上限", "build": "摧毁"},
-
+	{
+		"name": "空洞宝珠",
+		"icon": "BTNSoulGem.png",
+		"stat": "Lv4 | +18智力 以器养器：在你摧毁一个装备后，+1层数。 在你摧毁一个装备后，如果你有3层层数，进化为邪灵宝珠。 结算效果会在每轮战斗结束后触发",
+		"build": "摧毁"
+	},
+	{
+		"name": "回收锤",
+		"icon": "BTNDivineShieldOff.png",
+		"stat": "Lv5 | +14力量 +18智力 +300生命值 回收：摧毁一个装备后，获得摧毁目标等级*2的随机属性（可能是力量，敏捷，或智力）",
+		"build": "摧毁"
+	},
+	{
+		"name": "血羽之心",
+		"icon": "BTNPhilosophersStone.png",
+		"stat": "Lv6 | +15力量 +10敏捷 +28智力 秘力：在你摧毁一个其他道具后，血羽之心获得等同于该道具的道具等级。",
+		"build": "摧毁"
+	},
+	{
+		"name": "骨制风铃",
+		"icon": "BTNBoneChimes.png",
+		"stat": "Lv4 | +20攻击力 +30%攻击速度 +5三围 摧毁：提高你的基础三围属性（白字），使其不低于你的总道具等级。 摧毁效果会在道具被摧毁时触发",
+		"build": "摧毁"
+	},
+	{
+		"name": "邪灵宝珠",
+		"icon": "BTNOrb.png",
+		"stat": "Lv7 | +32智力 邪珠：该道具等级相当于你献祭的道具总等级。 该道具每级提供额外4%的魔法伤害加成。",
+		"build": "摧毁"
+	},
+	{
+		"name": "万宝锤",
+		"icon": "BTNwbc.png",
+		"stat": "Lv3 | +8力量 +250生命值 砸！：当你摧毁一个装备后，永久提高装备等级*20点生命值上限",
+		"build": "摧毁"
+	},
 	{"name": "蓝港补给箱", "icon": "BTNIcyTreasureBox.png", "stat": "Lv5 | 每波补给+还贷 核心", "build": "贷款"},
 	{"name": "VIP卡", "icon": "BTNChestOfGold.png", "stat": "Lv5 | 钱少概率高 +200%收益", "build": "贷款"},
 	{"name": "流星", "icon": "BTNStarFall.png", "stat": "Lv5 | +15%法伤 3个合成怀表", "build": "贷款"},
@@ -372,83 +407,123 @@ var ITEM_DB: Array = [
 	{"name": "贷款头盔", "icon": "BTNHelmOfValor.png", "stat": "Lv5 | +8%暴击 贷款毕业装", "build": "贷款"},
 	{"name": "贷款盾", "icon": "BTNManaShield.png", "stat": "Lv5 | +12护甲 +格挡 毕业装", "build": "贷款"},
 	{"name": "夹层硬币", "icon": "BTNTransmute.png", "stat": "Lv3 | 免费嫖VIP 减少花费", "build": "贷款"},
-
 	{"name": "三月", "icon": "BTN3M3.png", "stat": "Lv6 | 3个合成Lv7 +大量全属性", "build": "三月"},
 	{"name": "账本", "icon": "BTNTome.png", "stat": "Lv6 | 结算效果额外触发一次", "build": "三月"},
 	{"name": "窃魂", "icon": "BTNUsedSoulGem.png", "stat": "Lv4 | 叠灵魂层数 词缀装备", "build": "三月"},
 	{"name": "泰坦图腾", "icon": "BTNTaurenTotem.png", "stat": "Lv4 | +12力量 词缀加成", "build": "三月"},
-
 	{"name": "自动机枪", "icon": "BTNInfernalCannon.png", "stat": "Lv6 | 自动攻击 装入组装器", "build": "自动"},
-	{"name": "闪光放射器", "icon": "BTNInfernalFlameCannon.png", "stat": "Lv6 | 信标触发+法伤叠加", "build": "自动"},
+	{
+		"name": "闪光放射器",
+		"icon": "BTNInfernalFlameCannon.png",
+		"stat": "Lv6 | 信标触发+法伤叠加",
+		"build": "自动"
+	},
 	{"name": "组装器", "icon": "BTNBox.png", "stat": "Lv6 | 装入武器 可升级为信标", "build": "自动"},
 	{"name": "信标", "icon": "BTNInfernalStone.png", "stat": "Lv6 | 定期触发武器 自动核心", "build": "自动"},
 	{"name": "耐文合金", "icon": "BTNThoriumArmor.png", "stat": "Lv5 | +15护甲 +500生命", "build": "自动"},
-
 	{"name": "英灵旗布", "icon": "BTNHumanCaptureFlag.png", "stat": "Lv5 | 旗帜层数翻倍 核心", "build": "战旗"},
 	{"name": "银月", "icon": "BTNMoonKey.png", "stat": "Lv5 | +20%法伤 +10智力", "build": "战旗"},
 	{"name": "全属性旗", "icon": "BTNNightElfCaptureFlag.png", "stat": "Lv4 | +3全属性/每层", "build": "战旗"},
 	{"name": "法伤旗", "icon": "BTNOrcCaptureFlag.png", "stat": "Lv4 | +5%法伤/每层", "build": "战旗"},
-
 	{"name": "审判金剑", "icon": "BTNFrostMourne.png", "stat": "Lv6 | 每结算装+2敏智+1%暴击", "build": "结算"},
 	{"name": "金色账簿", "icon": "BTNTomeBrown.png", "stat": "Lv6 | 结算效果额外触发 核心", "build": "结算"},
 	{"name": "雄狮之戒", "icon": "BTNRingLionHead.png", "stat": "Lv5 | +8敏 结算+200HP", "build": "结算"},
 	{"name": "开辟者", "icon": "BTNScepterOfMastery.png", "stat": "Lv5 | +25%暴击伤害", "build": "结算"},
 	{"name": "恶鬼剑", "icon": "BTNSacrificialSkull.png", "stat": "Lv5 | +15%暴击伤害", "build": "结算"},
 	{"name": "钥匙", "icon": "BTNGhostKey.png", "stat": "Lv4 | +10%暴击率 英雄适配", "build": "结算"},
-
 	{"name": "充能剑", "icon": "BTNDaggerOfEscape.png", "stat": "Lv5 | 充能攻击+50%伤害", "build": "充能"},
 	{"name": "扳指", "icon": "BTNRingPurple.png", "stat": "Lv5 | +5全属性 攻击获充能层", "build": "充能"},
-	{"name": "通灵杖", "icon": "BTNStaffOfNegation.png", "stat": "Lv5 | +10智力 技能伤害+20%", "build": "充能"},
+	{
+		"name": "通灵杖",
+		"icon": "BTNStaffOfNegation.png",
+		"stat": "Lv5 | +10智力 技能伤害+20%",
+		"build": "充能"
+	},
 	{"name": "完美核心", "icon": "BTNCrystalBall.png", "stat": "Lv6 | 充能满释放能量波 +8全属性", "build": "充能"},
 	{"name": "充能齿轮", "icon": "BTNPocketFactory.png", "stat": "Lv5 | 充能核心装备 +充能效率", "build": "充能"},
 	{"name": "粒子充能瓶", "icon": "BTNPotionBlueBig.png", "stat": "Lv5 | 高级充能瓶 大量充能层", "build": "充能"},
-
 	{"name": "卡德加", "icon": "BTNSpellBookBLS.png", "stat": "Lv6 | 咒文效果+50% 法器核心", "build": "咒文"},
 	{"name": "通灵长袍", "icon": "BTNRobeOfTheMagi.png", "stat": "Lv5 | +15智力 召唤物+30%伤", "build": "咒文"},
 	{"name": "咒文灵翁", "icon": "BTNSobiMask.png", "stat": "Lv5 | 吃灵魂补主属性 咒文+1层", "build": "咒文"},
 	{"name": "咒文匣子", "icon": "BTNCrate.png", "stat": "Lv6 | 存储咒文自动释放 法伤核心", "build": "咒文"},
-
-	{"name": "毁灭之怒", "icon": "BTNAmuletOftheWild.png", "stat": "Lv3 | +600最大生命值 毁灭之怒：攻击时，造成自身最大生命值2%的额外范围伤害（攻击特效） 大部分由攻击触发的额外效果都属于攻击特效 三个泰坦之怒可以合成为陨灭泰坦之锤", "build": "火花"},
-	{"name": "火花环刃", "icon": "BTNUpgradeMoonGlaive.png", "stat": "Lv5 | +500生命 叠血核心", "build": "火花"},
+	{
+		"name": "毁灭之怒",
+		"icon": "BTNAmuletOftheWild.png",
+		"stat":
+		"Lv3 | +600最大生命值 毁灭之怒：攻击时，造成自身最大生命值2%的额外范围伤害（攻击特效） 大部分由攻击触发的额外效果都属于攻击特效 三个泰坦之怒可以合成为陨灭泰坦之锤",
+		"build": "火花"
+	},
+	{
+		"name": "火花环刃",
+		"icon": "BTNUpgradeMoonGlaive.png",
+		"stat": "Lv5 | +500生命 叠血核心",
+		"build": "火花"
+	},
 	{"name": "遗留者眼球", "icon": "BTNOrbOfFire.png", "stat": "Lv5 | +法伤 火花伤害×10倍", "build": "火花"},
 	{"name": "符文石", "icon": "BTNRunedBracers.png", "stat": "Lv4 | +300生命 叠血辅助", "build": "火花"},
 	{"name": "破败之刃", "icon": "BTNOrbOfCorruption.png", "stat": "Lv5 | 按%目标最大生命造伤", "build": "火花"},
-	{"name": "陨灭泰坦之锤", "icon": "BTNGolemThunderclap.png", "stat": "Lv7 | +1800最大生命值 陨灭之怒：攻击时，造成自身最大生命值4%的额外范围伤害（攻击特效） 大部分由攻击触发的额外效果都属于攻击特效", "build": "火花"},
+	{
+		"name": "陨灭泰坦之锤",
+		"icon": "BTNGolemThunderclap.png",
+		"stat": "Lv7 | +1800最大生命值 陨灭之怒：攻击时，造成自身最大生命值4%的额外范围伤害（攻击特效） 大部分由攻击触发的额外效果都属于攻击特效",
+		"build": "火花"
+	},
 	{"name": "火花灵翁", "icon": "BTNMarkOfFire.png", "stat": "Lv5 | 吃灵魂加攻速 火花辅助", "build": "火花"},
-
 	{"name": "闪耀之爪", "icon": "BTNBearBlink.png", "stat": "Lv5 | 闪耀特效 300层超破败", "build": "特摧"},
 	{"name": "霜火之珠", "icon": "BTNOrbOfFrost.png", "stat": "Lv5 | 升级成皇冠白嫖火花等级", "build": "特摧"},
 	{"name": "霜火皇冠", "icon": "BTNHelmutPurple.png", "stat": "Lv6 | 白嫖火花等级 可喂宝珠", "build": "特摧"},
-
 	{"name": "刷新币", "icon": "BTNPotionOfClarity.png", "stat": "Lv5 | 刷新商店获额外效果 必买", "build": "硬币"},
 	{"name": "金硬币", "icon": "BTNPotionOfDivinity.png", "stat": "Lv5 | 获大量金币经验 核心", "build": "硬币"},
-	{"name": "通天锤", "icon": "BTNStormHammer.png", "stat": "Lv6 | +600生命值 +14力量 +18智力 +20攻击力 在你摧毁一个道具后，+1层数 启智：拥有6层层数后，消耗所有层数，使你下次升级选择的两个天赋强化次数+1", "build": "摧毁"},
-
+	{
+		"name": "通天锤",
+		"icon": "BTNStormHammer.png",
+		"stat":
+		"Lv6 | +600生命值 +14力量 +18智力 +20攻击力 在你摧毁一个道具后，+1层数 启智：拥有6层层数后，消耗所有层数，使你下次升级选择的两个天赋强化次数+1",
+		"build": "摧毁"
+	},
 	{"name": "剑圣诅咒", "icon": "BTNWandSkull.png", "stat": "Lv5 | 攻击力转化全伤害 物理神", "build": "诅咒"},
 	{"name": "血法诅咒", "icon": "BTNBloodLust.png", "stat": "Lv5 | 法术攻击+暴击 充能15波锁", "build": "诅咒"},
 	{"name": "牛头人诅咒", "icon": "BTNCurse.png", "stat": "Lv5 | 燃烧+全能加成 牛头核心", "build": "诅咒"},
-	{"name": "萨满诅咒", "icon": "BTNBigBadVoodooSpell.png", "stat": "Lv5 | 咒文召唤强化 咒文流用", "build": "诅咒"},
-
+	{
+		"name": "萨满诅咒",
+		"icon": "BTNBigBadVoodooSpell.png",
+		"stat": "Lv5 | 咒文召唤强化 咒文流用",
+		"build": "诅咒"
+	},
 	{"name": "充能瓶", "icon": "BTNPotionBlue.png", "stat": "Lv3 | 消耗品 充n个电池叠充能", "build": "消耗"},
 	{"name": "充能电池", "icon": "BTNPendantOfEnergy.png", "stat": "Lv3 | 消耗品 电池充充能瓶循环", "build": "消耗"},
 	{"name": "经验币", "icon": "BTNPotionGreen.png", "stat": "Lv3 | 消耗品 获大量经验值", "build": "消耗"},
 	{"name": "金印", "icon": "BTNGlyph.png", "stat": "Lv4 | 消耗品 咒文替代 没匣子先用", "build": "消耗"},
 	{"name": "灵魂", "icon": "BTNSpiritWolf.png", "stat": "Lv2 | 消耗品 灵翁/窃魂获得", "build": "消耗"},
 	{"name": "咒文消耗", "icon": "BTNSpellSteal.png", "stat": "Lv3 | 消耗品 吃加主属性 挑便宜", "build": "消耗"},
-
 	{"name": "龙蛋", "icon": "BTNPhoenixEgg.png", "stat": "Lv4 | 配件 龙血沸腾+5特效/层", "build": "配件"},
 	{"name": "望远镜", "icon": "BTNFarSight.png", "stat": "Lv4 | 配件 龙蛋流 电池点给它", "build": "配件"},
 	{"name": "电磁屏障", "icon": "BTNNeutralManaShield.png", "stat": "Lv4 | 配件 防御护盾减伤", "build": "配件"},
 	{"name": "无敌斩", "icon": "BTNDivineShieldOff.png", "stat": "Lv4 | 配件 剑圣专用 无敌W", "build": "配件"},
 	{"name": "怨恨头骨", "icon": "BTNRingSkull.png", "stat": "Lv4 | 配件 死后灵体无敌平A", "build": "配件"},
-
 	{"name": "不详", "icon": "BTNGuldanSkull.png", "stat": "Lv6 | +25%暴击率 15波后锁", "build": "后期"},
-	{"name": "蓝港护盾", "icon": "BTNlzhdup.png", "stat": "Lv7 | 负债：1200 +24力量 +12智力 +50生命值 离子护盾：在你受到伤害时，将魔法值转化为等额护盾。每点魔法值可以提供3点护盾，在你的魔法值低于50%时失效。 蓝港补给：在你偿还负债后，永久获得等额魔法最大值。", "build": "泰坦"},
-	{"name": "唤醒泰坦之杖", "icon": "BTNWitchDoctorMaster.png", "stat": "Lv4 | +25力量 主动使用：如果你有6件泰坦装备，消耗它们，转化为1件泰坦化身。", "build": "泰坦"},
+	{
+		"name": "蓝港护盾",
+		"icon": "BTNlzhdup.png",
+		"stat":
+		"Lv7 | 负债：1200 +24力量 +12智力 +50生命值 离子护盾：在你受到伤害时，将魔法值转化为等额护盾。每点魔法值可以提供3点护盾，在你的魔法值低于50%时失效。 蓝港补给：在你偿还负债后，永久获得等额魔法最大值。",
+		"build": "泰坦"
+	},
+	{
+		"name": "唤醒泰坦之杖",
+		"icon": "BTNWitchDoctorMaster.png",
+		"stat": "Lv4 | +25力量 主动使用：如果你有6件泰坦装备，消耗它们，转化为1件泰坦化身。",
+		"build": "泰坦"
+	},
 	{"name": "泰坦化身", "icon": "BTNFleshGolem.png", "stat": "Lv7 | 全属性翻倍 8K+血 10W+伤", "build": "后期"},
 	{"name": "月牙塔", "icon": "BTNAncientOfTheMoon.png", "stat": "Lv6 | +法伤 后期4月牙2合金", "build": "通灵"},
 	{"name": "噬魂", "icon": "BTNSpiritLink.png", "stat": "Lv6 | 吃灵魂+攻速 几万攻速可达", "build": "后期"},
-	{"name": "暴击头盔", "icon": "BTNHumanArmorUpThree.png", "stat": "Lv5 | +10%暴击率 18波换装", "build": "后期"},
+	{
+		"name": "暴击头盔",
+		"icon": "BTNHumanArmorUpThree.png",
+		"stat": "Lv5 | +10%暴击率 18波换装",
+		"build": "后期"
+	},
 	{"name": "暴击斧", "icon": "BTNCriticalStrike.png", "stat": "Lv5 | +20%暴击伤害 恶鬼替代", "build": "后期"},
 ]
 
@@ -466,16 +541,17 @@ const COLOR_PORTRAIT_BG := Color(0.05, 0.04, 0.08, 1.0)
 const COLOR_SKILL_MANA_MASK := Color(0.18, 0.5, 1.0, 0.45)
 const SKILL_CD_MASK_SHADER_CODE := "shader_type canvas_item;\nuniform float progress : hint_range(0.0, 1.0) = 0.0;\nuniform vec4 mask_color : source_color = vec4(1.0, 1.0, 1.0, 0.45);\nvoid fragment() {\n\tvec2 p = UV * 2.0 - vec2(1.0);\n\tif (length(p) > 1.0) {\n\t\tCOLOR = vec4(0.0);\n\t} else {\n\t\tfloat angle = atan(p.x, -p.y);\n\t\tif (angle < 0.0) {\n\t\t\tangle += 6.28318530718;\n\t\t}\n\t\tfloat sweep = clamp(progress, 0.0, 1.0) * 6.28318530718;\n\t\tif (angle <= sweep) {\n\t\t\tCOLOR = mask_color;\n\t\t} else {\n\t\t\tCOLOR = vec4(0.0);\n\t\t}\n\t}\n}\n"
 
+
 func configure(
-		owner: Node,
-		hero_ctrl: Node,
-		net_ctrl: Node,
-		ui_state: Object,
-		resolve_net_ctrl_callback: Callable,
-		set_observed_peer_callback: Callable,
-		input_lock_changed_callback: Callable,
-		debug_shop_click_logs: bool
-	) -> void:
+	owner: Node,
+	hero_ctrl: Node,
+	net_ctrl: Node,
+	ui_state: Object,
+	resolve_net_ctrl_callback: Callable,
+	set_observed_peer_callback: Callable,
+	input_lock_changed_callback: Callable,
+	debug_shop_click_logs: bool
+) -> void:
 	_owner = owner
 	_hero_ctrl = hero_ctrl
 	_net_ctrl = net_ctrl
@@ -569,23 +645,35 @@ func is_local_equipment_state_synced(authority_state: Dictionary) -> bool:
 	if _hero_ctrl != null:
 		local_inventory = _to_int_array(_hero_ctrl.get("inventory"))
 	var authority_inventory: Array = _to_int_array(authority_state.get("inventory", []))
-	var authority_meta: Array = _sanitize_inventory_meta_array(authority_state.get("inventory_meta", []), authority_inventory)
-	var authority_destroy_state: Dictionary = _sanitize_destroy_faction_state(authority_state.get("destroy_faction_state", {}))
-	var authority_coin_state: Dictionary = _sanitize_coin_faction_state(authority_state.get("coin_faction_state", {}))
-	return _get_observe_sync_service().is_local_equipment_state_synced(authority_state, {
-		"inventory": local_inventory,
-		"gold": _gold,
-		"shop_level": _shop_level,
-		"shop_offer_ids": _shop_offered.duplicate(true),
-		"destroy_mode": _destroy_mode,
-		"inventory_meta": _equipment_inventory_meta.duplicate(true),
-		"destroy_faction_state": _destroy_faction_state.duplicate(true),
-		"coin_faction_state": _coin_faction_state.duplicate(true),
-		"authority_inventory": authority_inventory,
-		"authority_inventory_meta": authority_meta,
-		"authority_destroy_faction_state": authority_destroy_state,
-		"authority_coin_faction_state": authority_coin_state,
-	})
+	var authority_meta: Array = _sanitize_inventory_meta_array(
+		authority_state.get("inventory_meta", []), authority_inventory
+	)
+	var authority_destroy_state: Dictionary = _sanitize_destroy_faction_state(
+		authority_state.get("destroy_faction_state", {})
+	)
+	var authority_coin_state: Dictionary = _sanitize_coin_faction_state(
+		authority_state.get("coin_faction_state", {})
+	)
+	return (
+		_get_observe_sync_service()
+		. is_local_equipment_state_synced(
+			authority_state,
+			{
+				"inventory": local_inventory,
+				"gold": _gold,
+				"shop_level": _shop_level,
+				"shop_offer_ids": _shop_offered.duplicate(true),
+				"destroy_mode": _destroy_mode,
+				"inventory_meta": _equipment_inventory_meta.duplicate(true),
+				"destroy_faction_state": _destroy_faction_state.duplicate(true),
+				"coin_faction_state": _coin_faction_state.duplicate(true),
+				"authority_inventory": authority_inventory,
+				"authority_inventory_meta": authority_meta,
+				"authority_destroy_faction_state": authority_destroy_state,
+				"authority_coin_faction_state": authority_coin_state,
+			}
+		)
+	)
 
 
 func _resolve_net_ctrl() -> void:
@@ -631,21 +719,26 @@ func _get_equipment_runtime_helper():
 
 func _get_shop_catalog_helper():
 	if _shop_catalog_helper == null:
-		_shop_catalog_helper = SHOP_CATALOG_HELPER_SCRIPT.new({
-			"default_build_name": "无派系",
-			"build_alias_map": BUILD_ALIAS_MAP,
-			"item_name_overrides": ITEM_NAME_OVERRIDES,
-			"item_build_overrides": ITEM_BUILD_OVERRIDES,
-			"blocked_shop_builds": BLOCKED_SHOP_BUILDS,
-			"item_secondary_builds": ITEM_SECONDARY_BUILDS,
-			"blocked_shop_item_exact_names": BLOCKED_SHOP_ITEM_EXACT_NAMES,
-			"blocked_shop_item_name_keywords": BLOCKED_SHOP_ITEM_NAME_KEYWORDS,
-			"level_weights": LEVEL_WEIGHTS,
-			"charge_bottle_appearance_item_names": CHARGE_BOTTLE_APPEARANCE_ITEM_NAMES,
-			"charge_bottle_shop_item_names": CHARGE_BOTTLE_SHOP_ITEM_NAMES,
-			"shop_item_count": SHOP_ITEM_COUNT,
-			"build_tabs": BUILD_TABS,
-		})
+		_shop_catalog_helper = (
+			SHOP_CATALOG_HELPER_SCRIPT
+			. new(
+				{
+					"default_build_name": "无派系",
+					"build_alias_map": BUILD_ALIAS_MAP,
+					"item_name_overrides": ITEM_NAME_OVERRIDES,
+					"item_build_overrides": ITEM_BUILD_OVERRIDES,
+					"blocked_shop_builds": BLOCKED_SHOP_BUILDS,
+					"item_secondary_builds": ITEM_SECONDARY_BUILDS,
+					"blocked_shop_item_exact_names": BLOCKED_SHOP_ITEM_EXACT_NAMES,
+					"blocked_shop_item_name_keywords": BLOCKED_SHOP_ITEM_NAME_KEYWORDS,
+					"level_weights": LEVEL_WEIGHTS,
+					"charge_bottle_appearance_item_names": CHARGE_BOTTLE_APPEARANCE_ITEM_NAMES,
+					"charge_bottle_shop_item_names": CHARGE_BOTTLE_SHOP_ITEM_NAMES,
+					"shop_item_count": SHOP_ITEM_COUNT,
+					"build_tabs": BUILD_TABS,
+				}
+			)
+		)
 	return _shop_catalog_helper
 
 
@@ -669,20 +762,26 @@ func _get_observe_sync_service():
 
 func _get_equipment_effects_service():
 	if _equipment_effects_service == null:
-		_equipment_effects_service = EQUIPMENT_EFFECTS_SERVICE_SCRIPT.new({
-			"default_build_name": "无派系",
-			"build_alias_map": BUILD_ALIAS_MAP,
-			"spark_force_item_names": SPARK_FORCE_ITEM_NAMES,
-			"charge_build_name": CHARGE_BUILD_NAME,
-			"coin_build_name": COIN_BUILD_NAME,
-			"charge_stack_agility": CHARGE_STACK_AGILITY,
-			"charge_staff_summon_bonus_per_stack": CHARGE_STAFF_SUMMON_BONUS_PER_STACK,
-			"coin_button_attack_speed_per_layer": COIN_BUTTON_ATTACK_SPEED_PER_LAYER,
-			"coin_smile_damage_tenths_per_coin_owned": COIN_SMILE_DAMAGE_TENTHS_PER_COIN_OWNED,
-			"coin_gold_refresh_limit_per_item": COIN_GOLD_REFRESH_LIMIT_PER_ITEM,
-			"coin_lucky_gold_per_trigger": COIN_LUCKY_GOLD_PER_TRIGGER,
-			"coin_gold_gold_per_layer": COIN_GOLD_GOLD_PER_LAYER,
-		})
+		_equipment_effects_service = (
+			EQUIPMENT_EFFECTS_SERVICE_SCRIPT
+			. new(
+				{
+					"default_build_name": "无派系",
+					"build_alias_map": BUILD_ALIAS_MAP,
+					"spark_force_item_names": SPARK_FORCE_ITEM_NAMES,
+					"charge_build_name": CHARGE_BUILD_NAME,
+					"coin_build_name": COIN_BUILD_NAME,
+					"charge_stack_agility": CHARGE_STACK_AGILITY,
+					"charge_staff_summon_bonus_per_stack": CHARGE_STAFF_SUMMON_BONUS_PER_STACK,
+					"coin_button_attack_speed_per_layer": COIN_BUTTON_ATTACK_SPEED_PER_LAYER,
+					"coin_smile_damage_tenths_per_coin_owned":
+					COIN_SMILE_DAMAGE_TENTHS_PER_COIN_OWNED,
+					"coin_gold_refresh_limit_per_item": COIN_GOLD_REFRESH_LIMIT_PER_ITEM,
+					"coin_lucky_gold_per_trigger": COIN_LUCKY_GOLD_PER_TRIGGER,
+					"coin_gold_gold_per_layer": COIN_GOLD_GOLD_PER_LAYER,
+				}
+			)
+		)
 	return _equipment_effects_service
 
 
@@ -837,8 +936,7 @@ func _report_missing_item_icons() -> void:
 		missing_names.append(str(missing_variant))
 	missing_names.sort()
 	push_warning(
-		"装备图标未匹配，已回退默认图标（%d）: %s"
-		% [missing_names.size(), ", ".join(Array(missing_names))]
+		"装备图标未匹配，已回退默认图标（%d）: %s" % [missing_names.size(), ", ".join(Array(missing_names))]
 	)
 
 
@@ -858,7 +956,9 @@ func _resolve_item_name(raw_item_name: String) -> String:
 	return _get_shop_catalog_helper().resolve_item_name(raw_item_name)
 
 
-func _resolve_item_build_name(item_name: String, raw_build_name: String, stat_text: String = "") -> String:
+func _resolve_item_build_name(
+	item_name: String, raw_build_name: String, stat_text: String = ""
+) -> String:
 	return _get_shop_catalog_helper().resolve_item_build_name(item_name, raw_build_name, stat_text)
 
 
@@ -888,7 +988,9 @@ func _load_item_db_from_map_json() -> void:
 			stat_text = "Lv1 | 地图装备"
 		elif not stat_text.begins_with("Lv"):
 			stat_text = "Lv1 | %s" % stat_text
-		var build_name: String = _resolve_item_build_name(raw_item_name, str(row.get("build", "无派系")), stat_text)
+		var build_name: String = _resolve_item_build_name(
+			raw_item_name, str(row.get("build", "无派系")), stat_text
+		)
 		var loaded_item: Dictionary = {
 			"name": item_name,
 			"icon": icon_name,
@@ -899,7 +1001,7 @@ func _load_item_db_from_map_json() -> void:
 			loaded_item["cost"] = maxi(_variant_to_int(row.get("cost", 0), 0), 0)
 		loaded.append(loaded_item)
 	if not loaded.is_empty():
-		ITEM_DB = loaded
+		item_db = loaded
 	_report_missing_item_icons()
 
 
@@ -920,35 +1022,51 @@ func _sanitize_destroy_faction_state(state_variant: Variant) -> Dictionary:
 
 
 func _get_item_name_by_index(item_idx: int) -> String:
-	return _get_equipment_runtime_helper().get_item_name_by_index(ITEM_DB, item_idx)
+	return _get_equipment_runtime_helper().get_item_name_by_index(item_db, item_idx)
 
 
 func _create_default_inventory_meta_entry(item_idx: int = -1) -> Dictionary:
-	return _get_equipment_runtime_helper().create_default_inventory_meta_entry(ITEM_DB, item_idx)
+	return _get_equipment_runtime_helper().create_default_inventory_meta_entry(item_db, item_idx)
 
 
 func _sanitize_inventory_meta_entry(entry_variant: Variant, item_idx: int = -1) -> Dictionary:
-	return _get_equipment_runtime_helper().sanitize_inventory_meta_entry(ITEM_DB, entry_variant, item_idx)
+	return _get_equipment_runtime_helper().sanitize_inventory_meta_entry(
+		item_db, entry_variant, item_idx
+	)
 
 
 func _sanitize_inventory_meta_array(meta_variant: Variant, inventory: Array) -> Array:
-	return _get_equipment_runtime_helper().sanitize_inventory_meta_array(ITEM_DB, meta_variant, inventory)
+	return _get_equipment_runtime_helper().sanitize_inventory_meta_array(
+		item_db, meta_variant, inventory
+	)
 
 
 func _get_inventory_meta_entry(meta_array: Array, slot_idx: int, item_idx: int = -1) -> Dictionary:
-	return _get_equipment_runtime_helper().get_inventory_meta_entry(ITEM_DB, meta_array, slot_idx, item_idx)
+	return _get_equipment_runtime_helper().get_inventory_meta_entry(
+		item_db, meta_array, slot_idx, item_idx
+	)
 
 
-func _set_inventory_meta_entry(meta_array: Array, slot_idx: int, entry: Dictionary, item_idx: int = -1) -> void:
-	_get_equipment_runtime_helper().set_inventory_meta_entry(ITEM_DB, meta_array, slot_idx, entry, item_idx)
+func _set_inventory_meta_entry(
+	meta_array: Array, slot_idx: int, entry: Dictionary, item_idx: int = -1
+) -> void:
+	_get_equipment_runtime_helper().set_inventory_meta_entry(
+		item_db, meta_array, slot_idx, entry, item_idx
+	)
 
 
-func _get_effective_inventory_item_level(item_idx: int, slot_idx: int, meta_array: Array, inventory: Array = []) -> int:
-	return _get_equipment_runtime_helper().get_effective_inventory_item_level(ITEM_DB, item_idx, slot_idx, meta_array, inventory)
+func _get_effective_inventory_item_level(
+	item_idx: int, slot_idx: int, meta_array: Array, inventory: Array = []
+) -> int:
+	return _get_equipment_runtime_helper().get_effective_inventory_item_level(
+		item_db, item_idx, slot_idx, meta_array, inventory
+	)
 
 
 func _get_inventory_total_item_level(inventory: Array, meta_array: Array) -> int:
-	return _get_equipment_runtime_helper().get_inventory_total_item_level(ITEM_DB, inventory, meta_array)
+	return _get_equipment_runtime_helper().get_inventory_total_item_level(
+		item_db, inventory, meta_array
+	)
 
 
 func _ensure_local_equipment_runtime_state() -> void:
@@ -986,16 +1104,53 @@ func _build_local_equipment_baseline_state() -> Dictionary:
 	return baseline
 
 
-func _estimate_hero_base_stats_for_state(state: Dictionary, destroy_state: Dictionary) -> Dictionary:
+func _estimate_hero_base_stats_for_state(
+	state: Dictionary, destroy_state: Dictionary
+) -> Dictionary:
 	var hero_level: int = maxi(int(state.get("hero_level", 1)), 1)
 	return {
-		"strength": int(round(DESTROY_DEFAULT_STRENGTH_BASE + DESTROY_DEFAULT_STRENGTH_GROWTH * float(hero_level - 1))) + int(destroy_state.get("permanent_strength", 0)),
-		"agility": int(round(DESTROY_DEFAULT_AGILITY_BASE + DESTROY_DEFAULT_AGILITY_GROWTH * float(hero_level - 1))) + int(destroy_state.get("permanent_agility", 0)),
-		"intelligence": int(round(DESTROY_DEFAULT_INTELLIGENCE_BASE + DESTROY_DEFAULT_INTELLIGENCE_GROWTH * float(hero_level - 1))) + int(destroy_state.get("permanent_intelligence", 0)),
+		"strength":
+		(
+			int(
+				round(
+					(
+						DESTROY_DEFAULT_STRENGTH_BASE
+						+ DESTROY_DEFAULT_STRENGTH_GROWTH * float(hero_level - 1)
+					)
+				)
+			)
+			+ int(destroy_state.get("permanent_strength", 0))
+		),
+		"agility":
+		(
+			int(
+				round(
+					(
+						DESTROY_DEFAULT_AGILITY_BASE
+						+ DESTROY_DEFAULT_AGILITY_GROWTH * float(hero_level - 1)
+					)
+				)
+			)
+			+ int(destroy_state.get("permanent_agility", 0))
+		),
+		"intelligence":
+		(
+			int(
+				round(
+					(
+						DESTROY_DEFAULT_INTELLIGENCE_BASE
+						+ DESTROY_DEFAULT_INTELLIGENCE_GROWTH * float(hero_level - 1)
+					)
+				)
+			)
+			+ int(destroy_state.get("permanent_intelligence", 0))
+		),
 	}
 
 
-func _get_destroy_runtime_bonus_bundle(inventory: Array, meta_array: Array, destroy_state: Dictionary) -> Dictionary:
+func _get_destroy_runtime_bonus_bundle(
+	inventory: Array, meta_array: Array, destroy_state: Dictionary
+) -> Dictionary:
 	var out: Dictionary = {
 		"strength": maxi(int(destroy_state.get("permanent_strength", 0)), 0),
 		"agility": maxi(int(destroy_state.get("permanent_agility", 0)), 0),
@@ -1007,11 +1162,28 @@ func _get_destroy_runtime_bonus_bundle(inventory: Array, meta_array: Array, dest
 		var item_idx: int = int(inventory[i])
 		var item_name: String = _get_item_name_by_index(item_idx)
 		if item_name == "邪灵宝珠":
-			out["spell_damage_percent"] = float(out["spell_damage_percent"]) + float(maxi(_get_effective_inventory_item_level(item_idx, i, meta_array, inventory), 0)) * 4.0
+			out["spell_damage_percent"] = (
+				float(out["spell_damage_percent"])
+				+ (
+					float(
+						maxi(
+							_get_effective_inventory_item_level(item_idx, i, meta_array, inventory),
+							0
+						)
+					)
+					* 4.0
+				)
+			)
 	return out
 
 
-func _build_inventory_tooltip_text(item_idx: int, slot_idx: int, meta_array: Array, destroy_state: Dictionary, coin_state: Dictionary = {}) -> String:
+func _build_inventory_tooltip_text(
+	item_idx: int,
+	slot_idx: int,
+	meta_array: Array,
+	destroy_state: Dictionary,
+	coin_state: Dictionary = {}
+) -> String:
 	var item_name: String = _get_item_name_by_index(item_idx)
 	if item_name == "":
 		return ""
@@ -1027,12 +1199,20 @@ func _build_inventory_tooltip_text(item_idx: int, slot_idx: int, meta_array: Arr
 			if ready_loops > 0:
 				parts.append("启智就绪: %d" % ready_loops)
 		"血羽之心":
-			parts.append("动态等级: %d" % maxi(int(entry.get("dynamic_level", _get_item_level(ITEM_DB[item_idx]))), _get_item_level(ITEM_DB[item_idx])))
+			parts.append(
+				(
+					"动态等级: %d"
+					% maxi(
+						int(entry.get("dynamic_level", _get_item_level(item_db[item_idx]))),
+						_get_item_level(item_db[item_idx])
+					)
+				)
+			)
 		"邪灵宝珠":
 			var evil_level: int = maxi(int(entry.get("dynamic_level", 0)), 0)
 			parts.append("邪珠等级: %d" % evil_level)
 			parts.append("额外法伤: +%d%%" % maxi(evil_level * 4, 0))
-	if _is_charge_item_for_effects(ITEM_DB[item_idx]):
+	if _is_charge_item_for_effects(item_db[item_idx]):
 		var charge_count: int = maxi(int(entry.get("charges", 0)), 0)
 		if charge_count > 0:
 			parts.append("充能层数: %d" % charge_count)
@@ -1042,27 +1222,39 @@ func _build_inventory_tooltip_text(item_idx: int, slot_idx: int, meta_array: Arr
 		var permanent_hp: int = maxi(int(entry.get("permanent_hp", 0)), 0)
 		if permanent_hp > 0:
 			parts.append("永久生命: +%d" % permanent_hp)
-		var permanent_spell_damage: int = maxi(int(entry.get("permanent_spell_damage_percent", 0)), 0)
+		var permanent_spell_damage: int = maxi(
+			int(entry.get("permanent_spell_damage_percent", 0)), 0
+		)
 		if permanent_spell_damage > 0:
 			parts.append("永久法伤: +%d%%" % permanent_spell_damage)
 		var permanent_range: int = maxi(int(entry.get("permanent_attack_range", 0)), 0)
 		if permanent_range > 0:
 			parts.append("永久射程: +%d" % permanent_range)
-		var permanent_crit_damage: int = maxi(int(entry.get("permanent_physical_crit_multiplier", 0)), 0)
+		var permanent_crit_damage: int = maxi(
+			int(entry.get("permanent_physical_crit_multiplier", 0)), 0
+		)
 		if permanent_crit_damage > 0:
 			parts.append("永久暴伤: +%d%%" % permanent_crit_damage)
 		var particle_bonus: int = maxi(int(entry.get("particle_bonus_per_two_charges", 0)), 0)
 		if particle_bonus > 0:
 			parts.append("粒子加成: 每2层充能额外+%d敏捷" % particle_bonus)
 		if item_name == "通灵杖" and charge_count > 0:
-			parts.append("召唤攻击/射程: +%d%%" % int(round(float(charge_count) * CHARGE_STAFF_SUMMON_BONUS_PER_STACK)))
-	if _is_coin_item_for_effects(ITEM_DB[item_idx]):
+			parts.append(
+				(
+					"召唤攻击/射程: +%d%%"
+					% int(round(float(charge_count) * CHARGE_STAFF_SUMMON_BONUS_PER_STACK))
+				)
+			)
+	if _is_coin_item_for_effects(item_db[item_idx]):
 		var coin_layers: int = maxi(int(entry.get("coin_layers", 0)), 0)
 		parts.append("硬币层数: %d" % coin_layers)
 		var coin_str: int = int(entry.get("permanent_strength", 0))
 		var coin_agi: int = int(entry.get("permanent_agility", 0))
 		var coin_int: int = int(entry.get("permanent_intelligence", 0))
-		var coin_damage: int = int(entry.get("permanent_damage", 0)) + int(int(entry.get("permanent_damage_tenths", 0)) / 10)
+		var coin_damage: int = (
+			int(entry.get("permanent_damage", 0))
+			+ int(int(entry.get("permanent_damage_tenths", 0)) / 10)
+		)
 		var coin_ias: int = int(entry.get("permanent_attack_speed_percent", 0))
 		if coin_str != 0:
 			parts.append("永久力量: %+d" % coin_str)
@@ -1078,7 +1270,9 @@ func _build_inventory_tooltip_text(item_idx: int, slot_idx: int, meta_array: Arr
 		if deferred_child_count > 0:
 			parts.append("摧毁时提供子币: %d" % deferred_child_count)
 		if item_name == "金硬币":
-			var auto_destroy_enabled: bool = _variant_to_bool(coin_state.get("auto_destroy_coin_enabled", false), false)
+			var auto_destroy_enabled: bool = _variant_to_bool(
+				coin_state.get("auto_destroy_coin_enabled", false), false
+			)
 			parts.append("自动摧毁硬币: %s" % ("开启" if auto_destroy_enabled else "关闭"))
 	if _is_charge_active_item_name(item_name):
 		parts.append("右键主动使用")
@@ -1113,18 +1307,21 @@ func _update_shop_debug_overlay() -> void:
 	var ray_text: String = "-"
 	if _hero_ctrl != null:
 		ray_text = str(_hero_ctrl.get("shop_click_debug_last_result"))
-	_shop_debug_label.text = "shop_debug mode=%s self=%d local_owner=%d active_owner=%d observed=%d visible=%s\nowners=%s right_top_owner=%d\nlast_click=%s ray=%s" % [
-		net_mode_debug,
-		self_peer_id,
-		local_owner_peer_id,
-		_get_active_shop_owner_peer_id(),
-		int(_get_ui_state().observed_peer_id),
-		"true" if _shop_visible else "false",
-		owners_text,
-		right_top_owner,
-		_last_shop_click_debug_text,
-		ray_text
-	]
+	_shop_debug_label.text = (
+		"shop_debug mode=%s self=%d local_owner=%d active_owner=%d observed=%d visible=%s\nowners=%s right_top_owner=%d\nlast_click=%s ray=%s"
+		% [
+			net_mode_debug,
+			self_peer_id,
+			local_owner_peer_id,
+			_get_active_shop_owner_peer_id(),
+			int(_get_ui_state().observed_peer_id),
+			"true" if _shop_visible else "false",
+			owners_text,
+			right_top_owner,
+			_last_shop_click_debug_text,
+			ray_text
+		]
+	)
 
 
 func _variant_to_float(value: Variant, fallback: float = 0.0) -> float:
@@ -1166,6 +1363,7 @@ func _variant_to_bool(value: Variant, fallback: bool = false) -> bool:
 			return false
 	return fallback
 
+
 func _is_observing_boss() -> bool:
 	return _get_ui_state().is_observing_boss()
 
@@ -1183,7 +1381,9 @@ func _update_inventory_panel_visibility() -> void:
 func _update_skill_panel_visibility() -> void:
 	if _command_panel_root == null:
 		return
-	var show_local_skill_panel: bool = not _is_observing_remote() and not _is_observing_boss() and not _is_observing_enemy()
+	var show_local_skill_panel: bool = (
+		not _is_observing_remote() and not _is_observing_boss() and not _is_observing_enemy()
+	)
 	_command_panel_root.visible = show_local_skill_panel
 
 
@@ -1207,7 +1407,9 @@ func _check_shop_click() -> void:
 	var clicked = _hero_ctrl.get("shop_clicked")
 	if clicked == true:
 		_hero_ctrl.set("shop_clicked", false)
-		var clicked_owner_peer_id: int = maxi(_variant_to_int(_hero_ctrl.get("shop_clicked_owner_peer_id"), 0), 0)
+		var clicked_owner_peer_id: int = maxi(
+			_variant_to_int(_hero_ctrl.get("shop_clicked_owner_peer_id"), 0), 0
+		)
 		_hero_ctrl.set("shop_clicked_owner_peer_id", 0)
 		var local_owner_peer_id: int = _get_local_shop_owner_peer_id()
 		var is_local_shop_click: bool = (
@@ -1215,11 +1417,14 @@ func _check_shop_click() -> void:
 			and local_owner_peer_id > 0
 			and clicked_owner_peer_id == local_owner_peer_id
 		)
-		_last_shop_click_debug_text = "clicked=%d local=%d allow=%s" % [
-			clicked_owner_peer_id,
-			local_owner_peer_id,
-			"true" if is_local_shop_click else "false"
-		]
+		_last_shop_click_debug_text = (
+			"clicked=%d local=%d allow=%s"
+			% [
+				clicked_owner_peer_id,
+				local_owner_peer_id,
+				"true" if is_local_shop_click else "false"
+			]
+		)
 		if _debug_shop_click_logs:
 			var self_peer_id_debug: int = int(_get_ui_state().self_peer_id)
 			if self_peer_id_debug <= 0:
@@ -1228,13 +1433,16 @@ func _check_shop_click() -> void:
 			if _net_ctrl != null:
 				net_mode_debug = str(_net_ctrl.get("network_mode")).strip_edges().to_lower()
 			print(
-				"[shop-click] self=%d local_owner=%d clicked_owner=%d allow=%s mode=%s" % [
-					self_peer_id_debug,
-					local_owner_peer_id,
-					clicked_owner_peer_id,
-					"true" if is_local_shop_click else "false",
-					net_mode_debug
-				]
+				(
+					"[shop-click] self=%d local_owner=%d clicked_owner=%d allow=%s mode=%s"
+					% [
+						self_peer_id_debug,
+						local_owner_peer_id,
+						clicked_owner_peer_id,
+						"true" if is_local_shop_click else "false",
+						net_mode_debug
+					]
+				)
 			)
 		if not is_local_shop_click:
 			_active_shop_owner_peer_id = 0
@@ -1307,7 +1515,9 @@ func _clear_shop_item_hover_state() -> void:
 
 
 func _on_shop_item_mouse_entered(item_panel: Control, detail_text: String) -> void:
-	_get_shop_panel_controller().on_item_mouse_entered(item_panel, detail_text, SHOP_ITEM_DETAIL_HOVER_DELAY_SEC)
+	_get_shop_panel_controller().on_item_mouse_entered(
+		item_panel, detail_text, SHOP_ITEM_DETAIL_HOVER_DELAY_SEC
+	)
 
 
 func _on_shop_item_mouse_exited(item_panel: Control) -> void:
@@ -1331,9 +1541,9 @@ func _get_shop_item_cost(item_data: Dictionary) -> int:
 
 
 func _get_shop_item_cost_by_index(item_idx: int) -> int:
-	if item_idx < 0 or item_idx >= ITEM_DB.size():
+	if item_idx < 0 or item_idx >= item_db.size():
 		return 50
-	var item_data: Dictionary = ITEM_DB[item_idx] if ITEM_DB[item_idx] is Dictionary else {}
+	var item_data: Dictionary = item_db[item_idx] if item_db[item_idx] is Dictionary else {}
 	return _get_shop_item_cost(item_data)
 
 
@@ -1370,7 +1580,9 @@ func _is_active_shop_owned_by_local() -> bool:
 
 func _is_shop_action(action: String) -> bool:
 	var action_text: String = action.strip_edges().to_lower()
-	return action_text == "buy_item" or action_text == "refresh_shop" or action_text == "upgrade_shop"
+	return (
+		action_text == "buy_item" or action_text == "refresh_shop" or action_text == "upgrade_shop"
+	)
 
 
 func _is_shop_action_pending() -> bool:
@@ -1415,11 +1627,7 @@ func _get_shop_state_for_owner(owner_peer_id: int) -> Dictionary:
 	if owner_peer_id <= 0:
 		return {}
 	if owner_peer_id == _get_local_shop_owner_peer_id():
-		return {
-			"shop_level": _shop_level,
-			"gold": _gold,
-			"shop_offer_ids": _shop_offered
-		}
+		return {"shop_level": _shop_level, "gold": _gold, "shop_offer_ids": _shop_offered}
 	if _is_observing_remote() and int(_get_ui_state().observed_peer_id) == owner_peer_id:
 		var observed_state: Dictionary = _get_observed_equipment_state()
 		if not observed_state.is_empty():
@@ -1463,7 +1671,10 @@ func _get_local_authority_shop_state() -> Dictionary:
 	_resolve_net_ctrl()
 	if _net_ctrl == null:
 		return {}
-	if not _net_ctrl.has_method("get_ui_self_peer_id") or not _net_ctrl.has_method("get_ui_peer_equipment_state"):
+	if (
+		not _net_ctrl.has_method("get_ui_self_peer_id")
+		or not _net_ctrl.has_method("get_ui_peer_equipment_state")
+	):
 		return {}
 	var self_peer_id: int = int(_net_ctrl.call("get_ui_self_peer_id"))
 	if self_peer_id <= 0:
@@ -1478,9 +1689,9 @@ func _set_shop_offered_from_variant(values_variant: Variant) -> void:
 	var next_offers: Array[int] = _to_int_array(values_variant)
 	_shop_offered.clear()
 	for offer_id in next_offers:
-		if offer_id < 0 or offer_id >= ITEM_DB.size():
+		if offer_id < 0 or offer_id >= item_db.size():
 			continue
-		if _is_blocked_shop_item(ITEM_DB[offer_id]):
+		if _is_blocked_shop_item(item_db[offer_id]):
 			continue
 		if offer_id in _shop_offered:
 			continue
@@ -1536,18 +1747,22 @@ func _update_shop_info() -> void:
 		refresh_text = "刷新商品 (%d金)" % SHOP_REFRESH_COST
 		refresh_disabled = _gold < SHOP_REFRESH_COST
 	_get_shop_panel_controller().update_summary(level_text, gold_text)
-	_get_shop_panel_controller().update_action_buttons(upgrade_text, upgrade_disabled, refresh_text, refresh_disabled)
+	_get_shop_panel_controller().update_action_buttons(
+		upgrade_text, upgrade_disabled, refresh_text, refresh_disabled
+	)
 
 
 func _roll_shop_items() -> void:
 	var local_inventory: Array = []
 	if _hero_ctrl != null:
 		local_inventory = _to_int_array(_hero_ctrl.get("inventory"))
-	_shop_offered = _get_shop_catalog_helper().roll_shop_offer_ids(_shop_level, ITEM_DB, local_inventory)
+	_shop_offered = _get_shop_catalog_helper().roll_shop_offer_ids(
+		_shop_level, item_db, local_inventory
+	)
 
 
 func _is_shop_offer_before_for_display(left_idx: int, right_idx: int) -> bool:
-	return _get_shop_catalog_helper().is_shop_offer_before_for_display(left_idx, right_idx, ITEM_DB)
+	return _get_shop_catalog_helper().is_shop_offer_before_for_display(left_idx, right_idx, item_db)
 
 
 func _get_shop_build_sort_rank(build_name: String) -> int:
@@ -1555,7 +1770,7 @@ func _get_shop_build_sort_rank(build_name: String) -> int:
 
 
 func _sorted_shop_offer_ids_for_display(offer_ids: Array[int]) -> Array[int]:
-	return _get_shop_catalog_helper().sort_shop_offer_ids_for_display(offer_ids, ITEM_DB)
+	return _get_shop_catalog_helper().sort_shop_offer_ids_for_display(offer_ids, item_db)
 
 
 func _populate_offered_items() -> void:
@@ -1565,10 +1780,12 @@ func _populate_offered_items() -> void:
 		return
 	for child in offered_grid.get_children():
 		child.queue_free()
-	var display_offers: Array[int] = _sorted_shop_offer_ids_for_display(_get_display_shop_offer_ids())
+	var display_offers: Array[int] = _sorted_shop_offer_ids_for_display(
+		_get_display_shop_offer_ids()
+	)
 	var can_buy_items: bool = _can_operate_current_shop()
 	for idx in display_offers:
-		var item: Dictionary = ITEM_DB[idx]
+		var item: Dictionary = item_db[idx]
 		var card := _create_shop_item(item, idx, can_buy_items)
 		offered_grid.add_child(card)
 
@@ -1590,7 +1807,9 @@ func _on_refresh_pressed() -> void:
 		return
 	_apply_charge_refresh_effects(inv, _equipment_inventory_meta)
 	_roll_shop_items()
-	_apply_coin_refresh_effects(inv, _equipment_inventory_meta, _coin_faction_state, _shop_offered, _shop_level)
+	_apply_coin_refresh_effects(
+		inv, _equipment_inventory_meta, _coin_faction_state, _shop_offered, _shop_level
+	)
 	_refresh_inventory()
 	_populate_offered_items()
 	_update_shop_info()
@@ -1628,7 +1847,9 @@ func _request_authority_equipment_action(action: String, payload: Dictionary = {
 			return true
 		if _net_ctrl.has_method("request_equipment_action"):
 			var request_payload_client: Dictionary = payload.duplicate(true)
-			var sent_variant: Variant = _net_ctrl.call("request_equipment_action", normalized_action, request_payload_client)
+			var sent_variant: Variant = _net_ctrl.call(
+				"request_equipment_action", normalized_action, request_payload_client
+			)
 			var sent_ok: bool = _variant_to_bool(sent_variant, false)
 			if sent_ok and is_shop_action_request:
 				_set_shop_action_pending(normalized_action)
@@ -1666,34 +1887,62 @@ func _apply_local_authority_equipment_action(action: String, payload: Dictionary
 func _get_build_color(build_name: String) -> Color:
 	var normalized_build: String = _normalize_build_name(build_name)
 	match normalized_build:
-		"初始": return Color(0.6, 0.8, 0.6, 1.0)
-		"过渡": return Color(0.7, 0.7, 0.7, 1.0)
-		"摧毁": return Color(0.9, 0.3, 0.9, 1.0)
-		"贷款", "负债": return Color(1.0, 0.85, 0.2, 1.0)
-		"三月": return Color(0.5, 0.8, 1.0, 1.0)
-		"灵魂": return Color(0.45, 0.9, 0.6, 1.0)
-		"灵瓮": return Color(0.45, 0.9, 0.6, 1.0)
-		"传火": return Color(1.0, 0.5, 0.2, 1.0)
-		"齿轮": return Color(0.8, 0.8, 0.8, 1.0)
-		"神器": return Color(0.95, 0.78, 0.25, 1.0)
-		"泰坦": return Color(0.85, 0.65, 0.25, 1.0)
-		"通灵": return Color(0.45, 0.85, 0.75, 1.0)
-		"自动": return Color(0.6, 0.6, 0.6, 1.0)
-		"战旗": return Color(0.2, 0.9, 0.5, 1.0)
-		"备战": return Color(0.95, 0.55, 0.25, 1.0)
-		"结算": return Color(0.9, 0.6, 0.2, 1.0)
-		"充能": return Color(0.3, 0.7, 1.0, 1.0)
-		"咒文": return Color(0.7, 0.4, 1.0, 1.0)
-		"火花": return Color(1.0, 0.4, 0.2, 1.0)
-		"特摧": return Color(1.0, 0.2, 0.6, 1.0)
-		"硬币": return Color(1.0, 0.9, 0.3, 1.0)
-		"诅咒": return Color(0.8, 0.2, 0.2, 1.0)
-		"邪能": return Color(0.6, 0.2, 0.8, 1.0)
-		"消耗": return Color(0.4, 0.8, 0.8, 1.0)
-		"配件": return Color(0.8, 0.6, 0.3, 1.0)
-		"后期": return Color(1.0, 0.3, 0.3, 1.0)
-		"无派系": return Color(0.75, 0.75, 0.75, 1.0)
-		_: return COLOR_TEXT
+		"初始":
+			return Color(0.6, 0.8, 0.6, 1.0)
+		"过渡":
+			return Color(0.7, 0.7, 0.7, 1.0)
+		"摧毁":
+			return Color(0.9, 0.3, 0.9, 1.0)
+		"贷款", "负债":
+			return Color(1.0, 0.85, 0.2, 1.0)
+		"三月":
+			return Color(0.5, 0.8, 1.0, 1.0)
+		"灵魂":
+			return Color(0.45, 0.9, 0.6, 1.0)
+		"灵瓮":
+			return Color(0.45, 0.9, 0.6, 1.0)
+		"传火":
+			return Color(1.0, 0.5, 0.2, 1.0)
+		"齿轮":
+			return Color(0.8, 0.8, 0.8, 1.0)
+		"神器":
+			return Color(0.95, 0.78, 0.25, 1.0)
+		"泰坦":
+			return Color(0.85, 0.65, 0.25, 1.0)
+		"通灵":
+			return Color(0.45, 0.85, 0.75, 1.0)
+		"自动":
+			return Color(0.6, 0.6, 0.6, 1.0)
+		"战旗":
+			return Color(0.2, 0.9, 0.5, 1.0)
+		"备战":
+			return Color(0.95, 0.55, 0.25, 1.0)
+		"结算":
+			return Color(0.9, 0.6, 0.2, 1.0)
+		"充能":
+			return Color(0.3, 0.7, 1.0, 1.0)
+		"咒文":
+			return Color(0.7, 0.4, 1.0, 1.0)
+		"火花":
+			return Color(1.0, 0.4, 0.2, 1.0)
+		"特摧":
+			return Color(1.0, 0.2, 0.6, 1.0)
+		"硬币":
+			return Color(1.0, 0.9, 0.3, 1.0)
+		"诅咒":
+			return Color(0.8, 0.2, 0.2, 1.0)
+		"邪能":
+			return Color(0.6, 0.2, 0.8, 1.0)
+		"消耗":
+			return Color(0.4, 0.8, 0.8, 1.0)
+		"配件":
+			return Color(0.8, 0.6, 0.3, 1.0)
+		"后期":
+			return Color(1.0, 0.3, 0.3, 1.0)
+		"无派系":
+			return Color(0.75, 0.75, 0.75, 1.0)
+		_:
+			return COLOR_TEXT
 
 
 func _build_shop_item_tooltip(data: Dictionary, cost: int) -> String:
@@ -1744,7 +1993,7 @@ func _on_buy_item(index: int) -> void:
 	if not (inv_variant is Array):
 		return
 	var inv: Array = inv_variant
-	var item_data: Dictionary = ITEM_DB[index]
+	var item_data: Dictionary = item_db[index]
 	if _is_blocked_shop_item(item_data):
 		_shop_offered.erase(index)
 		_populate_offered_items()
@@ -1752,7 +2001,11 @@ func _on_buy_item(index: int) -> void:
 	var item_name: String = _normalize_item_name_for_effects(item_data)
 	var is_auto_consume_charge_bottle: bool = _is_charge_bottle_item_name(item_name)
 	var is_coin_item: bool = _is_coin_item_for_effects(item_data)
-	var auto_destroy_coin_purchase: bool = is_coin_item and item_name != "金硬币" and _variant_to_bool(_coin_faction_state.get("auto_destroy_coin_enabled", false), false)
+	var auto_destroy_coin_purchase: bool = (
+		is_coin_item
+		and item_name != "金硬币"
+		and _variant_to_bool(_coin_faction_state.get("auto_destroy_coin_enabled", false), false)
+	)
 	if inv.size() >= 6 and not is_auto_consume_charge_bottle and not auto_destroy_coin_purchase:
 		return
 	var cost: int = _get_shop_item_cost(item_data)
@@ -1807,7 +2060,9 @@ func apply_authoritative_equipment_commit(commit: Dictionary) -> void:
 	_equipment_inventory_meta = _sanitize_inventory_meta_array(state.get("inventory_meta", []), inv)
 	_destroy_faction_state = _sanitize_destroy_faction_state(state.get("destroy_faction_state", {}))
 	_coin_faction_state = _sanitize_coin_faction_state(state.get("coin_faction_state", {}))
-	var next_destroy_mode: bool = _variant_to_bool(state.get("destroy_mode", _destroy_mode), _destroy_mode)
+	var next_destroy_mode: bool = _variant_to_bool(
+		state.get("destroy_mode", _destroy_mode), _destroy_mode
+	)
 	if _hero_ctrl != null:
 		_hero_ctrl.set("inventory", inv)
 		if _hero_ctrl.has_method("set_destroy_cursor_mode"):
@@ -1818,7 +2073,9 @@ func apply_authoritative_equipment_commit(commit: Dictionary) -> void:
 	_destroy_mode = next_destroy_mode
 	_destroy_hover_index = -1
 	if action == "destroy_item" and commit_ok:
-		var stable_result: Dictionary = _build_destroy_stable_inventory_view(previous_inventory, inv, destroyed_slot_idx)
+		var stable_result: Dictionary = _build_destroy_stable_inventory_view(
+			previous_inventory, inv, destroyed_slot_idx
+		)
 		var stable_view: Array = _to_int_array(stable_result.get("display", []))
 		var stable_slot_map: Array = _to_int_array(stable_result.get("slot_map", []))
 		if not stable_view.is_empty() and stable_view.size() == stable_slot_map.size():
@@ -1874,7 +2131,9 @@ func _resolve_inventory_real_slot(display_slot_idx: int, real_inventory: Array) 
 	return int(_inventory_display_override_slot_map[display_slot_idx])
 
 
-func _build_destroy_stable_inventory_view(previous_inventory_variant: Variant, next_inventory_variant: Variant, destroyed_slot_idx: int) -> Dictionary:
+func _build_destroy_stable_inventory_view(
+	previous_inventory_variant: Variant, next_inventory_variant: Variant, destroyed_slot_idx: int
+) -> Dictionary:
 	var previous_inventory: Array = _to_int_array(previous_inventory_variant)
 	var next_inventory: Array = _to_int_array(next_inventory_variant)
 	if destroyed_slot_idx < 0 or destroyed_slot_idx >= previous_inventory.size():
@@ -1913,7 +2172,10 @@ func _build_destroy_stable_inventory_view(previous_inventory_variant: Variant, n
 	for real_slot_idx in range(next_inventory.size()):
 		if consumed_real_slots.has(real_slot_idx):
 			continue
-		while next_empty_display_slot < display_inventory.size() and int(display_slot_map[next_empty_display_slot]) >= 0:
+		while (
+			next_empty_display_slot < display_inventory.size()
+			and int(display_slot_map[next_empty_display_slot]) >= 0
+		):
 			next_empty_display_slot += 1
 		if next_empty_display_slot < display_inventory.size():
 			display_inventory[next_empty_display_slot] = int(next_inventory[real_slot_idx])
@@ -1924,15 +2186,12 @@ func _build_destroy_stable_inventory_view(previous_inventory_variant: Variant, n
 			break
 		display_inventory.append(int(next_inventory[real_slot_idx]))
 		display_slot_map.append(real_slot_idx)
-	return {
-		"display": display_inventory,
-		"slot_map": display_slot_map
-	}
+	return {"display": display_inventory, "slot_map": display_slot_map}
 
 
 func _find_item_index_by_name(item_name: String) -> int:
-	for i in range(ITEM_DB.size()):
-		if ITEM_DB[i]["name"] == item_name:
+	for i in range(item_db.size()):
+		if item_db[i]["name"] == item_name:
 			return i
 	return -1
 
@@ -2017,9 +2276,9 @@ func _get_coin_item_slots(inventory: Array, exclusions: Array[int] = []) -> Arra
 		if slot_idx in exclusions:
 			continue
 		var item_idx: int = int(inventory[slot_idx])
-		if item_idx < 0 or item_idx >= ITEM_DB.size():
+		if item_idx < 0 or item_idx >= item_db.size():
 			continue
-		if not _is_coin_item_for_effects(ITEM_DB[item_idx]):
+		if not _is_coin_item_for_effects(item_db[item_idx]):
 			continue
 		out.append(slot_idx)
 	return out
@@ -2054,13 +2313,18 @@ func _get_primary_attr_key_for_coin_effects() -> String:
 			return "permanent_agility"
 
 
-func _apply_coin_layer_gain_side_effects(item_name: String, entry: Dictionary, layers_gained: int) -> void:
+func _apply_coin_layer_gain_side_effects(
+	item_name: String, entry: Dictionary, layers_gained: int
+) -> void:
 	var safe_layers: int = maxi(layers_gained, 0)
 	if safe_layers <= 0:
 		return
 	match item_name:
 		"纽扣硬币":
-			entry["permanent_attack_speed_percent"] = int(entry.get("permanent_attack_speed_percent", 0)) + safe_layers * COIN_BUTTON_ATTACK_SPEED_PER_LAYER
+			entry["permanent_attack_speed_percent"] = (
+				int(entry.get("permanent_attack_speed_percent", 0))
+				+ safe_layers * COIN_BUTTON_ATTACK_SPEED_PER_LAYER
+			)
 		"强化硬币":
 			var primary_key: String = _get_primary_attr_key_for_coin_effects()
 			for _idx in range(safe_layers):
@@ -2072,12 +2336,16 @@ func _apply_coin_layer_gain_side_effects(item_name: String, entry: Dictionary, l
 					1:
 						entry["permanent_agility"] = int(entry.get("permanent_agility", 0)) + 1
 					_:
-						entry["permanent_intelligence"] = int(entry.get("permanent_intelligence", 0)) + 1
+						entry["permanent_intelligence"] = (
+							int(entry.get("permanent_intelligence", 0)) + 1
+						)
 		_:
 			pass
 
 
-func _apply_coin_layers_gain_to_all(inventory: Array, inventory_meta: Array, coin_state: Dictionary, layers_gained: int) -> bool:
+func _apply_coin_layers_gain_to_all(
+	inventory: Array, inventory_meta: Array, _coin_state: Dictionary, layers_gained: int
+) -> bool:
 	var safe_layers: int = maxi(layers_gained, 0)
 	if safe_layers <= 0:
 		return false
@@ -2093,58 +2361,92 @@ func _apply_coin_layers_gain_to_all(inventory: Array, inventory_meta: Array, coi
 	return changed
 
 
-func _register_single_coin_gain(inventory: Array, inventory_meta: Array, coin_state: Dictionary, gained_slot_idx: int) -> bool:
+func _register_single_coin_gain(
+	inventory: Array, inventory_meta: Array, coin_state: Dictionary, gained_slot_idx: int
+) -> bool:
 	if gained_slot_idx < 0 or gained_slot_idx >= inventory.size():
 		return false
 	var gained_item_idx: int = int(inventory[gained_slot_idx])
-	if gained_item_idx < 0 or gained_item_idx >= ITEM_DB.size():
+	if gained_item_idx < 0 or gained_item_idx >= item_db.size():
 		return false
-	if not _is_coin_item_for_effects(ITEM_DB[gained_item_idx]):
+	if not _is_coin_item_for_effects(item_db[gained_item_idx]):
 		return false
 	var changed: bool = false
-	coin_state["total_coins_gained_run"] = maxi(int(coin_state.get("total_coins_gained_run", 0)), 0) + 1
+	coin_state["total_coins_gained_run"] = (
+		maxi(int(coin_state.get("total_coins_gained_run", 0)), 0) + 1
+	)
 	var coin_count: int = maxi(_count_coin_items_in_inventory(inventory), 0)
 	for slot_idx in _find_item_slots_by_name(inventory, "笑脸硬币"):
 		var smile_idx: int = int(inventory[slot_idx])
 		var smile_entry: Dictionary = _get_inventory_meta_entry(inventory_meta, slot_idx, smile_idx)
-		smile_entry["permanent_damage_tenths"] = int(smile_entry.get("permanent_damage_tenths", 0)) + coin_count * COIN_SMILE_DAMAGE_TENTHS_PER_COIN_OWNED
+		smile_entry["permanent_damage_tenths"] = (
+			int(smile_entry.get("permanent_damage_tenths", 0))
+			+ coin_count * COIN_SMILE_DAMAGE_TENTHS_PER_COIN_OWNED
+		)
 		_set_inventory_meta_entry(inventory_meta, slot_idx, smile_entry, smile_idx)
 		changed = true
-	var gained_entry: Dictionary = _get_inventory_meta_entry(inventory_meta, gained_slot_idx, gained_item_idx)
+	var gained_entry: Dictionary = _get_inventory_meta_entry(
+		inventory_meta, gained_slot_idx, gained_item_idx
+	)
 	var gained_item_name: String = _get_item_name_by_index(gained_item_idx)
 	if gained_item_name == "金硬币":
-		gained_entry["coin_layers"] = maxi(int(gained_entry.get("coin_layers", 0)), 0) + COIN_GOLD_INITIAL_EXTRA_LAYERS
+		gained_entry["coin_layers"] = (
+			maxi(int(gained_entry.get("coin_layers", 0)), 0) + COIN_GOLD_INITIAL_EXTRA_LAYERS
+		)
 		_set_inventory_meta_entry(inventory_meta, gained_slot_idx, gained_entry, gained_item_idx)
 		changed = true
 	if gained_item_name == "经验币":
-		gained_entry["coin_layers"] = maxi(int(gained_entry.get("coin_layers", 0)), 0) + maxi(int(coin_state.get("total_coins_gained_run", 0)), 0)
+		gained_entry["coin_layers"] = (
+			maxi(int(gained_entry.get("coin_layers", 0)), 0)
+			+ maxi(int(coin_state.get("total_coins_gained_run", 0)), 0)
+		)
 		_set_inventory_meta_entry(inventory_meta, gained_slot_idx, gained_entry, gained_item_idx)
 		changed = true
 	if gained_item_name == "复活币":
-		coin_state["revive_event_charges"] = maxi(int(coin_state.get("revive_event_charges", 0)), 0) + 1
+		coin_state["revive_event_charges"] = (
+			maxi(int(coin_state.get("revive_event_charges", 0)), 0) + 1
+		)
 		changed = true
-	changed = _apply_coin_layers_gain_to_all(inventory, inventory_meta, coin_state, COIN_LAYER_GAIN_PER_COIN_GAIN) or changed
+	changed = (
+		_apply_coin_layers_gain_to_all(
+			inventory, inventory_meta, coin_state, COIN_LAYER_GAIN_PER_COIN_GAIN
+		)
+		or changed
+	)
 	if gained_item_name == "母币":
 		var child_idx: int = _find_item_index_by_name("子币")
 		if child_idx >= 0:
 			if inventory.size() < 6:
 				inventory.append(child_idx)
 				inventory_meta.append(_create_default_inventory_meta_entry(child_idx))
-				changed = _register_single_coin_gain(inventory, inventory_meta, coin_state, inventory.size() - 1) or changed
+				changed = (
+					_register_single_coin_gain(
+						inventory, inventory_meta, coin_state, inventory.size() - 1
+					)
+					or changed
+				)
 			else:
-				gained_entry = _get_inventory_meta_entry(inventory_meta, gained_slot_idx, gained_item_idx)
-				gained_entry["deferred_child_coin_on_destroy"] = maxi(int(gained_entry.get("deferred_child_coin_on_destroy", 0)), 0) + 1
-				_set_inventory_meta_entry(inventory_meta, gained_slot_idx, gained_entry, gained_item_idx)
+				gained_entry = _get_inventory_meta_entry(
+					inventory_meta, gained_slot_idx, gained_item_idx
+				)
+				gained_entry["deferred_child_coin_on_destroy"] = (
+					maxi(int(gained_entry.get("deferred_child_coin_on_destroy", 0)), 0) + 1
+				)
+				_set_inventory_meta_entry(
+					inventory_meta, gained_slot_idx, gained_entry, gained_item_idx
+				)
 				changed = true
 	return changed
 
 
-func _apply_coin_item_gain_effects(inventory: Array, inventory_meta: Array, coin_state: Dictionary, gained_item_idx: int) -> bool:
-	if gained_item_idx < 0 or gained_item_idx >= ITEM_DB.size():
+func _apply_coin_item_gain_effects(
+	inventory: Array, inventory_meta: Array, coin_state: Dictionary, gained_item_idx: int
+) -> bool:
+	if gained_item_idx < 0 or gained_item_idx >= item_db.size():
 		return false
 	if inventory.is_empty():
 		return false
-	if not _is_coin_item_for_effects(ITEM_DB[gained_item_idx]):
+	if not _is_coin_item_for_effects(item_db[gained_item_idx]):
 		return false
 	var gained_slot_idx: int = inventory.rfind(gained_item_idx)
 	if gained_slot_idx < 0:
@@ -2152,10 +2454,12 @@ func _apply_coin_item_gain_effects(inventory: Array, inventory_meta: Array, coin
 	return _register_single_coin_gain(inventory, inventory_meta, coin_state, gained_slot_idx)
 
 
-func _append_random_coin_offer_to_shop_offers(offers: Array, inventory: Array, shop_level: int) -> bool:
+func _append_random_coin_offer_to_shop_offers(
+	offers: Array, inventory: Array, shop_level: int
+) -> bool:
 	var candidates: Array[int] = []
-	for item_idx in range(ITEM_DB.size()):
-		var item_data: Dictionary = ITEM_DB[item_idx]
+	for item_idx in range(item_db.size()):
+		var item_data: Dictionary = item_db[item_idx]
 		if not _is_coin_item_for_effects(item_data):
 			continue
 		if shop_level < 7 and _get_item_name_by_index(item_idx) == "金硬币":
@@ -2169,14 +2473,18 @@ func _append_random_coin_offer_to_shop_offers(offers: Array, inventory: Array, s
 	return true
 
 
-func _apply_coin_refresh_effects(inventory: Array, inventory_meta: Array, coin_state: Dictionary, offers: Array, shop_level: int) -> bool:
+func _apply_coin_refresh_effects(
+	inventory: Array, _inventory_meta: Array, coin_state: Dictionary, offers: Array, shop_level: int
+) -> bool:
 	var changed: bool = false
 	var refresh_coin_count: int = _find_item_slots_by_name(inventory, "刷新币").size()
 	for _idx in range(refresh_coin_count):
 		changed = _append_random_coin_offer_to_shop_offers(offers, inventory, shop_level) or changed
 	var gold_coin_count: int = _find_item_slots_by_name(inventory, "金硬币").size()
 	if gold_coin_count > 0:
-		coin_state["refreshes_used_this_battle"] = maxi(int(coin_state.get("refreshes_used_this_battle", 0)), 0) + 1
+		coin_state["refreshes_used_this_battle"] = (
+			maxi(int(coin_state.get("refreshes_used_this_battle", 0)), 0) + 1
+		)
 		changed = true
 	return changed
 
@@ -2192,11 +2500,13 @@ func _can_refresh_with_coin_rules(inventory: Array, coin_state: Dictionary) -> b
 	return maxi(int(coin_state.get("refreshes_used_this_battle", 0)), 0) < refresh_limit
 
 
-func _use_coin_item_in_place(inventory: Array, inventory_meta: Array, coin_state: Dictionary, slot_idx: int) -> bool:
+func _use_coin_item_in_place(
+	inventory: Array, inventory_meta: Array, coin_state: Dictionary, slot_idx: int
+) -> bool:
 	if slot_idx < 0 or slot_idx >= inventory.size():
 		return false
 	var item_idx: int = int(inventory[slot_idx])
-	if item_idx < 0 or item_idx >= ITEM_DB.size():
+	if item_idx < 0 or item_idx >= item_db.size():
 		return false
 	var item_name: String = _get_item_name_by_index(item_idx)
 	var entry: Dictionary = _get_inventory_meta_entry(inventory_meta, slot_idx, item_idx)
@@ -2214,13 +2524,19 @@ func _use_coin_item_in_place(inventory: Array, inventory_meta: Array, coin_state
 			for _layer_idx in range(remaining_layers):
 				var target_slot: int = target_slots[randi() % target_slots.size()]
 				var target_idx: int = int(inventory[target_slot])
-				var target_entry: Dictionary = _get_inventory_meta_entry(inventory_meta, target_slot, target_idx)
+				var target_entry: Dictionary = _get_inventory_meta_entry(
+					inventory_meta, target_slot, target_idx
+				)
 				target_entry["coin_layers"] = maxi(int(target_entry.get("coin_layers", 0)), 0) + 1
-				_apply_coin_layer_gain_side_effects(_get_item_name_by_index(target_idx), target_entry, 1)
+				_apply_coin_layer_gain_side_effects(
+					_get_item_name_by_index(target_idx), target_entry, 1
+				)
 				_set_inventory_meta_entry(inventory_meta, target_slot, target_entry, target_idx)
 			return true
 		"金硬币":
-			coin_state["auto_destroy_coin_enabled"] = not _variant_to_bool(coin_state.get("auto_destroy_coin_enabled", false), false)
+			coin_state["auto_destroy_coin_enabled"] = not _variant_to_bool(
+				coin_state.get("auto_destroy_coin_enabled", false), false
+			)
 			return true
 		_:
 			return false
@@ -2238,28 +2554,48 @@ func _get_coin_battle_phase_end_gold_reward(inventory: Array, inventory_meta: Ar
 	var lucky_coin_count: int = _find_item_slots_by_name(inventory, "幸运币").size()
 	var gold_coin_count: int = _find_item_slots_by_name(inventory, "金硬币").size()
 	var total_coin_layers: int = _get_total_coin_layers(inventory, inventory_meta)
-	return lucky_coin_count * COIN_LUCKY_GOLD_PER_TRIGGER + gold_coin_count * total_coin_layers * COIN_GOLD_GOLD_PER_LAYER
+	return (
+		lucky_coin_count * COIN_LUCKY_GOLD_PER_TRIGGER
+		+ gold_coin_count * total_coin_layers * COIN_GOLD_GOLD_PER_LAYER
+	)
 
 
-func _apply_coin_destroy_effects_before_removal(state: Dictionary, inventory: Array, inventory_meta: Array, coin_state: Dictionary, slot_idx: int) -> void:
+func _apply_coin_destroy_effects_before_removal(
+	state: Dictionary,
+	inventory: Array,
+	inventory_meta: Array,
+	coin_state: Dictionary,
+	slot_idx: int
+) -> void:
 	if slot_idx < 0 or slot_idx >= inventory.size():
 		return
 	var item_idx: int = int(inventory[slot_idx])
-	if item_idx < 0 or item_idx >= ITEM_DB.size():
+	if item_idx < 0 or item_idx >= item_db.size():
 		return
 	var item_name: String = _get_item_name_by_index(item_idx)
 	match item_name:
 		"夹层硬币":
 			state["gold"] = maxi(int(state.get("gold", 0)), 0) + 300
 		"铜硬币":
-			coin_state["retained_copper_damage"] = maxi(int(coin_state.get("retained_copper_damage", 0)), 0) + _get_total_coin_layers(inventory, inventory_meta)
+			coin_state["retained_copper_damage"] = (
+				maxi(int(coin_state.get("retained_copper_damage", 0)), 0)
+				+ _get_total_coin_layers(inventory, inventory_meta)
+			)
 		"复活币":
-			coin_state["revive_event_charges"] = maxi(int(coin_state.get("revive_event_charges", 0)), 0) + 1
+			coin_state["revive_event_charges"] = (
+				maxi(int(coin_state.get("revive_event_charges", 0)), 0) + 1
+			)
 		_:
 			pass
 
 
-func _apply_coin_destroy_effects_after_removal(inventory: Array, inventory_meta: Array, coin_state: Dictionary, removed_item_name: String, removed_entry: Dictionary) -> bool:
+func _apply_coin_destroy_effects_after_removal(
+	inventory: Array,
+	inventory_meta: Array,
+	coin_state: Dictionary,
+	removed_item_name: String,
+	removed_entry: Dictionary
+) -> bool:
 	var changed: bool = false
 	if removed_item_name == "母币":
 		var child_idx: int = _find_item_index_by_name("子币")
@@ -2267,7 +2603,12 @@ func _apply_coin_destroy_effects_after_removal(inventory: Array, inventory_meta:
 		while child_idx >= 0 and child_count > 0 and inventory.size() < 6:
 			inventory.append(child_idx)
 			inventory_meta.append(_create_default_inventory_meta_entry(child_idx))
-			changed = _register_single_coin_gain(inventory, inventory_meta, coin_state, inventory.size() - 1) or changed
+			changed = (
+				_register_single_coin_gain(
+					inventory, inventory_meta, coin_state, inventory.size() - 1
+				)
+				or changed
+			)
 			child_count -= 1
 	return changed
 
@@ -2277,7 +2618,7 @@ func _is_coin_dream_active(coin_state: Dictionary) -> bool:
 
 
 func _find_item_slots_by_name(inventory: Array, item_name: String) -> Array[int]:
-	return _get_equipment_runtime_helper().find_item_slots_by_name(ITEM_DB, inventory, item_name)
+	return _get_equipment_runtime_helper().find_item_slots_by_name(item_db, inventory, item_name)
 
 
 func _get_charge_item_slots(inventory: Array, exclude_slots: Array[int] = []) -> Array[int]:
@@ -2286,9 +2627,9 @@ func _get_charge_item_slots(inventory: Array, exclude_slots: Array[int] = []) ->
 		if i in exclude_slots:
 			continue
 		var item_idx: int = int(inventory[i])
-		if item_idx < 0 or item_idx >= ITEM_DB.size():
+		if item_idx < 0 or item_idx >= item_db.size():
 			continue
-		if _is_charge_item_for_effects(ITEM_DB[item_idx]):
+		if _is_charge_item_for_effects(item_db[item_idx]):
 			out.append(i)
 	return out
 
@@ -2315,14 +2656,27 @@ func _apply_charge_shield_conversion(entry: Dictionary) -> Dictionary:
 	var charge_count: int = maxi(int(entry.get("charges", 0)), 0)
 	if charge_count <= 0:
 		return entry
-	entry["permanent_agility"] = maxi(int(entry.get("permanent_agility", 0)), 0) + charge_count * CHARGE_STACK_AGILITY
-	entry["permanent_hp"] = maxi(int(entry.get("permanent_hp", 0)), 0) + charge_count * CHARGE_SHIELD_HP_PER_STACK
-	entry["permanent_spell_damage_percent"] = maxi(int(entry.get("permanent_spell_damage_percent", 0)), 0) + charge_count * CHARGE_SHIELD_SPELL_DAMAGE_PER_STACK
+	entry["permanent_agility"] = (
+		maxi(int(entry.get("permanent_agility", 0)), 0) + charge_count * CHARGE_STACK_AGILITY
+	)
+	entry["permanent_hp"] = (
+		maxi(int(entry.get("permanent_hp", 0)), 0) + charge_count * CHARGE_SHIELD_HP_PER_STACK
+	)
+	entry["permanent_spell_damage_percent"] = (
+		maxi(int(entry.get("permanent_spell_damage_percent", 0)), 0)
+		+ charge_count * CHARGE_SHIELD_SPELL_DAMAGE_PER_STACK
+	)
 	entry["charges"] = 0
 	return entry
 
 
-func _add_charge_to_slot(inventory: Array, inventory_meta: Array, slot_idx: int, amount: int, exclude_redirect_slots: Array[int] = []) -> bool:
+func _add_charge_to_slot(
+	inventory: Array,
+	inventory_meta: Array,
+	slot_idx: int,
+	amount: int,
+	exclude_redirect_slots: Array[int] = []
+) -> bool:
 	if amount <= 0 or slot_idx < 0 or slot_idx >= inventory.size():
 		return false
 	var redirect_slot: int = _get_primary_charge_redirect_slot(inventory, exclude_redirect_slots)
@@ -2332,9 +2686,9 @@ func _add_charge_to_slot(inventory: Array, inventory_meta: Array, slot_idx: int,
 	if final_slot < 0 or final_slot >= inventory.size():
 		return false
 	var item_idx: int = int(inventory[final_slot])
-	if item_idx < 0 or item_idx >= ITEM_DB.size():
+	if item_idx < 0 or item_idx >= item_db.size():
 		return false
-	if not _is_charge_item_for_effects(ITEM_DB[item_idx]):
+	if not _is_charge_item_for_effects(item_db[item_idx]):
 		return false
 	var item_name: String = _get_item_name_by_index(item_idx)
 	var entry: Dictionary = _get_inventory_meta_entry(inventory_meta, final_slot, item_idx)
@@ -2345,7 +2699,9 @@ func _add_charge_to_slot(inventory: Array, inventory_meta: Array, slot_idx: int,
 	return true
 
 
-func _apply_charge_bottle_effect(item_name: String, inventory: Array, inventory_meta: Array, excluded_slots: Array[int] = []) -> bool:
+func _apply_charge_bottle_effect(
+	item_name: String, inventory: Array, inventory_meta: Array, excluded_slots: Array[int] = []
+) -> bool:
 	var repeat_count: int = _get_charge_bottle_repeat_count(item_name, inventory)
 	if repeat_count <= 0:
 		return false
@@ -2365,16 +2721,21 @@ func _apply_charge_consumable_gain_effects(inventory: Array, inventory_meta: Arr
 	for slot_idx in _find_item_slots_by_name(inventory, "充能望远镜"):
 		var item_idx: int = int(inventory[slot_idx])
 		var entry: Dictionary = _get_inventory_meta_entry(inventory_meta, slot_idx, item_idx)
-		entry["permanent_attack_range"] = maxi(int(entry.get("permanent_attack_range", 0)), 0) + CHARGE_TELESCOPE_RANGE_PER_CONSUMABLE
+		entry["permanent_attack_range"] = (
+			maxi(int(entry.get("permanent_attack_range", 0)), 0)
+			+ CHARGE_TELESCOPE_RANGE_PER_CONSUMABLE
+		)
 		_set_inventory_meta_entry(inventory_meta, slot_idx, entry, item_idx)
 		changed = true
 	return changed
 
 
-func _apply_charge_item_gain_effects(inventory: Array, inventory_meta: Array, gained_item_idx: int) -> bool:
-	if gained_item_idx < 0 or gained_item_idx >= ITEM_DB.size():
+func _apply_charge_item_gain_effects(
+	inventory: Array, inventory_meta: Array, gained_item_idx: int
+) -> bool:
+	if gained_item_idx < 0 or gained_item_idx >= item_db.size():
 		return false
-	var item_data: Dictionary = ITEM_DB[gained_item_idx]
+	var item_data: Dictionary = item_db[gained_item_idx]
 	var item_name: String = _normalize_item_name_for_effects(item_data)
 	var changed: bool = false
 	if _is_charge_consumable_trigger_item(item_data):
@@ -2384,7 +2745,12 @@ func _apply_charge_item_gain_effects(inventory: Array, inventory_meta: Array, ga
 	return changed
 
 
-func _redistribute_all_charge_stacks(inventory: Array, inventory_meta: Array, source_slot: int = -1, grant_particle_bonus: bool = false) -> bool:
+func _redistribute_all_charge_stacks(
+	inventory: Array,
+	inventory_meta: Array,
+	source_slot: int = -1,
+	grant_particle_bonus: bool = false
+) -> bool:
 	var source_exclusions: Array[int] = []
 	if source_slot >= 0:
 		source_exclusions.append(source_slot)
@@ -2396,9 +2762,9 @@ func _redistribute_all_charge_stacks(inventory: Array, inventory_meta: Array, so
 		if i == source_slot:
 			continue
 		var item_idx: int = int(inventory[i])
-		if item_idx < 0 or item_idx >= ITEM_DB.size():
+		if item_idx < 0 or item_idx >= item_db.size():
 			continue
-		if not _is_charge_item_for_effects(ITEM_DB[item_idx]):
+		if not _is_charge_item_for_effects(item_db[item_idx]):
 			continue
 		var entry: Dictionary = _get_inventory_meta_entry(inventory_meta, i, item_idx)
 		carried_charges += maxi(int(entry.get("charges", 0)), 0)
@@ -2424,8 +2790,12 @@ func _redistribute_all_charge_stacks(inventory: Array, inventory_meta: Array, so
 				highest_slot = slot_idx
 		if highest_slot >= 0:
 			var highest_item_idx: int = int(inventory[highest_slot])
-			var highest_entry: Dictionary = _get_inventory_meta_entry(inventory_meta, highest_slot, highest_item_idx)
-			highest_entry["particle_bonus_per_two_charges"] = maxi(int(highest_entry.get("particle_bonus_per_two_charges", 0)), 0) + 1
+			var highest_entry: Dictionary = _get_inventory_meta_entry(
+				inventory_meta, highest_slot, highest_item_idx
+			)
+			highest_entry["particle_bonus_per_two_charges"] = (
+				maxi(int(highest_entry.get("particle_bonus_per_two_charges", 0)), 0) + 1
+			)
 			_set_inventory_meta_entry(inventory_meta, highest_slot, highest_entry, highest_item_idx)
 	return true
 
@@ -2439,7 +2809,10 @@ func _apply_charge_refresh_effects(inventory: Array, inventory_meta: Array) -> b
 			changed = _add_charge_to_slot(inventory, inventory_meta, target_slot, 1) or changed
 		var item_idx: int = int(inventory[slot_idx])
 		var entry: Dictionary = _get_inventory_meta_entry(inventory_meta, slot_idx, item_idx)
-		entry["permanent_physical_crit_multiplier"] = maxi(int(entry.get("permanent_physical_crit_multiplier", 0)), 0) + CHARGE_FUTURE_ENGINE_CRIT_DAMAGE_PER_PROC
+		entry["permanent_physical_crit_multiplier"] = (
+			maxi(int(entry.get("permanent_physical_crit_multiplier", 0)), 0)
+			+ CHARGE_FUTURE_ENGINE_CRIT_DAMAGE_PER_PROC
+		)
 		_set_inventory_meta_entry(inventory_meta, slot_idx, entry, item_idx)
 		changed = true
 	return changed
@@ -2460,15 +2833,19 @@ func _apply_charge_battle_phase_end_effects(inventory: Array, inventory_meta: Ar
 	return changed
 
 
-func _apply_charge_destroy_absorb_effect(inventory: Array, inventory_meta: Array, destroyed_slot_idx: int) -> bool:
+func _apply_charge_destroy_absorb_effect(
+	inventory: Array, inventory_meta: Array, destroyed_slot_idx: int
+) -> bool:
 	if destroyed_slot_idx < 0 or destroyed_slot_idx >= inventory.size():
 		return false
 	var destroyed_item_idx: int = int(inventory[destroyed_slot_idx])
-	if destroyed_item_idx < 0 or destroyed_item_idx >= ITEM_DB.size():
+	if destroyed_item_idx < 0 or destroyed_item_idx >= item_db.size():
 		return false
-	if not _is_charge_item_for_effects(ITEM_DB[destroyed_item_idx]):
+	if not _is_charge_item_for_effects(item_db[destroyed_item_idx]):
 		return false
-	var destroyed_entry: Dictionary = _get_inventory_meta_entry(inventory_meta, destroyed_slot_idx, destroyed_item_idx)
+	var destroyed_entry: Dictionary = _get_inventory_meta_entry(
+		inventory_meta, destroyed_slot_idx, destroyed_item_idx
+	)
 	var destroyed_charges: int = maxi(int(destroyed_entry.get("charges", 0)), 0)
 	if destroyed_charges <= 0:
 		return false
@@ -2476,7 +2853,9 @@ func _apply_charge_destroy_absorb_effect(inventory: Array, inventory_meta: Array
 		if slot_idx == destroyed_slot_idx:
 			continue
 		var particle_item_idx: int = int(inventory[slot_idx])
-		var particle_entry: Dictionary = _get_inventory_meta_entry(inventory_meta, slot_idx, particle_item_idx)
+		var particle_entry: Dictionary = _get_inventory_meta_entry(
+			inventory_meta, slot_idx, particle_item_idx
+		)
 		if maxi(int(particle_entry.get("charges", 0)), 0) > 0:
 			continue
 		particle_entry["charges"] = destroyed_charges
@@ -2485,11 +2864,13 @@ func _apply_charge_destroy_absorb_effect(inventory: Array, inventory_meta: Array
 	return false
 
 
-func _use_inventory_item_in_place(inventory: Array, inventory_meta: Array, coin_state: Dictionary, slot_idx: int) -> bool:
+func _use_inventory_item_in_place(
+	inventory: Array, inventory_meta: Array, coin_state: Dictionary, slot_idx: int
+) -> bool:
 	if slot_idx < 0 or slot_idx >= inventory.size():
 		return false
 	var item_idx: int = int(inventory[slot_idx])
-	if item_idx < 0 or item_idx >= ITEM_DB.size():
+	if item_idx < 0 or item_idx >= item_db.size():
 		return false
 	if _use_coin_item_in_place(inventory, inventory_meta, coin_state, slot_idx):
 		return true
@@ -2511,13 +2892,11 @@ func _use_inventory_item_in_place(inventory: Array, inventory_meta: Array, coin_
 
 func _calculate_inventory_bonuses(inv: Array) -> Dictionary:
 	_ensure_local_equipment_runtime_state()
-	var destroy_bonus: Dictionary = _get_destroy_runtime_bonus_bundle(inv, _equipment_inventory_meta, _destroy_faction_state)
+	var destroy_bonus: Dictionary = _get_destroy_runtime_bonus_bundle(
+		inv, _equipment_inventory_meta, _destroy_faction_state
+	)
 	return _get_equipment_effects_service().calculate_inventory_bonuses(
-		ITEM_DB,
-		inv,
-		_equipment_inventory_meta,
-		_coin_faction_state,
-		destroy_bonus
+		item_db, inv, _equipment_inventory_meta, _coin_faction_state, destroy_bonus
 	)
 
 
@@ -2576,7 +2955,10 @@ func notify_local_battle_phase_ended() -> void:
 	if coin_reward > 0:
 		_gold = maxi(_gold + coin_reward, 0)
 		changed = true
-	if maxi(_get_coin_refresh_limit_per_battle(inv), 0) > 0 and maxi(int(_coin_faction_state.get("refreshes_used_this_battle", 0)), 0) != 0:
+	if (
+		maxi(_get_coin_refresh_limit_per_battle(inv), 0) > 0
+		and maxi(int(_coin_faction_state.get("refreshes_used_this_battle", 0)), 0) != 0
+	):
 		_coin_faction_state["refreshes_used_this_battle"] = 0
 		changed = true
 	if changed:
@@ -2651,7 +3033,9 @@ func _try_synthesize() -> void:
 
 
 func authority_ensure_peer_equipment_state(peer_id: int, baseline_state: Dictionary = {}) -> void:
-	_get_equipment_authority_service().ensure_peer_state(peer_id, baseline_state, Callable(self, "_authority_build_peer_state"))
+	_get_equipment_authority_service().ensure_peer_state(
+		peer_id, baseline_state, Callable(self, "_authority_build_peer_state")
+	)
 
 
 func authority_drop_peer_state(peer_id: int) -> void:
@@ -2671,10 +3055,14 @@ func authority_grant_gold_reward(peer_id: int, amount: int) -> Dictionary:
 		_gold = maxi(_gold + safe_amount, 0)
 		_update_shop_info()
 		return _build_local_equipment_baseline_state()
-	return _get_equipment_authority_service().grant_remote_gold_reward(peer_id, safe_amount, Callable(self, "_authority_build_peer_state"))
+	return _get_equipment_authority_service().grant_remote_gold_reward(
+		peer_id, safe_amount, Callable(self, "_authority_build_peer_state")
+	)
 
 
-func authority_handle_equipment_action(peer_id: int, request: Dictionary, baseline_state: Dictionary = {}) -> Dictionary:
+func authority_handle_equipment_action(
+	peer_id: int, request: Dictionary, baseline_state: Dictionary = {}
+) -> Dictionary:
 	return _get_equipment_authority_service().handle_action(
 		peer_id,
 		request,
@@ -2684,7 +3072,9 @@ func authority_handle_equipment_action(peer_id: int, request: Dictionary, baseli
 	)
 
 
-func _apply_authority_action_to_state(action: String, next_state: Dictionary, payload: Dictionary) -> String:
+func _apply_authority_action_to_state(
+	action: String, next_state: Dictionary, payload: Dictionary
+) -> String:
 	match action:
 		"buy_item":
 			return _authority_buy_item(next_state, payload)
@@ -2710,7 +3100,7 @@ func _authority_build_peer_state(baseline_state: Dictionary) -> Dictionary:
 	return _get_equipment_action_service().build_peer_state(
 		baseline_state,
 		_gold,
-		ITEM_DB.size(),
+		item_db.size(),
 		Callable(self, "_to_int_array"),
 		Callable(self, "_sanitize_inventory_meta_array"),
 		Callable(self, "_sanitize_destroy_faction_state"),
@@ -2722,18 +3112,18 @@ func _authority_build_peer_state(baseline_state: Dictionary) -> Dictionary:
 
 
 func _sanitize_inventory(values: Array) -> Array:
-	return _get_equipment_action_service().sanitize_inventory(values, ITEM_DB.size(), 6)
+	return _get_equipment_action_service().sanitize_inventory(values, item_db.size(), 6)
 
 
 func _sanitize_offer_ids(values: Array, shop_level: int) -> Array:
-	return _get_shop_catalog_helper().sanitize_offer_ids(values, shop_level, ITEM_DB)
+	return _get_shop_catalog_helper().sanitize_offer_ids(values, shop_level, item_db)
 
 
 func _authority_buy_item(state: Dictionary, payload: Dictionary) -> String:
 	return _get_equipment_action_service().apply_buy_item(
 		state,
 		payload,
-		ITEM_DB,
+		item_db,
 		Callable(self, "_get_shop_item_cost_by_index"),
 		Callable(self, "_to_int_array"),
 		Callable(self, "_sanitize_inventory_meta_array"),
@@ -2769,9 +3159,7 @@ func _authority_refresh_shop(state: Dictionary) -> String:
 
 func _authority_upgrade_shop(state: Dictionary) -> String:
 	return _get_equipment_action_service().apply_upgrade_shop(
-		state,
-		SHOP_UPGRADE_COST,
-		Callable(self, "_authority_roll_shop_items_for_level")
+		state, SHOP_UPGRADE_COST, Callable(self, "_authority_roll_shop_items_for_level")
 	)
 
 
@@ -2792,34 +3180,62 @@ func _apply_recovery_hammer_random_bonus(destroy_state: Dictionary, destroyed_le
 		var roll: int = (randi() % 3) + 1
 		match roll:
 			1:
-				destroy_state["permanent_agility"] = int(destroy_state.get("permanent_agility", 0)) + safe_level
+				destroy_state["permanent_agility"] = (
+					int(destroy_state.get("permanent_agility", 0)) + safe_level
+				)
 			2:
-				destroy_state["permanent_intelligence"] = int(destroy_state.get("permanent_intelligence", 0)) + safe_level
+				destroy_state["permanent_intelligence"] = (
+					int(destroy_state.get("permanent_intelligence", 0)) + safe_level
+				)
 			_:
-				destroy_state["permanent_strength"] = int(destroy_state.get("permanent_strength", 0)) + safe_level
+				destroy_state["permanent_strength"] = (
+					int(destroy_state.get("permanent_strength", 0)) + safe_level
+				)
 
 
-func _apply_destroy_faction_effects_before_removal(state: Dictionary, inventory: Array, inventory_meta: Array, destroy_state: Dictionary, slot_idx: int) -> void:
+func _apply_destroy_faction_effects_before_removal(
+	state: Dictionary,
+	inventory: Array,
+	inventory_meta: Array,
+	destroy_state: Dictionary,
+	slot_idx: int
+) -> void:
 	if slot_idx < 0 or slot_idx >= inventory.size():
 		return
 	var destroyed_item_idx: int = int(inventory[slot_idx])
-	if destroyed_item_idx < 0 or destroyed_item_idx >= ITEM_DB.size():
+	if destroyed_item_idx < 0 or destroyed_item_idx >= item_db.size():
 		return
 	var destroyed_item_name: String = _get_item_name_by_index(destroyed_item_idx)
-	var destroyed_item_level: int = maxi(_get_effective_inventory_item_level(destroyed_item_idx, slot_idx, inventory_meta, inventory), 0)
-	var total_item_level_before_destroy: int = maxi(_get_inventory_total_item_level(inventory, inventory_meta), 0)
+	var destroyed_item_level: int = maxi(
+		_get_effective_inventory_item_level(
+			destroyed_item_idx, slot_idx, inventory_meta, inventory
+		),
+		0
+	)
+	var total_item_level_before_destroy: int = maxi(
+		_get_inventory_total_item_level(inventory, inventory_meta), 0
+	)
 	if destroyed_item_name == "骨制风铃":
-		var estimated_base_stats: Dictionary = _estimate_hero_base_stats_for_state(state, destroy_state)
+		var estimated_base_stats: Dictionary = _estimate_hero_base_stats_for_state(
+			state, destroy_state
+		)
 		var target_floor: int = total_item_level_before_destroy
 		var current_strength: int = int(estimated_base_stats.get("strength", 0))
 		var current_agility: int = int(estimated_base_stats.get("agility", 0))
 		var current_intelligence: int = int(estimated_base_stats.get("intelligence", 0))
 		if current_strength < target_floor:
-			destroy_state["permanent_strength"] = int(destroy_state.get("permanent_strength", 0)) + (target_floor - current_strength)
+			destroy_state["permanent_strength"] = (
+				int(destroy_state.get("permanent_strength", 0)) + (target_floor - current_strength)
+			)
 		if current_agility < target_floor:
-			destroy_state["permanent_agility"] = int(destroy_state.get("permanent_agility", 0)) + (target_floor - current_agility)
+			destroy_state["permanent_agility"] = (
+				int(destroy_state.get("permanent_agility", 0)) + (target_floor - current_agility)
+			)
 		if current_intelligence < target_floor:
-			destroy_state["permanent_intelligence"] = int(destroy_state.get("permanent_intelligence", 0)) + (target_floor - current_intelligence)
+			destroy_state["permanent_intelligence"] = (
+				int(destroy_state.get("permanent_intelligence", 0))
+				+ (target_floor - current_intelligence)
+			)
 
 	var first_void_orb_slot: int = -1
 	for i in range(inventory.size()):
@@ -2827,24 +3243,43 @@ func _apply_destroy_faction_effects_before_removal(state: Dictionary, inventory:
 		var held_item_name: String = _get_item_name_by_index(held_item_idx)
 		match held_item_name:
 			"万宝锤":
-				destroy_state["permanent_hp"] = int(destroy_state.get("permanent_hp", 0)) + destroyed_item_level * 20
+				destroy_state["permanent_hp"] = (
+					int(destroy_state.get("permanent_hp", 0)) + destroyed_item_level * 20
+				)
 			"回收锤":
 				_apply_recovery_hammer_random_bonus(destroy_state, destroyed_item_level)
 			"通天锤":
-				var tongtian_meta: Dictionary = _get_inventory_meta_entry(inventory_meta, i, held_item_idx)
+				var tongtian_meta: Dictionary = _get_inventory_meta_entry(
+					inventory_meta, i, held_item_idx
+				)
 				var tongtian_charges: int = maxi(int(tongtian_meta.get("charges", 0)), 0)
 				if tongtian_charges >= 5:
-					destroy_state["tongtian_ready_stages"] = int(destroy_state.get("tongtian_ready_stages", 0)) + 2
-					destroy_state["tongtian_bonus_loops"] = int(destroy_state.get("tongtian_bonus_loops", 0)) + 1
+					destroy_state["tongtian_ready_stages"] = (
+						int(destroy_state.get("tongtian_ready_stages", 0)) + 2
+					)
+					destroy_state["tongtian_bonus_loops"] = (
+						int(destroy_state.get("tongtian_bonus_loops", 0)) + 1
+					)
 					tongtian_meta["charges"] = 0
 				else:
 					tongtian_meta["charges"] = tongtian_charges + 1
 				_set_inventory_meta_entry(inventory_meta, i, tongtian_meta, held_item_idx)
 			"血羽之心":
 				if destroyed_item_name != "血羽之心":
-					var bloodheart_meta: Dictionary = _get_inventory_meta_entry(inventory_meta, i, held_item_idx)
-					var current_bloodheart_level: int = maxi(int(bloodheart_meta.get("dynamic_level", _get_item_level(ITEM_DB[held_item_idx]))), _get_item_level(ITEM_DB[held_item_idx]))
-					bloodheart_meta["dynamic_level"] = current_bloodheart_level + destroyed_item_level
+					var bloodheart_meta: Dictionary = _get_inventory_meta_entry(
+						inventory_meta, i, held_item_idx
+					)
+					var current_bloodheart_level: int = maxi(
+						int(
+							bloodheart_meta.get(
+								"dynamic_level", _get_item_level(item_db[held_item_idx])
+							)
+						),
+						_get_item_level(item_db[held_item_idx])
+					)
+					bloodheart_meta["dynamic_level"] = (
+						current_bloodheart_level + destroyed_item_level
+					)
 					_set_inventory_meta_entry(inventory_meta, i, bloodheart_meta, held_item_idx)
 			"空洞宝珠":
 				if first_void_orb_slot < 0:
@@ -2854,10 +3289,16 @@ func _apply_destroy_faction_effects_before_removal(state: Dictionary, inventory:
 
 	if first_void_orb_slot >= 0:
 		var void_orb_item_idx: int = int(inventory[first_void_orb_slot])
-		var void_orb_meta: Dictionary = _get_inventory_meta_entry(inventory_meta, first_void_orb_slot, void_orb_item_idx)
+		var void_orb_meta: Dictionary = _get_inventory_meta_entry(
+			inventory_meta, first_void_orb_slot, void_orb_item_idx
+		)
 		void_orb_meta["charges"] = maxi(int(void_orb_meta.get("charges", 0)), 0) + 1
-		void_orb_meta["stored_level"] = maxi(int(void_orb_meta.get("stored_level", 0)), 0) + destroyed_item_level
-		_set_inventory_meta_entry(inventory_meta, first_void_orb_slot, void_orb_meta, void_orb_item_idx)
+		void_orb_meta["stored_level"] = (
+			maxi(int(void_orb_meta.get("stored_level", 0)), 0) + destroyed_item_level
+		)
+		_set_inventory_meta_entry(
+			inventory_meta, first_void_orb_slot, void_orb_meta, void_orb_item_idx
+		)
 
 
 func _apply_destroy_faction_effects_after_removal(inventory: Array, inventory_meta: Array) -> void:
@@ -2871,7 +3312,9 @@ func _apply_destroy_faction_effects_after_removal(inventory: Array, inventory_me
 		if item_idx != empty_orb_idx:
 			slot_idx += 1
 			continue
-		var empty_orb_meta: Dictionary = _get_inventory_meta_entry(inventory_meta, slot_idx, item_idx)
+		var empty_orb_meta: Dictionary = _get_inventory_meta_entry(
+			inventory_meta, slot_idx, item_idx
+		)
 		if maxi(int(empty_orb_meta.get("charges", 0)), 0) < 3:
 			slot_idx += 1
 			continue
@@ -2902,7 +3345,9 @@ func _authority_destroy_item(state: Dictionary, payload: Dictionary) -> String:
 
 
 func _authority_set_destroy_mode(state: Dictionary, payload: Dictionary) -> String:
-	return _get_equipment_action_service().apply_set_destroy_mode(state, payload, Callable(self, "_variant_to_bool"))
+	return _get_equipment_action_service().apply_set_destroy_mode(
+		state, payload, Callable(self, "_variant_to_bool")
+	)
 
 
 func _authority_battle_phase_started(state: Dictionary) -> String:
@@ -2929,7 +3374,7 @@ func _authority_battle_phase_ended(state: Dictionary) -> String:
 
 func _authority_roll_shop_items_for_level(level: int, state: Dictionary = {}) -> Array:
 	var inventory: Array = _sanitize_inventory(_to_int_array(state.get("inventory", [])))
-	return _get_shop_catalog_helper().roll_shop_offer_ids(level, ITEM_DB, inventory)
+	return _get_shop_catalog_helper().roll_shop_offer_ids(level, item_db, inventory)
 
 
 func _synthesize_inventory_in_place(inventory: Array, inventory_meta: Array = []) -> void:
@@ -3005,11 +3450,21 @@ func _build_inventory_signature(inv: Array) -> String:
 	if _is_observing_remote():
 		owner_key = int(_get_ui_state().observed_peer_id)
 		var observed_state: Dictionary = _get_observed_equipment_state()
-		var observed_meta: Array = _sanitize_inventory_meta_array(observed_state.get("inventory_meta", []), inv)
-		var observed_destroy_state: Dictionary = _sanitize_destroy_faction_state(observed_state.get("destroy_faction_state", {}))
-		var observed_coin_state: Dictionary = _sanitize_coin_faction_state(observed_state.get("coin_faction_state", {}))
-		return _get_equipment_runtime_helper().build_inventory_signature(inv, owner_key, observed_meta, observed_destroy_state, observed_coin_state)
-	return _get_equipment_runtime_helper().build_inventory_signature(inv, owner_key, _equipment_inventory_meta, _destroy_faction_state, _coin_faction_state)
+		var observed_meta: Array = _sanitize_inventory_meta_array(
+			observed_state.get("inventory_meta", []), inv
+		)
+		var observed_destroy_state: Dictionary = _sanitize_destroy_faction_state(
+			observed_state.get("destroy_faction_state", {})
+		)
+		var observed_coin_state: Dictionary = _sanitize_coin_faction_state(
+			observed_state.get("coin_faction_state", {})
+		)
+		return _get_equipment_runtime_helper().build_inventory_signature(
+			inv, owner_key, observed_meta, observed_destroy_state, observed_coin_state
+		)
+	return _get_equipment_runtime_helper().build_inventory_signature(
+		inv, owner_key, _equipment_inventory_meta, _destroy_faction_state, _coin_faction_state
+	)
 
 
 func _refresh_inventory() -> void:
@@ -3025,8 +3480,12 @@ func _refresh_inventory() -> void:
 	if _is_observing_remote():
 		var observed_state: Dictionary = _get_observed_equipment_state()
 		tooltip_meta = _sanitize_inventory_meta_array(observed_state.get("inventory_meta", []), inv)
-		tooltip_state = _sanitize_destroy_faction_state(observed_state.get("destroy_faction_state", {}))
-		tooltip_coin_state = _sanitize_coin_faction_state(observed_state.get("coin_faction_state", {}))
+		tooltip_state = _sanitize_destroy_faction_state(
+			observed_state.get("destroy_faction_state", {})
+		)
+		tooltip_coin_state = _sanitize_coin_faction_state(
+			observed_state.get("coin_faction_state", {})
+		)
 	else:
 		tooltip_meta = _equipment_inventory_meta
 		tooltip_state = _destroy_faction_state
@@ -3039,15 +3498,21 @@ func _refresh_inventory() -> void:
 	for i in range(6):
 		if i < inv.size():
 			var item_idx: int = inv[i]
-			if item_idx >= 0 and item_idx < ITEM_DB.size():
-				var tex := _load_item_texture(str(ITEM_DB[item_idx].get("icon", "")))
+			if item_idx >= 0 and item_idx < item_db.size():
+				var tex := _load_item_texture(str(item_db[item_idx].get("icon", "")))
 				if tex and i < _inventory_icons.size():
 					_inventory_icons[i].texture = tex
 					_inventory_icons[i].visible = true
 				if i < _inventory_slots.size():
 					var tooltip_slot_idx: int = _resolve_inventory_real_slot(i, real_inv)
 					if tooltip_slot_idx >= 0:
-						_inventory_slots[i].tooltip_text = _build_inventory_tooltip_text(item_idx, tooltip_slot_idx, tooltip_meta, tooltip_state, tooltip_coin_state)
+						_inventory_slots[i].tooltip_text = _build_inventory_tooltip_text(
+							item_idx,
+							tooltip_slot_idx,
+							tooltip_meta,
+							tooltip_state,
+							tooltip_coin_state
+						)
 					else:
 						_inventory_slots[i].tooltip_text = ""
 			else:
@@ -3071,7 +3536,7 @@ func _is_inventory_slot_has_item(index: int) -> bool:
 	if index < 0 or index >= inv.size():
 		return false
 	var item_idx: int = int(inv[index])
-	return item_idx >= 0 and item_idx < ITEM_DB.size()
+	return item_idx >= 0 and item_idx < item_db.size()
 
 
 func _find_hovered_inventory_index() -> int:
@@ -3148,7 +3613,9 @@ func _update_destroy_visual() -> void:
 			dsb.corner_radius_bottom_right = 3
 			_destroy_skill_panel.add_theme_stylebox_override("panel", dsb)
 		else:
-			_destroy_skill_panel.add_theme_stylebox_override("panel", _create_transparent_stylebox([6, 6, 6, 6]))
+			_destroy_skill_panel.add_theme_stylebox_override(
+				"panel", _create_transparent_stylebox([6, 6, 6, 6])
+			)
 
 	for i in range(_inventory_slots.size()):
 		var slot := _inventory_slots[i]
@@ -3167,7 +3634,9 @@ func _update_destroy_visual() -> void:
 			slot.add_theme_stylebox_override("panel", _create_transparent_stylebox([4, 4, 4, 4]))
 
 
-func _create_hud_texture_stylebox(texture: Texture2D, texture_margins: Array, content_margins: Array = []) -> StyleBoxTexture:
+func _create_hud_texture_stylebox(
+	texture: Texture2D, texture_margins: Array, content_margins: Array = []
+) -> StyleBoxTexture:
 	var sb := StyleBoxTexture.new()
 	sb.texture = texture
 	sb.texture_margin_left = float(texture_margins[0])
@@ -3197,10 +3666,19 @@ func _create_transparent_stylebox(content_margins: Array = []) -> StyleBoxFlat:
 func _on_inv_slot_input(event: InputEvent, index: int) -> void:
 	if _is_observing_remote() or _is_observing_boss() or _is_observing_enemy():
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+	if (
+		event is InputEventMouseButton
+		and event.pressed
+		and event.button_index == MOUSE_BUTTON_RIGHT
+	):
 		_use_inventory_item(index)
 		return
-	if _destroy_mode and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if (
+		_destroy_mode
+		and event is InputEventMouseButton
+		and event.pressed
+		and event.button_index == MOUSE_BUTTON_LEFT
+	):
 		_destroy_item(index)
 
 
@@ -3219,7 +3697,9 @@ func _use_inventory_item(index: int) -> void:
 	if _request_authority_equipment_action("use_item", {"slot_idx": resolved_slot_idx}):
 		return
 	_ensure_local_equipment_runtime_state()
-	if not _use_inventory_item_in_place(inv, _equipment_inventory_meta, _coin_faction_state, resolved_slot_idx):
+	if not _use_inventory_item_in_place(
+		inv, _equipment_inventory_meta, _coin_faction_state, resolved_slot_idx
+	):
 		return
 	_destroy_mode = false
 	_destroy_hover_index = -1
@@ -3249,17 +3729,25 @@ func _destroy_item(index: int) -> void:
 	var removed_item_name: String = _get_item_name_by_index(removed_item_idx)
 	if removed_item_name == "金硬币":
 		return
-	var removed_entry: Dictionary = _get_inventory_meta_entry(_equipment_inventory_meta, resolved_slot_idx, removed_item_idx)
+	var removed_entry: Dictionary = _get_inventory_meta_entry(
+		_equipment_inventory_meta, resolved_slot_idx, removed_item_idx
+	)
 	var local_state: Dictionary = _build_local_equipment_baseline_state()
-	_apply_destroy_faction_effects_before_removal(local_state, inv, _equipment_inventory_meta, _destroy_faction_state, resolved_slot_idx)
-	_apply_coin_destroy_effects_before_removal(local_state, inv, _equipment_inventory_meta, _coin_faction_state, resolved_slot_idx)
+	_apply_destroy_faction_effects_before_removal(
+		local_state, inv, _equipment_inventory_meta, _destroy_faction_state, resolved_slot_idx
+	)
+	_apply_coin_destroy_effects_before_removal(
+		local_state, inv, _equipment_inventory_meta, _coin_faction_state, resolved_slot_idx
+	)
 	_gold = maxi(int(local_state.get("gold", _gold)), 0)
 	_apply_charge_destroy_absorb_effect(inv, _equipment_inventory_meta, resolved_slot_idx)
 	inv.remove_at(resolved_slot_idx)
 	if resolved_slot_idx < _equipment_inventory_meta.size():
 		_equipment_inventory_meta.remove_at(resolved_slot_idx)
 	_apply_destroy_faction_effects_after_removal(inv, _equipment_inventory_meta)
-	_apply_coin_destroy_effects_after_removal(inv, _equipment_inventory_meta, _coin_faction_state, removed_item_name, removed_entry)
+	_apply_coin_destroy_effects_after_removal(
+		inv, _equipment_inventory_meta, _coin_faction_state, removed_item_name, removed_entry
+	)
 	_refresh_inventory()
 	_destroy_mode = false
 	_destroy_hover_index = -1

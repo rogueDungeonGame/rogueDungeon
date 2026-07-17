@@ -11,7 +11,9 @@ func get_peer_latest_hero_command(peer_id: int, peer_latest_hero_command: Dictio
 	return {}
 
 
-func is_remote_avatar_command_drive_active(remote_command_drive_enabled: bool, mode_raw: String, command: Dictionary) -> bool:
+func is_remote_avatar_command_drive_active(
+	remote_command_drive_enabled: bool, mode_raw: String, command: Dictionary
+) -> bool:
 	if not remote_command_drive_enabled:
 		return false
 	var mode_text: String = mode_raw.strip_edges().to_lower()
@@ -23,7 +25,13 @@ func is_remote_avatar_command_drive_active(remote_command_drive_enabled: bool, m
 	return cmd_type == "move_to" or cmd_type == "chase_target" or cmd_type == "attack_target"
 
 
-func resolve_remote_command_target_position(command: Dictionary, fallback: Vector3, target_node: Node3D, remote_avatar_target_positions: Dictionary, peer_id: int) -> Vector3:
+func resolve_remote_command_target_position(
+	command: Dictionary,
+	fallback: Vector3,
+	target_node: Node3D,
+	remote_avatar_target_positions: Dictionary,
+	peer_id: int
+) -> Vector3:
 	var target_pos: Vector3 = fallback
 	if target_node != null and is_instance_valid(target_node):
 		target_pos = target_node.global_position
@@ -55,20 +63,22 @@ func resolve_peer_attack_range(peer_id: int, peer_latest_hero_state: Dictionary)
 		var state_variant: Variant = peer_latest_hero_state[peer_id]
 		if state_variant is Dictionary:
 			var state: Dictionary = state_variant as Dictionary
-			attack_range = _float_from_variant(state.get("attack_range", attack_range), attack_range)
+			attack_range = _float_from_variant(
+				state.get("attack_range", attack_range), attack_range
+			)
 	return clampf(attack_range, 80.0, 2200.0)
 
 
 func apply_remote_avatar_command_correction(
-		peer_id: int,
-		avatar: Node3D,
-		delta: float,
-		remote_avatar_target_positions: Dictionary,
-		remote_avatar_velocities: Dictionary,
-		soft_distance: float,
-		hard_distance: float,
-		correction_speed: float
-	) -> void:
+	peer_id: int,
+	avatar: Node3D,
+	delta: float,
+	remote_avatar_target_positions: Dictionary,
+	remote_avatar_velocities: Dictionary,
+	soft_distance: float,
+	hard_distance: float,
+	correction_speed: float
+) -> void:
 	if not remote_avatar_target_positions.has(peer_id):
 		return
 	var sync_pos_variant: Variant = remote_avatar_target_positions[peer_id]
@@ -91,23 +101,23 @@ func apply_remote_avatar_command_correction(
 
 
 func update_remote_avatar_command_drive(
-		peer_id: int,
-		avatar: Node3D,
-		delta: float,
-		rot_alpha: float,
-		command: Dictionary,
-		target_pos: Vector3,
-		move_speed: float,
-		attack_range: float,
-		remote_command_drive_stop_distance: float,
-		remote_command_drive_soft_correction_distance: float,
-		remote_command_drive_hard_snap_distance: float,
-		remote_command_drive_correction_speed: float,
-		remote_command_drive_turn_speed: float,
-		remote_avatar_target_positions: Dictionary,
-		remote_avatar_target_yaws: Dictionary,
-		remote_avatar_velocities: Dictionary
-	) -> bool:
+	peer_id: int,
+	avatar: Node3D,
+	delta: float,
+	rot_alpha: float,
+	command: Dictionary,
+	target_pos: Vector3,
+	move_speed: float,
+	attack_range: float,
+	remote_command_drive_stop_distance: float,
+	remote_command_drive_soft_correction_distance: float,
+	remote_command_drive_hard_snap_distance: float,
+	remote_command_drive_correction_speed: float,
+	remote_command_drive_turn_speed: float,
+	remote_avatar_target_positions: Dictionary,
+	remote_avatar_target_yaws: Dictionary,
+	remote_avatar_velocities: Dictionary
+) -> bool:
 	if command.is_empty():
 		return false
 	var cmd_type: String = str(command.get("type", "idle")).strip_edges().to_lower()
@@ -133,7 +143,9 @@ func update_remote_avatar_command_drive(
 	face_dir.y = 0.0
 	if face_dir.length() > 0.01:
 		var desired_yaw: float = atan2(face_dir.x, face_dir.z) - PI / 2.0
-		var turn_alpha: float = 1.0 - exp(-maxf(remote_command_drive_turn_speed, 0.01) * maxf(delta, 0.0))
+		var turn_alpha: float = (
+			1.0 - exp(-maxf(remote_command_drive_turn_speed, 0.01) * maxf(delta, 0.0))
+		)
 		turn_alpha = maxf(turn_alpha, rot_alpha)
 		var next_rot: Vector3 = avatar.rotation
 		next_rot.y = lerp_angle(next_rot.y, desired_yaw, turn_alpha)

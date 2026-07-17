@@ -2,7 +2,9 @@ extends RefCounted
 class_name HudStatusPanelsController
 
 
-func build_hero_section(parent: Control, config: Dictionary, callbacks: Dictionary = {}) -> Dictionary:
+func build_hero_section(
+	parent: Control, config: Dictionary, callbacks: Dictionary = {}
+) -> Dictionary:
 	if bool(config.get("fixed_layout", false)):
 		return _build_hero_section_fixed(parent, config, callbacks)
 
@@ -14,10 +16,16 @@ func build_hero_section(parent: Control, config: Dictionary, callbacks: Dictiona
 	parent.add_child(panel)
 
 	var outer_margin := MarginContainer.new()
-	outer_margin.add_theme_constant_override("margin_left", int(config.get("outer_margin_left", 10)))
+	outer_margin.add_theme_constant_override(
+		"margin_left", int(config.get("outer_margin_left", 10))
+	)
 	outer_margin.add_theme_constant_override("margin_top", int(config.get("outer_margin_top", 8)))
-	outer_margin.add_theme_constant_override("margin_right", int(config.get("outer_margin_right", 10)))
-	outer_margin.add_theme_constant_override("margin_bottom", int(config.get("outer_margin_bottom", 8)))
+	outer_margin.add_theme_constant_override(
+		"margin_right", int(config.get("outer_margin_right", 10))
+	)
+	outer_margin.add_theme_constant_override(
+		"margin_bottom", int(config.get("outer_margin_bottom", 8))
+	)
 	panel.add_child(outer_margin)
 
 	var hbox := HBoxContainer.new()
@@ -73,17 +81,23 @@ func build_hero_section(parent: Control, config: Dictionary, callbacks: Dictiona
 	portrait_label.text = "HERO"
 	portrait_label.set_anchors_preset(Control.PRESET_CENTER)
 	portrait_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	portrait_label.add_theme_color_override("font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0)))
+	portrait_label.add_theme_color_override(
+		"font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0))
+	)
 	portrait_label.add_theme_font_size_override("font_size", 14)
 	portrait_label.visible = portrait_texture_rect.texture == null
 	portrait_rect.add_child(portrait_label)
 
-	var hp_refs := _create_portrait_bar_row("HP", config.get("hp_bar_color", Color(0.1, 0.85, 0.1, 1.0)), config, portrait_size - 16.0)
+	var hp_refs := _create_portrait_bar_row(
+		"HP", config.get("hp_bar_color", Color(0.1, 0.85, 0.1, 1.0)), config, portrait_size - 16.0
+	)
 	portrait_column.add_child(hp_refs.get("root"))
 	var hero_hp_bar := hp_refs.get("bar") as ProgressBar
 	var hero_hp_label := hp_refs.get("value_label") as Label
 
-	var mp_refs := _create_portrait_bar_row("MP", config.get("mp_bar_color", Color(0.15, 0.35, 0.95, 1.0)), config, portrait_size - 16.0)
+	var mp_refs := _create_portrait_bar_row(
+		"MP", config.get("mp_bar_color", Color(0.15, 0.35, 0.95, 1.0)), config, portrait_size - 16.0
+	)
 	portrait_column.add_child(mp_refs.get("root"))
 	var hero_mp_bar := mp_refs.get("bar") as ProgressBar
 	hero_mp_bar.value = 100
@@ -100,14 +114,18 @@ func build_hero_section(parent: Control, config: Dictionary, callbacks: Dictiona
 	name_label.text = "英雄信息"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_label.add_theme_color_override("font_color", config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0)))
+	name_label.add_theme_color_override(
+		"font_color", config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0))
+	)
 	name_label.add_theme_font_size_override("font_size", 17)
 	info_vbox.add_child(name_label)
 
 	var stats_title := Label.new()
 	stats_title.text = "属性"
 	stats_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stats_title.add_theme_color_override("font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0)))
+	stats_title.add_theme_color_override(
+		"font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0))
+	)
 	stats_title.add_theme_font_size_override("font_size", 12)
 	info_vbox.add_child(stats_title)
 
@@ -142,10 +160,18 @@ func build_hero_section(parent: Control, config: Dictionary, callbacks: Dictiona
 	hbox.add_child(inv_panel)
 
 	var inv_margin := MarginContainer.new()
-	inv_margin.add_theme_constant_override("margin_left", int(config.get("inventory_grid_margin_left", 8)))
-	inv_margin.add_theme_constant_override("margin_top", int(config.get("inventory_grid_margin_top", 6)))
-	inv_margin.add_theme_constant_override("margin_right", int(config.get("inventory_grid_margin_right", 8)))
-	inv_margin.add_theme_constant_override("margin_bottom", int(config.get("inventory_grid_margin_bottom", 6)))
+	inv_margin.add_theme_constant_override(
+		"margin_left", int(config.get("inventory_grid_margin_left", 8))
+	)
+	inv_margin.add_theme_constant_override(
+		"margin_top", int(config.get("inventory_grid_margin_top", 6))
+	)
+	inv_margin.add_theme_constant_override(
+		"margin_right", int(config.get("inventory_grid_margin_right", 8))
+	)
+	inv_margin.add_theme_constant_override(
+		"margin_bottom", int(config.get("inventory_grid_margin_bottom", 6))
+	)
 	inv_panel.add_child(inv_margin)
 
 	var inv_vbox := VBoxContainer.new()
@@ -155,15 +181,21 @@ func build_hero_section(parent: Control, config: Dictionary, callbacks: Dictiona
 	var inv_title := Label.new()
 	inv_title.text = "物品栏"
 	inv_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	inv_title.add_theme_color_override("font_color", config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0)))
+	inv_title.add_theme_color_override(
+		"font_color", config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0))
+	)
 	inv_title.add_theme_font_size_override("font_size", 13)
 	inv_vbox.add_child(inv_title)
 
 	var inv_grid := GridContainer.new()
 	inv_grid.columns = 2
 	inv_grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	inv_grid.add_theme_constant_override("h_separation", int(config.get("inventory_grid_h_separation", 6)))
-	inv_grid.add_theme_constant_override("v_separation", int(config.get("inventory_grid_v_separation", 6)))
+	inv_grid.add_theme_constant_override(
+		"h_separation", int(config.get("inventory_grid_h_separation", 6))
+	)
+	inv_grid.add_theme_constant_override(
+		"v_separation", int(config.get("inventory_grid_v_separation", 6))
+	)
 	inv_vbox.add_child(inv_grid)
 
 	var inventory_slots: Array = []
@@ -226,7 +258,9 @@ func build_hero_section(parent: Control, config: Dictionary, callbacks: Dictiona
 	}
 
 
-func _build_hero_section_fixed(parent: Control, config: Dictionary, callbacks: Dictionary = {}) -> Dictionary:
+func _build_hero_section_fixed(
+	parent: Control, config: Dictionary, callbacks: Dictionary = {}
+) -> Dictionary:
 	var hero_rect: Rect2 = config.get("hero_rect", Rect2(504, 36, 443, 354))
 	var hero_panel := Control.new()
 	hero_panel.position = hero_rect.position
@@ -266,17 +300,31 @@ func _build_hero_section_fixed(parent: Control, config: Dictionary, callbacks: D
 	portrait_label.text = "HERO"
 	portrait_label.set_anchors_preset(Control.PRESET_CENTER)
 	portrait_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	portrait_label.add_theme_color_override("font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0)))
+	portrait_label.add_theme_color_override(
+		"font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0))
+	)
 	portrait_label.add_theme_font_size_override("font_size", 14)
 	portrait_label.visible = portrait_texture_rect.texture == null
 	portrait_rect.add_child(portrait_label)
 
-	var hp_refs := _create_fixed_bar("HP", Vector2(30, 216), Vector2(188, 24), config.get("hp_bar_color", Color(0.1, 0.85, 0.1, 1.0)), config)
+	var hp_refs := _create_fixed_bar(
+		"HP",
+		Vector2(30, 216),
+		Vector2(188, 24),
+		config.get("hp_bar_color", Color(0.1, 0.85, 0.1, 1.0)),
+		config
+	)
 	hero_panel.add_child(hp_refs.get("root"))
 	var hero_hp_bar := hp_refs.get("bar") as ProgressBar
 	var hero_hp_label := hp_refs.get("value_label") as Label
 
-	var mp_refs := _create_fixed_bar("MP", Vector2(30, 250), Vector2(188, 24), config.get("mp_bar_color", Color(0.15, 0.35, 0.95, 1.0)), config)
+	var mp_refs := _create_fixed_bar(
+		"MP",
+		Vector2(30, 250),
+		Vector2(188, 24),
+		config.get("mp_bar_color", Color(0.15, 0.35, 0.95, 1.0)),
+		config
+	)
 	hero_panel.add_child(mp_refs.get("root"))
 	var hero_mp_bar := mp_refs.get("bar") as ProgressBar
 	hero_mp_bar.value = 100
@@ -288,7 +336,9 @@ func _build_hero_section_fixed(parent: Control, config: Dictionary, callbacks: D
 	name_label.position = Vector2(286, 33)
 	name_label.size = Vector2(500, 28)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_color_override("font_color", config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0)))
+	name_label.add_theme_color_override(
+		"font_color", config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0))
+	)
 	name_label.add_theme_font_size_override("font_size", 18)
 	hero_panel.add_child(name_label)
 
@@ -297,7 +347,9 @@ func _build_hero_section_fixed(parent: Control, config: Dictionary, callbacks: D
 	stats_title.position = Vector2(286, 64)
 	stats_title.size = Vector2(500, 22)
 	stats_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stats_title.add_theme_color_override("font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0)))
+	stats_title.add_theme_color_override(
+		"font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0))
+	)
 	stats_title.add_theme_font_size_override("font_size", 13)
 	hero_panel.add_child(stats_title)
 
@@ -336,7 +388,9 @@ func _build_hero_section_fixed(parent: Control, config: Dictionary, callbacks: D
 	inv_title.position = Vector2(58, 18)
 	inv_title.size = Vector2(170, 28)
 	inv_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	inv_title.add_theme_color_override("font_color", config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0)))
+	inv_title.add_theme_color_override(
+		"font_color", config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0))
+	)
 	inv_title.add_theme_font_size_override("font_size", 18)
 	inv_panel.add_child(inv_title)
 
@@ -436,7 +490,9 @@ func build_boss_section(parent: HBoxContainer, config: Dictionary) -> Dictionary
 
 	var boss_title := Label.new()
 	boss_title.text = "★ BOSS - %s" % str(config.get("boss_display_name", "BOSS"))
-	boss_title.add_theme_color_override("font_color", config.get("boss_title_color", Color(1.0, 0.4, 0.3, 1.0)))
+	boss_title.add_theme_color_override(
+		"font_color", config.get("boss_title_color", Color(1.0, 0.4, 0.3, 1.0))
+	)
 	boss_title.add_theme_font_size_override("font_size", 14)
 	inner_vbox.add_child(boss_title)
 
@@ -449,11 +505,15 @@ func build_boss_section(parent: HBoxContainer, config: Dictionary) -> Dictionary
 	boss_portrait_label.text = "BOSS"
 	boss_portrait_label.set_anchors_preset(Control.PRESET_CENTER)
 	boss_portrait_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	boss_portrait_label.add_theme_color_override("font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0)))
+	boss_portrait_label.add_theme_color_override(
+		"font_color", config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0))
+	)
 	boss_portrait_label.add_theme_font_size_override("font_size", 11)
 	boss_portrait_rect.add_child(boss_portrait_label)
 
-	var hp_row := _create_bar_row("HP", config.get("boss_hp_bar_color", Color(0.9, 0.2, 0.15, 1.0)), config)
+	var hp_row := _create_bar_row(
+		"HP", config.get("boss_hp_bar_color", Color(0.9, 0.2, 0.15, 1.0)), config
+	)
 	inner_vbox.add_child(hp_row)
 	var boss_hp_bar := hp_row.get_node("Bar") as ProgressBar
 	var boss_hp_label := hp_row.get_node("ValueLabel") as Label
@@ -502,14 +562,18 @@ func _create_bar_row(label_text: String, bar_color: Color, config: Dictionary) -
 	val_label.text = "--- / ---"
 	val_label.custom_minimum_size = Vector2(100, 0)
 	val_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	val_label.add_theme_color_override("font_color", config.get("text_color", Color(0.95, 0.92, 0.78, 1.0)))
+	val_label.add_theme_color_override(
+		"font_color", config.get("text_color", Color(0.95, 0.92, 0.78, 1.0))
+	)
 	val_label.add_theme_font_size_override("font_size", 12)
 	row.add_child(val_label)
 
 	return row
 
 
-func _create_portrait_bar_row(label_text: String, bar_color: Color, config: Dictionary, bar_width: float) -> Dictionary:
+func _create_portrait_bar_row(
+	label_text: String, bar_color: Color, config: Dictionary, bar_width: float
+) -> Dictionary:
 	var row := HBoxContainer.new()
 	row.custom_minimum_size = Vector2(bar_width, 20)
 	row.add_theme_constant_override("separation", 4)
@@ -546,7 +610,9 @@ func _create_portrait_bar_row(label_text: String, bar_color: Color, config: Dict
 	val_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	val_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	val_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	val_label.add_theme_color_override("font_color", config.get("text_color", Color(0.95, 0.92, 0.78, 1.0)))
+	val_label.add_theme_color_override(
+		"font_color", config.get("text_color", Color(0.95, 0.92, 0.78, 1.0))
+	)
 	val_label.add_theme_font_size_override("font_size", 10)
 	val_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(val_label)
@@ -558,7 +624,9 @@ func _create_portrait_bar_row(label_text: String, bar_color: Color, config: Dict
 	}
 
 
-func _create_fixed_bar(label_text: String, position: Vector2, size: Vector2, bar_color: Color, config: Dictionary) -> Dictionary:
+func _create_fixed_bar(
+	label_text: String, position: Vector2, size: Vector2, bar_color: Color, config: Dictionary
+) -> Dictionary:
 	var root := Control.new()
 	root.position = position
 	root.size = Vector2(size.x + 22.0, size.y)
@@ -597,7 +665,9 @@ func _create_fixed_bar(label_text: String, position: Vector2, size: Vector2, bar
 	val_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	val_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	val_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	val_label.add_theme_color_override("font_color", config.get("text_color", Color(0.95, 0.92, 0.78, 1.0)))
+	val_label.add_theme_color_override(
+		"font_color", config.get("text_color", Color(0.95, 0.92, 0.78, 1.0))
+	)
 	val_label.add_theme_font_size_override("font_size", 10)
 	val_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(val_label)
@@ -616,7 +686,9 @@ func _create_stat_label(parent: Control, text: String, config: Dictionary) -> La
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl.clip_text = true
 	lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	lbl.add_theme_color_override("font_color", config.get("text_color", Color(0.95, 0.92, 0.78, 1.0)))
+	lbl.add_theme_color_override(
+		"font_color", config.get("text_color", Color(0.95, 0.92, 0.78, 1.0))
+	)
 	lbl.add_theme_font_size_override("font_size", int(config.get("stat_font_size", 11)))
 	parent.add_child(lbl)
 	return lbl

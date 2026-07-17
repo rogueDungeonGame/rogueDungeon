@@ -9,14 +9,24 @@ const TALENT_SELECTION_CONTROLLER_SCRIPT := preload("res://talent_selection_cont
 const HUD_PRESENTER_SCRIPT := preload("res://hud_presenter.gd")
 const UI_STATE_SERVICE_SCRIPT := preload("res://ui_state_service.gd")
 const INVENTORY_SHOP_CONTROLLER_SCRIPT := preload("res://inventory_shop_controller.gd")
-const HUD_BOTTOM_SHELL_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/hud_bottom_shell_exact_ratio_2_5_1_5_2_5.png")
-const HUD_PANEL_MINIMAP_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/panel_minimap_frame.png")
-const HUD_PANEL_HERO_STATS_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/panel_hero_stats_frame.png")
+const HUD_BOTTOM_SHELL_TEXTURE := preload(
+	"res://ui/hud_assets/rogue_dungeon/hud_bottom_shell_exact_ratio_2_5_1_5_2_5.png"
+)
+const HUD_PANEL_MINIMAP_TEXTURE := preload(
+	"res://ui/hud_assets/rogue_dungeon/panel_minimap_frame.png"
+)
+const HUD_PANEL_HERO_STATS_TEXTURE := preload(
+	"res://ui/hud_assets/rogue_dungeon/panel_hero_stats_frame.png"
+)
 const HUD_SLOT_ITEM_GOLD_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/slot_item_gold.png")
-const HUD_SKILL_BUTTON_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/skill_button_frame.png")
+const HUD_SKILL_BUTTON_TEXTURE := preload(
+	"res://ui/hud_assets/rogue_dungeon/skill_button_frame.png"
+)
 const HUD_BAR_HEALTH_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/bar_frame_health.png")
 const HUD_BAR_MANA_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/bar_frame_mana.png")
-const HUD_PANEL_INVENTORY_TEXTURE := preload("res://ui/hud_assets/rogue_dungeon/panel_inventory_frame.png")
+const HUD_PANEL_INVENTORY_TEXTURE := preload(
+	"res://ui/hud_assets/rogue_dungeon/panel_inventory_frame.png"
+)
 const HERO_PORTRAIT_MELEE_TEXTURE := preload("res://icons/skills/BTNHeroWarden.png")
 const HERO_PORTRAIT_RANGED_TEXTURE := preload("res://icons/skills/BTNRifleman.png")
 
@@ -274,56 +284,57 @@ func _apply_hud_scale() -> void:
 
 
 func _configure_hud_presenter() -> void:
-	_get_hud_presenter().configure({
-		"hero_hp_bar": _hero_hp_bar,
-		"hero_hp_label": _hero_hp_label,
-		"hero_mp_bar": _hero_mp_bar,
-		"hero_mp_label": _hero_mp_label,
-		"hero_name_label": _hero_name_label,
-		"hero_portrait_texture_rect": _hero_portrait_texture_rect,
-		"hero_portrait_melee_texture": HERO_PORTRAIT_MELEE_TEXTURE,
-		"hero_portrait_ranged_texture": HERO_PORTRAIT_RANGED_TEXTURE,
-		"flash_cd_label": _flash_cd_label,
-		"haste_cd_label": _haste_cd_label,
-		"q_skill_name_label": _q_skill_name_label,
-		"w_skill_name_label": _w_skill_name_label,
-		"e_skill_name_label": _e_skill_name_label,
-		"e_skill_cd_label": _e_skill_cd_label,
-		"r_skill_name_label": _r_skill_name_label,
-		"r_skill_cd_label": _r_skill_cd_label,
-		"atk_label": _atk_label,
-		"def_label": _def_label,
-		"spd_label": _spd_label,
-		"atk_speed_label": _atk_speed_label,
-		"atk_interval_label": _atk_interval_label,
-		"atk_range_label": _atk_range_label,
-		"cdr_label": _cdr_label,
-		"phys_crit_rate_label": _phys_crit_rate_label,
-		"phys_crit_mul_label": _phys_crit_mul_label,
-		"spell_crit_rate_label": _spell_crit_rate_label,
-		"spell_crit_mul_label": _spell_crit_mul_label,
-		"hp_regen_label": _hp_regen_label,
-		"mp_regen_label": _mp_regen_label,
-		"str_label": _str_label,
-		"agi_label": _agi_label,
-		"int_label": _int_label,
-		"skill_button_by_key": _skill_button_by_key,
-		"skill_mana_masks": _skill_mana_masks,
-		"skill_cd_masks": _skill_cd_masks,
-		"skill_cd_mask_materials": _skill_cd_mask_materials,
-	}, {
-		"hp_full": COLOR_HP_FULL,
-		"hp_low": COLOR_HP_LOW,
-	})
+	(
+		_get_hud_presenter()
+		. configure(
+			{
+				"hero_hp_bar": _hero_hp_bar,
+				"hero_hp_label": _hero_hp_label,
+				"hero_mp_bar": _hero_mp_bar,
+				"hero_mp_label": _hero_mp_label,
+				"hero_name_label": _hero_name_label,
+				"hero_portrait_texture_rect": _hero_portrait_texture_rect,
+				"hero_portrait_melee_texture": HERO_PORTRAIT_MELEE_TEXTURE,
+				"hero_portrait_ranged_texture": HERO_PORTRAIT_RANGED_TEXTURE,
+				"flash_cd_label": _flash_cd_label,
+				"haste_cd_label": _haste_cd_label,
+				"q_skill_name_label": _q_skill_name_label,
+				"w_skill_name_label": _w_skill_name_label,
+				"e_skill_name_label": _e_skill_name_label,
+				"e_skill_cd_label": _e_skill_cd_label,
+				"r_skill_name_label": _r_skill_name_label,
+				"r_skill_cd_label": _r_skill_cd_label,
+				"atk_label": _atk_label,
+				"def_label": _def_label,
+				"spd_label": _spd_label,
+				"atk_speed_label": _atk_speed_label,
+				"atk_interval_label": _atk_interval_label,
+				"atk_range_label": _atk_range_label,
+				"cdr_label": _cdr_label,
+				"phys_crit_rate_label": _phys_crit_rate_label,
+				"phys_crit_mul_label": _phys_crit_mul_label,
+				"spell_crit_rate_label": _spell_crit_rate_label,
+				"spell_crit_mul_label": _spell_crit_mul_label,
+				"hp_regen_label": _hp_regen_label,
+				"mp_regen_label": _mp_regen_label,
+				"str_label": _str_label,
+				"agi_label": _agi_label,
+				"int_label": _int_label,
+				"skill_button_by_key": _skill_button_by_key,
+				"skill_mana_masks": _skill_mana_masks,
+				"skill_cd_masks": _skill_cd_masks,
+				"skill_cd_mask_materials": _skill_cd_mask_materials,
+			},
+			{
+				"hp_full": COLOR_HP_FULL,
+				"hp_low": COLOR_HP_LOW,
+			}
+		)
+	)
 
 
 func _update_hud() -> void:
-	_get_hud_presenter().update(
-		_hero_ctrl,
-		_enemy_ai,
-		_get_ui_state(),
-		_get_skill_status_service()
-	)
+	_get_hud_presenter().update(_hero_ctrl, _enemy_ai, _get_ui_state(), _get_skill_status_service())
 
 
 func _build_shop_debug_overlay(root: Control) -> void:
@@ -342,7 +353,9 @@ func _build_shop_debug_overlay(root: Control) -> void:
 	root.add_child(_shop_debug_label)
 
 
-func _create_hud_texture_stylebox(texture: Texture2D, texture_margins: Array, content_margins: Array = []) -> StyleBoxTexture:
+func _create_hud_texture_stylebox(
+	texture: Texture2D, texture_margins: Array, content_margins: Array = []
+) -> StyleBoxTexture:
 	var sb := StyleBoxTexture.new()
 	sb.texture = texture
 	sb.texture_margin_left = float(texture_margins[0])
@@ -384,12 +397,17 @@ func _create_hud_assets_config() -> Dictionary:
 
 
 func _configure_inventory_shop_refs() -> void:
-	_get_inventory_shop_controller().set_ui_refs({
-		"inventory_panel_root": _inventory_panel_root,
-		"inventory_slots": _inventory_slots,
-		"inventory_icons": _inventory_icons,
-		"destroy_skill_panel": _destroy_skill_panel,
-	})
+	(
+		_get_inventory_shop_controller()
+		. set_ui_refs(
+			{
+				"inventory_panel_root": _inventory_panel_root,
+				"inventory_slots": _inventory_slots,
+				"inventory_icons": _inventory_icons,
+				"destroy_skill_panel": _destroy_skill_panel,
+			}
+		)
+	)
 	_get_inventory_shop_controller().set_shop_debug_label(_shop_debug_label)
 
 
@@ -404,7 +422,9 @@ func _build_talent_popup(root: Control) -> void:
 
 
 func _update_talent_selection_flow() -> void:
-	var is_observing_any: bool = _is_observing_remote() or _is_observing_boss() or _is_observing_enemy()
+	var is_observing_any: bool = (
+		_is_observing_remote() or _is_observing_boss() or _is_observing_enemy()
+	)
 	_get_talent_selection_controller().update(
 		_hero_ctrl,
 		is_observing_any,
@@ -416,7 +436,10 @@ func _update_talent_selection_flow() -> void:
 func _sync_hero_input_lock_by_ui_state() -> void:
 	if _hero_ctrl == null or not _hero_ctrl.has_method("set_input_locked_by_ui"):
 		return
-	var should_lock_input: bool = _get_inventory_shop_controller().is_shop_visible() or _get_talent_selection_controller().is_popup_open()
+	var should_lock_input: bool = (
+		_get_inventory_shop_controller().is_shop_visible()
+		or _get_talent_selection_controller().is_popup_open()
+	)
 	_hero_ctrl.call("set_input_locked_by_ui", should_lock_input)
 
 
@@ -448,38 +471,49 @@ func _build_minimap_section(parent: Control) -> void:
 
 func _build_hero_info_section(parent: Control) -> void:
 	var hud_assets := _create_hud_assets_config()
-	var refs: Dictionary = _get_hud_status_panels_controller().build_hero_section(parent, {
-		"fixed_layout": true,
-		"hero_rect": Rect2(349, 36, 860, 354),
-		"inventory_rect": Rect2(1222, 0, 262, 438),
-		"panel_stylebox": hud_assets.get("hero_panel_stylebox"),
-		"inventory_slot_stylebox": hud_assets.get("inventory_slot_stylebox"),
-		"health_bar_frame_texture": hud_assets.get("health_bar_frame_texture"),
-		"mana_bar_frame_texture": hud_assets.get("mana_bar_frame_texture"),
-		"inventory_panel_stylebox": hud_assets.get("inventory_panel_stylebox"),
-		"portrait_texture": hud_assets.get("hero_portrait_melee_texture"),
-		"portrait_size": 158.0,
-		"portrait_inset": 6,
-		"inventory_slot_rects": [
-			Rect2(30, 73, 79, 91), Rect2(126, 73, 79, 91),
-			Rect2(30, 176, 79, 91), Rect2(126, 176, 79, 91),
-			Rect2(30, 278, 79, 91), Rect2(126, 278, 79, 91),
-		],
-		"inventory_icon_inset": 6,
-		"stat_font_size": 18,
-		"panel_bg": Color(0.06, 0.05, 0.1, 1.0),
-		"panel_border": COLOR_BORDER_DARK,
-		"portrait_bg": COLOR_PORTRAIT_BG,
-		"accent_color": COLOR_BORDER,
-		"text_color": COLOR_TEXT,
-		"text_dim": COLOR_TEXT_DIM,
-		"hp_bar_color": COLOR_HP_FULL,
-		"mp_bar_color": COLOR_MP,
-	}, {
-		"on_inv_slot_input": Callable(self, "_on_inv_slot_input"),
-		"on_inv_slot_mouse_entered": Callable(self, "_on_inv_slot_mouse_entered"),
-		"on_inv_slot_mouse_exited": Callable(self, "_on_inv_slot_mouse_exited"),
-	})
+	var refs: Dictionary = (
+		_get_hud_status_panels_controller()
+		. build_hero_section(
+			parent,
+			{
+				"fixed_layout": true,
+				"hero_rect": Rect2(349, 36, 860, 354),
+				"inventory_rect": Rect2(1222, 0, 262, 438),
+				"panel_stylebox": hud_assets.get("hero_panel_stylebox"),
+				"inventory_slot_stylebox": hud_assets.get("inventory_slot_stylebox"),
+				"health_bar_frame_texture": hud_assets.get("health_bar_frame_texture"),
+				"mana_bar_frame_texture": hud_assets.get("mana_bar_frame_texture"),
+				"inventory_panel_stylebox": hud_assets.get("inventory_panel_stylebox"),
+				"portrait_texture": hud_assets.get("hero_portrait_melee_texture"),
+				"portrait_size": 158.0,
+				"portrait_inset": 6,
+				"inventory_slot_rects":
+				[
+					Rect2(30, 73, 79, 91),
+					Rect2(126, 73, 79, 91),
+					Rect2(30, 176, 79, 91),
+					Rect2(126, 176, 79, 91),
+					Rect2(30, 278, 79, 91),
+					Rect2(126, 278, 79, 91),
+				],
+				"inventory_icon_inset": 6,
+				"stat_font_size": 18,
+				"panel_bg": Color(0.06, 0.05, 0.1, 1.0),
+				"panel_border": COLOR_BORDER_DARK,
+				"portrait_bg": COLOR_PORTRAIT_BG,
+				"accent_color": COLOR_BORDER,
+				"text_color": COLOR_TEXT,
+				"text_dim": COLOR_TEXT_DIM,
+				"hp_bar_color": COLOR_HP_FULL,
+				"mp_bar_color": COLOR_MP,
+			},
+			{
+				"on_inv_slot_input": Callable(self, "_on_inv_slot_input"),
+				"on_inv_slot_mouse_entered": Callable(self, "_on_inv_slot_mouse_entered"),
+				"on_inv_slot_mouse_exited": Callable(self, "_on_inv_slot_mouse_exited"),
+			}
+		)
+	)
 	_portrait_rect = refs.get("portrait_rect", null) as ColorRect
 	_hero_portrait_texture_rect = refs.get("hero_portrait_texture_rect", null) as TextureRect
 	_hero_name_label = refs.get("hero_name_label", null) as Label
@@ -516,40 +550,57 @@ func _build_hero_info_section(parent: Control) -> void:
 
 func _build_command_section(parent: Control) -> void:
 	var hud_assets := _create_hud_assets_config()
-	var refs: Dictionary = _get_command_section_controller().build(parent, {
-		"fixed_layout": true,
-		"panel_rect": Rect2(1484, 0, 436, 438),
-		"skill_slot_rects": [
-			Rect2(27, 73, 79, 91), Rect2(120, 73, 79, 91), Rect2(212, 73, 79, 91), Rect2(305, 73, 79, 91),
-			Rect2(27, 176, 79, 91), Rect2(120, 176, 79, 91), Rect2(212, 176, 79, 91), Rect2(305, 176, 79, 91),
-			Rect2(27, 278, 79, 91), Rect2(120, 278, 79, 91), Rect2(212, 278, 79, 91), Rect2(305, 278, 79, 91),
-		],
-		"skill_button_stylebox": hud_assets.get("skill_button_stylebox"),
-		"skill_button_size": Vector2(79, 91),
-		"skill_slot_count": 12,
-		"panel_bg": Color(0.06, 0.05, 0.1, 1.0),
-		"panel_border": COLOR_BORDER_DARK,
-		"button_bg_active": COLOR_BUTTON_BG,
-		"button_bg_inactive": Color(0.08, 0.07, 0.1, 1.0),
-		"button_border_active": COLOR_BUTTON_BORDER,
-		"button_border_inactive": Color(0.25, 0.2, 0.15, 1.0),
-		"accent_color": COLOR_BORDER,
-		"text_color": COLOR_TEXT,
-		"text_dim": COLOR_TEXT_DIM,
-		"cooldown_text_color": Color(1.0, 0.5, 0.3, 1.0),
-		"skill_mana_mask_color": COLOR_SKILL_MANA_MASK,
-		"skill_cd_mask_shader_code": SKILL_CD_MASK_SHADER_CODE,
-		"skill_data": [
-			{"key": "Q", "name": "闪现", "active": true},
-			{"key": "W", "name": "急速", "active": true},
-			{"key": "E", "name": "回避", "active": true},
-			{"key": "R", "name": "被动", "active": true},
-			{"key": "A", "name": "攻击", "active": true},
-			{"key": "F", "name": "摧毁", "active": true},
-			{"key": "S", "name": "停止", "active": false},
-			{"key": "P", "name": "巡逻", "active": false},
-		],
-	})
+	var refs: Dictionary = (
+		_get_command_section_controller()
+		. build(
+			parent,
+			{
+				"fixed_layout": true,
+				"panel_rect": Rect2(1484, 0, 436, 438),
+				"skill_slot_rects":
+				[
+					Rect2(27, 73, 79, 91),
+					Rect2(120, 73, 79, 91),
+					Rect2(212, 73, 79, 91),
+					Rect2(305, 73, 79, 91),
+					Rect2(27, 176, 79, 91),
+					Rect2(120, 176, 79, 91),
+					Rect2(212, 176, 79, 91),
+					Rect2(305, 176, 79, 91),
+					Rect2(27, 278, 79, 91),
+					Rect2(120, 278, 79, 91),
+					Rect2(212, 278, 79, 91),
+					Rect2(305, 278, 79, 91),
+				],
+				"skill_button_stylebox": hud_assets.get("skill_button_stylebox"),
+				"skill_button_size": Vector2(79, 91),
+				"skill_slot_count": 12,
+				"panel_bg": Color(0.06, 0.05, 0.1, 1.0),
+				"panel_border": COLOR_BORDER_DARK,
+				"button_bg_active": COLOR_BUTTON_BG,
+				"button_bg_inactive": Color(0.08, 0.07, 0.1, 1.0),
+				"button_border_active": COLOR_BUTTON_BORDER,
+				"button_border_inactive": Color(0.25, 0.2, 0.15, 1.0),
+				"accent_color": COLOR_BORDER,
+				"text_color": COLOR_TEXT,
+				"text_dim": COLOR_TEXT_DIM,
+				"cooldown_text_color": Color(1.0, 0.5, 0.3, 1.0),
+				"skill_mana_mask_color": COLOR_SKILL_MANA_MASK,
+				"skill_cd_mask_shader_code": SKILL_CD_MASK_SHADER_CODE,
+				"skill_data":
+				[
+					{"key": "Q", "name": "闪现", "active": true},
+					{"key": "W", "name": "急速", "active": true},
+					{"key": "E", "name": "回避", "active": true},
+					{"key": "R", "name": "被动", "active": true},
+					{"key": "A", "name": "攻击", "active": true},
+					{"key": "F", "name": "摧毁", "active": true},
+					{"key": "S", "name": "停止", "active": false},
+					{"key": "P", "name": "巡逻", "active": false},
+				],
+			}
+		)
+	)
 	_command_panel_root = refs.get("command_panel_root", null) as Control
 	_skill_button_by_key = refs.get("skill_button_by_key", {})
 	_skill_mana_masks = refs.get("skill_mana_masks", {})
@@ -595,15 +646,21 @@ func _variant_to_bool(value: Variant, fallback: bool = false) -> bool:
 
 
 func set_observed_peer(peer_id: int) -> void:
-	var result: Dictionary = _get_observe_sync_service().apply_observed_peer(_build_current_observe_state(), peer_id)
+	var result: Dictionary = _get_observe_sync_service().apply_observed_peer(
+		_build_current_observe_state(), peer_id
+	)
 	if not _variant_to_bool(result.get("changed", false), false):
 		return
 	_apply_observe_state_snapshot(result.get("state", {}))
-	_get_inventory_shop_controller().on_observe_state_changed(_variant_to_bool(result.get("reset_local_destroy_mode", false), false))
+	_get_inventory_shop_controller().on_observe_state_changed(
+		_variant_to_bool(result.get("reset_local_destroy_mode", false), false)
+	)
 
 
 func set_observed_boss(enabled: bool) -> void:
-	var result: Dictionary = _get_observe_sync_service().apply_observed_boss(_build_current_observe_state(), enabled)
+	var result: Dictionary = _get_observe_sync_service().apply_observed_boss(
+		_build_current_observe_state(), enabled
+	)
 	if not _variant_to_bool(result.get("changed", false), false):
 		return
 	_apply_observe_state_snapshot(result.get("state", {}))
@@ -611,7 +668,9 @@ func set_observed_boss(enabled: bool) -> void:
 
 
 func set_observed_enemy(enemy_state_variant: Variant) -> void:
-	var result: Dictionary = _get_observe_sync_service().apply_observed_enemy(_build_current_observe_state(), enemy_state_variant)
+	var result: Dictionary = _get_observe_sync_service().apply_observed_enemy(
+		_build_current_observe_state(), enemy_state_variant
+	)
 	if not _variant_to_bool(result.get("changed", false), false):
 		return
 	_apply_observe_state_snapshot(result.get("state", {}))
@@ -621,7 +680,9 @@ func set_observed_enemy(enemy_state_variant: Variant) -> void:
 func _update_network_view_state() -> void:
 	if _net_ctrl == null:
 		_net_ctrl = get_node_or_null(net_session_controller_path)
-	var result: Dictionary = _get_observe_sync_service().update_network_view_state(_net_ctrl, _build_current_observe_state())
+	var result: Dictionary = _get_observe_sync_service().update_network_view_state(
+		_net_ctrl, _build_current_observe_state()
+	)
 	_apply_observe_state_snapshot(result.get("state", {}))
 	_sync_local_equipment_state_from_authority()
 	if _variant_to_bool(result.get("clear_observed_peer", false), false):
@@ -629,14 +690,17 @@ func _update_network_view_state() -> void:
 
 
 func _sync_local_equipment_state_from_authority() -> void:
-	var authority_state: Dictionary = _get_observe_sync_service().fetch_local_authority_equipment_state(_net_ctrl, _is_observing_remote(), int(_get_ui_state().self_peer_id))
+	var authority_state: Dictionary = (
+		_get_observe_sync_service()
+		. fetch_local_authority_equipment_state(
+			_net_ctrl, _is_observing_remote(), int(_get_ui_state().self_peer_id)
+		)
+	)
 	if authority_state.is_empty():
 		return
 	if _get_inventory_shop_controller().is_local_equipment_state_synced(authority_state):
 		return
-	apply_authoritative_equipment_commit({
-		"state": authority_state
-	})
+	apply_authoritative_equipment_commit({"state": authority_state})
 
 
 func _is_observing_boss() -> bool:
@@ -691,8 +755,12 @@ func authority_grant_gold_reward(peer_id: int, amount: int) -> Dictionary:
 	return _get_inventory_shop_controller().authority_grant_gold_reward(peer_id, amount)
 
 
-func authority_handle_equipment_action(peer_id: int, request: Dictionary, baseline_state: Dictionary = {}) -> Dictionary:
-	return _get_inventory_shop_controller().authority_handle_equipment_action(peer_id, request, baseline_state)
+func authority_handle_equipment_action(
+	peer_id: int, request: Dictionary, baseline_state: Dictionary = {}
+) -> Dictionary:
+	return _get_inventory_shop_controller().authority_handle_equipment_action(
+		peer_id, request, baseline_state
+	)
 
 
 func _input(event: InputEvent) -> void:

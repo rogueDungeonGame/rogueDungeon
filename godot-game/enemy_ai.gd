@@ -123,29 +123,31 @@ func _ready() -> void:
 		push_warning("enemy_path 未指向有效的 Node3D。")
 		set_process(false)
 		return
-	
+
 	_hero = get_node_or_null(hero_path) as Node3D
 	if _hero == null:
 		_hero = _find_nearest_hero()
-	
+
 	var initial_rotation := _enemy.rotation
 	initial_rotation.z = 0.0
 	_enemy.rotation = initial_rotation
-	
+
 	_nav_agent = NavigationAgent3D.new()
 	_nav_agent.path_desired_distance = 20.0
 	_nav_agent.target_desired_distance = 20.0
 	_enemy.add_child(_nav_agent)
-	
+
 	_animation_player = _enemy.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _animation_player == null:
 		push_warning("未在小怪中找到 AnimationPlayer 节点。")
 	elif not _animation_player.animation_finished.is_connected(_on_attack_finished):
 		_animation_player.animation_finished.connect(_on_attack_finished)
-	
-	var _raw := [attack_animation_1, attack_animation_2, attack_animation_3].filter(func(a): return a != "")
+
+	var raw := [attack_animation_1, attack_animation_2, attack_animation_3].filter(
+		func(a): return a != ""
+	)
 	_attack_animations.clear()
-	for a in _raw:
+	for a in raw:
 		_attack_animations.append(a)
 	_current_hp = max_hp
 	_current_hp_phase = _resolve_hp_phase(_current_hp)
@@ -159,9 +161,7 @@ func _ready() -> void:
 	_create_hp_bar()
 	_update_hp_bar()
 	_play_idle_animation()
-	_push_network_control_command("idle", {
-		"target_pos": _enemy.global_position
-	})
+	_push_network_control_command("idle", {"target_pos": _enemy.global_position})
 
 
 func _play_idle_animation() -> void:
@@ -184,7 +184,7 @@ func _process(delta: float) -> void:
 		_update_remote_sync_smoothing(delta)
 		return
 	_update_incoming_damage_bonus_runtime(delta)
-	
+
 	if _hero == null or not is_instance_valid(_hero) or _is_hero_dead(_hero) or not _hero.visible:
 		_hero = _find_nearest_hero()
 		_target_lock_active = false
@@ -212,14 +212,14 @@ func _process(delta: float) -> void:
 			_stop_animation()
 			_push_network_control_command("idle")
 		return
-	
+
 	if _attack_cooldown > 0.0:
 		_attack_cooldown -= delta
 	if _skill_cooldown > 0.0:
 		_skill_cooldown -= delta
 	if _skill2_cooldown > 0.0:
 		_skill2_cooldown -= delta
-	
+
 	if _is_casting_skill2:
 		_skill2_timer += delta
 		var progress := clampf(_skill2_timer / _skill2_total_time, 0.0, 1.0)
@@ -228,19 +228,26 @@ func _process(delta: float) -> void:
 		if _skill2_timer >= _skill2_total_time:
 			_finish_skill2()
 		return
-	
+
 	if _is_casting_skill:
 		_skill_cast_timer -= delta
 		if _hero != null and is_instance_valid(_hero):
 			_face_toward(_hero.global_position)
 		if _skill_warning != null:
-			_skill_warning.position = Vector3(_enemy.global_position.x, 1.0, _enemy.global_position.z)
+			_skill_warning.position = Vector3(
+				_enemy.global_position.x, 1.0, _enemy.global_position.z
+			)
 		if _skill_cast_timer <= 0.0:
 			_finish_skill()
 		return
-	
+
 	if _is_attacking:
-		if _hero == null or not is_instance_valid(_hero) or not _hero.visible or _is_hero_dead(_hero):
+		if (
+			_hero == null
+			or not is_instance_valid(_hero)
+			or not _hero.visible
+			or _is_hero_dead(_hero)
+		):
 			_is_attacking = false
 			_current_attack_index = 0
 			_hero = null
@@ -248,31 +255,31 @@ func _process(delta: float) -> void:
 			_target_lock_active = false
 			_queue_idle_after_current_animation()
 			return
-		
+
 		_face_toward(_hero.global_position)
-		
+
 		var attack_distance := _distance_xz(_enemy.global_position, _hero.global_position)
 		if attack_distance > attack_range:
 			_interrupt_attack_for_chase()
-		
+
 		return
-	
+
 	var enemy_pos := _enemy.global_position
 	var hero_pos := _hero.global_position
 	var distance := _distance_xz(enemy_pos, hero_pos)
 	var engage_range := attack_range * engage_range_multiplier
 	var in_engage_range := distance <= engage_range
-	
+
 	if not _engage_initialized:
 		_engage_initialized = true
 		return
-	
+
 	if not _is_engaged:
 		if in_engage_range:
 			_is_engaged = true
 			_target_lock_active = true
 			_chase_timer = 0.0
-	
+
 	if not _is_engaged:
 		_engage_timer = 0.0
 		_reset_chase_nav_throttle()
@@ -281,41 +288,41 @@ func _process(delta: float) -> void:
 			_stop_animation()
 			_push_network_control_command("idle")
 		return
-	
+
 	if distance <= attack_range:
 		_chase_timer = 0.0
 	else:
 		_chase_timer += delta
-	
+
 	_engage_timer += delta
-	
+
 	if _engage_timer >= 1.0 and _skill2_cooldown <= 0.0 and distance <= engage_range:
 		if _is_moving:
 			_is_moving = false
 		_start_skill2()
 		return
-	
+
 	var skill_range := attack_range * skill_range_multiplier
-	
+
 	if _engage_timer >= 1.0 and _skill_cooldown <= 0.0 and distance <= skill_range:
 		if _is_moving:
 			_is_moving = false
 		_face_toward(hero_pos)
 		_start_skill()
 		return
-	
+
 	if distance <= attack_range:
 		_reset_chase_nav_throttle()
 		if _is_moving:
 			_is_moving = false
 			_stop_animation()
-		
+
 		_face_toward(hero_pos)
-		
+
 		if _attack_cooldown <= 0.0:
 			_start_attack()
 		return
-	
+
 	if distance > engage_range and not _target_lock_active:
 		_reset_chase_nav_throttle()
 		if _is_moving:
@@ -323,26 +330,28 @@ func _process(delta: float) -> void:
 			_stop_animation()
 			_push_network_control_command("idle")
 		return
-	
+
 	_update_chase_nav_target_throttled(hero_pos)
 	var move_target := hero_pos
 	if not _nav_agent.is_navigation_finished():
 		var next_nav := _nav_agent.get_next_path_position()
 		if _distance_xz(next_nav, enemy_pos) > 1.0:
 			move_target = next_nav
-	var next := _compute_next_move_with_obstacle_avoidance(enemy_pos, move_target, move_speed * delta)
+	var next := _compute_next_move_with_obstacle_avoidance(
+		enemy_pos, move_target, move_speed * delta
+	)
 	next.y = enemy_pos.y
 	_enemy.global_position = next
 	_look_at_target(move_target)
-	
+
 	if not _is_moving:
 		_is_moving = true
 		_play_walk_animation()
 		if _hero != null and is_instance_valid(_hero):
-			_push_network_control_command("chase_target", {
-				"target_path": str(_hero.get_path()),
-				"target_pos": _hero.global_position
-			})
+			_push_network_control_command(
+				"chase_target",
+				{"target_path": str(_hero.get_path()), "target_pos": _hero.global_position}
+			)
 
 
 func _update_chase_nav_target_throttled(target_pos: Vector3, force: bool = false) -> void:
@@ -384,7 +393,7 @@ func _face_toward(target_pos: Vector3) -> void:
 func _start_attack() -> void:
 	if _animation_player == null:
 		return
-	
+
 	if _hero != null and is_instance_valid(_hero) and not _is_hero_dead(_hero):
 		_face_toward(_hero.global_position)
 	_is_attacking = true
@@ -392,28 +401,28 @@ func _start_attack() -> void:
 	_attack_cooldown = _get_attack_interval()
 	_current_attack_index = 0
 	if _hero != null and is_instance_valid(_hero):
-		_push_network_control_command("attack_target", {
-			"target_path": str(_hero.get_path()),
-			"target_pos": _hero.global_position
-		})
-	
+		_push_network_control_command(
+			"attack_target",
+			{"target_path": str(_hero.get_path()), "target_pos": _hero.global_position}
+		)
+
 	if not _animation_player.animation_finished.is_connected(_on_attack_finished):
 		_animation_player.animation_finished.connect(_on_attack_finished)
-	
+
 	_play_current_attack_animation()
 
 
 func _play_current_attack_animation() -> void:
 	if _animation_player == null:
 		return
-	
+
 	if _hero != null and is_instance_valid(_hero) and not _is_hero_dead(_hero):
 		_face_toward(_hero.global_position)
 	if _current_attack_index >= _attack_animations.size():
 		return
-	
+
 	var anim_name = _attack_animations[_current_attack_index]
-	
+
 	if not _animation_player.has_animation(anim_name):
 		push_warning("未找到攻击动画: " + anim_name)
 		_current_attack_index += 1
@@ -422,18 +431,21 @@ func _play_current_attack_animation() -> void:
 		else:
 			_is_attacking = false
 		return
-	
+
 	var anim = _animation_player.get_animation(anim_name)
 	if anim != null:
 		anim.loop_mode = Animation.LOOP_NONE
-	
+
 	_animation_player.play(anim_name, -1.0, _get_attack_speed_scale(), false)
 	_try_apply_damage_to_hero()
 
 
 func _play_walk_animation() -> void:
 	if _animation_player != null and _animation_player.has_animation(walk_animation):
-		if not _animation_player.is_playing() or _animation_player.current_animation != walk_animation:
+		if (
+			not _animation_player.is_playing()
+			or _animation_player.current_animation != walk_animation
+		):
 			_animation_player.play(walk_animation, -1, 1.0, false)
 			var anim = _animation_player.get_animation(walk_animation)
 			if anim != null:
@@ -458,7 +470,12 @@ func _on_attack_finished(_anim_name: StringName) -> void:
 		_resolve_target_after_attack_end()
 		return
 	if not _is_attacking and not _is_moving and not _is_casting_skill and not _is_casting_skill2:
-		if _hero == null or not is_instance_valid(_hero) or _is_hero_dead(_hero) or not _hero.visible:
+		if (
+			_hero == null
+			or not is_instance_valid(_hero)
+			or _is_hero_dead(_hero)
+			or not _hero.visible
+		):
 			_resolve_target_after_attack_end()
 
 
@@ -499,18 +516,17 @@ func _is_obstacle_collider(collider: Node) -> bool:
 	return CombatSceneUtils.is_obstacle_collider(collider)
 
 
-func _is_move_segment_blocked(from_pos: Vector3, to_pos: Vector3, probe_half_width: float, probe_height: float) -> bool:
+func _is_move_segment_blocked(
+	from_pos: Vector3, to_pos: Vector3, probe_half_width: float, probe_height: float
+) -> bool:
 	return CombatSceneUtils.is_move_segment_blocked(
-		get_world_3d(),
-		from_pos,
-		to_pos,
-		probe_half_width,
-		probe_height,
-		OBSTACLE_RAY_MASK
+		get_world_3d(), from_pos, to_pos, probe_half_width, probe_height, OBSTACLE_RAY_MASK
 	)
 
 
-func _compute_next_move_with_obstacle_avoidance(current: Vector3, move_target: Vector3, max_step: float) -> Vector3:
+func _compute_next_move_with_obstacle_avoidance(
+	current: Vector3, move_target: Vector3, max_step: float
+) -> Vector3:
 	var to_target: Vector3 = move_target - current
 	to_target.y = 0.0
 	if to_target.length() <= 0.01 or max_step <= 0.0:
@@ -541,7 +557,7 @@ func _compute_next_move_with_obstacle_avoidance(current: Vector3, move_target: V
 func _find_nearest_hero(max_distance: float = INF) -> Node3D:
 	var nearest: Node3D = null
 	var nearest_distance := INF
-	
+
 	var candidates := get_tree().get_nodes_in_group(hero_group_name)
 	for candidate in candidates:
 		var hero := candidate as Node3D
@@ -551,19 +567,24 @@ func _find_nearest_hero(max_distance: float = INF) -> Node3D:
 			continue
 		if _is_hero_dead(hero):
 			continue
-		
+
 		var distance := _distance_xz(_enemy.global_position, hero.global_position)
 		if distance > max_distance:
 			continue
 		if distance < nearest_distance:
 			nearest_distance = distance
 			nearest = hero
-	
+
 	if nearest != null:
 		return nearest
-	
+
 	var fallback := get_node_or_null(hero_path) as Node3D
-	if fallback != null and is_instance_valid(fallback) and fallback.visible and not _is_hero_dead(fallback):
+	if (
+		fallback != null
+		and is_instance_valid(fallback)
+		and fallback.visible
+		and not _is_hero_dead(fallback)
+	):
 		var fallback_distance := _distance_xz(_enemy.global_position, fallback.global_position)
 		if fallback_distance <= max_distance:
 			return fallback
@@ -576,11 +597,11 @@ func _try_apply_damage_to_hero() -> void:
 	if _is_hero_dead(_hero):
 		return
 	_face_toward(_hero.global_position)
-	
+
 	var distance := _distance_xz(_enemy.global_position, _hero.global_position)
 	if distance > attack_range:
 		return
-	
+
 	var hero_controller := _hero.get_parent()
 	if hero_controller != null and hero_controller.has_method("apply_damage"):
 		hero_controller.call("apply_damage", damage_per_hit, false, _enemy, "physical")
@@ -592,7 +613,9 @@ func _try_apply_damage_to_hero() -> void:
 	if target_peer_id > 0:
 		var net_ctrl: Node = _get_network_session_controller()
 		if net_ctrl != null and net_ctrl.has_method("request_damage_remote_hero"):
-			net_ctrl.call("request_damage_remote_hero", target_peer_id, damage_per_hit, false, "physical")
+			net_ctrl.call(
+				"request_damage_remote_hero", target_peer_id, damage_per_hit, false, "physical"
+			)
 		if _is_hero_dead(_hero):
 			_stop_attack_combo_after_current = true
 			_retarget_hero_after_kill()
@@ -643,7 +666,9 @@ func _apply_skill2_hit_to_heroes_in_range() -> void:
 		var distance: float = _distance_xz(_enemy.global_position, hero.global_position)
 		if distance > overlap_distance:
 			continue
-		var applied: bool = _apply_damage_and_optional_slow_to_hero(hero, skill2_damage, skill2_slow_percent, skill2_slow_duration, "magic")
+		var applied: bool = _apply_damage_and_optional_slow_to_hero(
+			hero, skill2_damage, skill2_slow_percent, skill2_slow_duration, "magic"
+		)
 		if applied:
 			_skill2_hit_targets[hit_key] = true
 			_skill2_hit_applied = true
@@ -659,15 +684,21 @@ func _build_skill2_hit_key(hero: Node3D) -> String:
 func _get_horizontal_collision_radius(target: Node3D, fallback_radius: float) -> float:
 	if target == null or not is_instance_valid(target):
 		return maxf(fallback_radius, 0.0)
-	var collision_shape: CollisionShape3D = target.get_node_or_null("CollisionBody/CollisionShape3D") as CollisionShape3D
+	var collision_shape: CollisionShape3D = (
+		target.get_node_or_null("CollisionBody/CollisionShape3D") as CollisionShape3D
+	)
 	if collision_shape == null:
 		collision_shape = target.find_child("CollisionShape3D", true, false) as CollisionShape3D
 	if collision_shape == null or collision_shape.shape == null:
 		return maxf(fallback_radius, 0.0)
-	return _shape_horizontal_radius(collision_shape.shape, collision_shape.global_basis.get_scale(), fallback_radius)
+	return _shape_horizontal_radius(
+		collision_shape.shape, collision_shape.global_basis.get_scale(), fallback_radius
+	)
 
 
-func _shape_horizontal_radius(shape: Shape3D, world_scale: Vector3, fallback_radius: float) -> float:
+func _shape_horizontal_radius(
+	shape: Shape3D, world_scale: Vector3, fallback_radius: float
+) -> float:
 	if shape == null:
 		return maxf(fallback_radius, 0.0)
 	var scale_xz: float = maxf(maxf(absf(world_scale.x), absf(world_scale.z)), 0.0001)
@@ -685,7 +716,13 @@ func _shape_horizontal_radius(shape: Shape3D, world_scale: Vector3, fallback_rad
 	return maxf(fallback_radius, 0.0)
 
 
-func _apply_damage_and_optional_slow_to_hero(hero: Node3D, damage: int, slow_percent: float, slow_duration: float, damage_type: String = "physical") -> bool:
+func _apply_damage_and_optional_slow_to_hero(
+	hero: Node3D,
+	damage: int,
+	slow_percent: float,
+	slow_duration: float,
+	damage_type: String = "physical"
+) -> bool:
 	if hero == null or not is_instance_valid(hero):
 		return false
 	if _is_hero_dead(hero):
@@ -695,7 +732,11 @@ func _apply_damage_and_optional_slow_to_hero(hero: Node3D, damage: int, slow_per
 	if hero_controller != null and hero_controller.has_method("apply_damage"):
 		hero_controller.call("apply_damage", maxi(damage, 0), false, _enemy, damage_type)
 		dealt = true
-		if slow_percent > 0.0 and slow_duration > 0.0 and hero_controller.has_method("apply_temporary_slow"):
+		if (
+			slow_percent > 0.0
+			and slow_duration > 0.0
+			and hero_controller.has_method("apply_temporary_slow")
+		):
 			hero_controller.call("apply_temporary_slow", slow_percent, slow_duration)
 		return true
 	var target_peer_id: int = _get_remote_target_peer_id(hero)
@@ -705,9 +746,15 @@ func _apply_damage_and_optional_slow_to_hero(hero: Node3D, damage: int, slow_per
 	if net_ctrl == null:
 		return dealt
 	if net_ctrl.has_method("request_damage_remote_hero"):
-		net_ctrl.call("request_damage_remote_hero", target_peer_id, maxi(damage, 0), false, damage_type)
+		net_ctrl.call(
+			"request_damage_remote_hero", target_peer_id, maxi(damage, 0), false, damage_type
+		)
 		dealt = true
-	if slow_percent > 0.0 and slow_duration > 0.0 and net_ctrl.has_method("request_slow_remote_hero"):
+	if (
+		slow_percent > 0.0
+		and slow_duration > 0.0
+		and net_ctrl.has_method("request_slow_remote_hero")
+	):
 		net_ctrl.call("request_slow_remote_hero", target_peer_id, slow_percent, slow_duration)
 	return dealt
 
@@ -763,10 +810,10 @@ func _resolve_target_after_attack_end() -> void:
 		_update_chase_nav_target_throttled(hero_pos, true)
 		_is_moving = true
 		_play_walk_animation()
-		_push_network_control_command("chase_target", {
-			"target_path": str(_hero.get_path()),
-			"target_pos": _hero.global_position
-		})
+		_push_network_control_command(
+			"chase_target",
+			{"target_path": str(_hero.get_path()), "target_pos": _hero.global_position}
+		)
 		return
 	_reset_chase_nav_throttle()
 	_is_moving = false
@@ -774,7 +821,12 @@ func _resolve_target_after_attack_end() -> void:
 	_push_network_control_command("idle")
 
 
-func apply_damage(amount: int, attacker: Node3D = null, damage_source: String = "basic_attack", hit_context: Dictionary = {}) -> void:
+func apply_damage(
+	amount: int,
+	attacker: Node3D = null,
+	damage_source: String = "basic_attack",
+	hit_context: Dictionary = {}
+) -> void:
 	if _is_dead:
 		return
 	var incoming: int = maxi(amount, 0)
@@ -791,7 +843,7 @@ func apply_damage(amount: int, attacker: Node3D = null, damage_source: String = 
 	_apply_incoming_damage_bonus_from_context(hit_context)
 	if final_damage > 0 and _current_hp > 0:
 		_retarget_to_attacker(attacker)
-	
+
 	if _current_hp <= 0:
 		_die()
 
@@ -809,10 +861,15 @@ func _get_physical_damage_multiplier() -> float:
 
 
 func get_incoming_damage_bonus_percent() -> float:
-	return maxf(_incoming_damage_bonus_temporary_percent, 0.0) + maxf(_incoming_damage_bonus_permanent_percent, 0.0)
+	return (
+		maxf(_incoming_damage_bonus_temporary_percent, 0.0)
+		+ maxf(_incoming_damage_bonus_permanent_percent, 0.0)
+	)
 
 
-func apply_incoming_damage_bonus(bonus_percent: float, duration_sec: float = 0.0, permanent: bool = false) -> void:
+func apply_incoming_damage_bonus(
+	bonus_percent: float, duration_sec: float = 0.0, permanent: bool = false
+) -> void:
 	var safe_bonus: float = maxf(bonus_percent, 0.0)
 	if safe_bonus <= 0.0:
 		return
@@ -837,7 +894,9 @@ func _apply_incoming_damage_bonus_from_context(hit_context: Dictionary) -> void:
 func _update_incoming_damage_bonus_runtime(delta: float) -> void:
 	if _incoming_damage_bonus_temporary_percent <= 0.0 and _incoming_damage_bonus_time_left <= 0.0:
 		return
-	_incoming_damage_bonus_time_left = maxf(_incoming_damage_bonus_time_left - maxf(delta, 0.0), 0.0)
+	_incoming_damage_bonus_time_left = maxf(
+		_incoming_damage_bonus_time_left - maxf(delta, 0.0), 0.0
+	)
 	if _incoming_damage_bonus_time_left <= 0.0:
 		_incoming_damage_bonus_temporary_percent = 0.0
 
@@ -868,11 +927,7 @@ func _show_damage_popup(amount: int, damage_source: String, is_critical: bool = 
 	if _hp_bar_anchor_height <= 0.0:
 		_hp_bar_anchor_height = _resolve_hp_bar_anchor_height()
 	CombatSceneUtils.spawn_damage_popup(
-		_enemy,
-		amount,
-		_hp_bar_anchor_height,
-		_is_magic_damage_source(damage_source),
-		is_critical
+		_enemy, amount, _hp_bar_anchor_height, _is_magic_damage_source(damage_source), is_critical
 	)
 
 
@@ -903,7 +958,9 @@ func _apply_remote_damage_popup_sync(state: Dictionary) -> void:
 		_show_damage_popup(amount, source, is_critical)
 
 
-func apply_knockback(push_direction: Vector3, distance: float, duration_sec: float = 0.2, source_priority: int = 0) -> bool:
+func apply_knockback(
+	push_direction: Vector3, distance: float, duration_sec: float = 0.2, source_priority: int = 0
+) -> bool:
 	if _is_dead:
 		return false
 	if _enemy == null or not is_instance_valid(_enemy):
@@ -939,11 +996,12 @@ func apply_knockback(push_direction: Vector3, distance: float, duration_sec: flo
 	_knockback_tween.set_trans(Tween.TRANS_LINEAR)
 	_knockback_tween.set_ease(Tween.EASE_IN_OUT)
 	_knockback_tween.tween_property(_enemy, "global_position", to_pos, safe_duration)
-	_knockback_tween.finished.connect(func() -> void:
-		_knockback_active = false
-		_knockback_tween = null
-		if _nav_agent != null:
-			_nav_agent.target_position = _enemy.global_position
+	_knockback_tween.finished.connect(
+		func() -> void:
+			_knockback_active = false
+			_knockback_tween = null
+			if _nav_agent != null:
+				_nav_agent.target_position = _enemy.global_position
 	)
 	return true
 
@@ -987,10 +1045,10 @@ func _retarget_to_attacker(attacker: Node3D) -> void:
 	if _is_attacking:
 		_interrupt_attack_for_chase()
 	_face_toward(attacker.global_position)
-	_push_network_control_command("chase_target", {
-		"target_path": str(attacker.get_path()),
-		"target_pos": attacker.global_position
-	})
+	_push_network_control_command(
+		"chase_target",
+		{"target_path": str(attacker.get_path()), "target_pos": attacker.global_position}
+	)
 
 
 func is_dead() -> bool:
@@ -1000,7 +1058,7 @@ func is_dead() -> bool:
 func _die() -> void:
 	if _is_dead:
 		return
-	
+
 	_is_dead = true
 	emit_signal("boss_defeated")
 	if _knockback_tween != null and _knockback_tween.is_valid():
@@ -1019,7 +1077,7 @@ func _die() -> void:
 	_hero = null
 	_hide_skill_warning()
 	_push_network_control_command("dead")
-	
+
 	if _animation_player != null:
 		_animation_player.stop()
 		if _animation_player.has_animation(death_animation):
@@ -1079,7 +1137,9 @@ func _refresh_hp_bar_anchor_height_and_position() -> void:
 
 
 func _sync_hp_bar_follow_and_facing() -> void:
-	CombatSceneUtils.sync_top_level_billboard_to_camera(_hp_bar, _enemy, _hp_bar_anchor_height, get_viewport())
+	CombatSceneUtils.sync_top_level_billboard_to_camera(
+		_hp_bar, _enemy, _hp_bar_anchor_height, get_viewport()
+	)
 
 
 func _compute_node_mesh_height(root_node: Node3D) -> float:
@@ -1188,9 +1248,7 @@ func _push_network_control_command(command_type: String, extra: Dictionary = {})
 		normalized_type = "idle"
 	_network_command_seq += 1
 	var payload: Dictionary = {
-		"seq": _network_command_seq,
-		"type": normalized_type,
-		"t_ms": Time.get_ticks_msec()
+		"seq": _network_command_seq, "type": normalized_type, "t_ms": Time.get_ticks_msec()
 	}
 	if _enemy != null and is_instance_valid(_enemy):
 		payload["target_pos"] = _enemy.global_position
@@ -1214,9 +1272,7 @@ func _start_skill() -> void:
 	_is_casting_skill = true
 	_is_attacking = false
 	_skill_cast_timer = cast_duration
-	_push_network_control_command("cast_skill", {
-		"skill_id": 1
-	})
+	_push_network_control_command("cast_skill", {"skill_id": 1})
 	if _animation_player.has_animation(skill_animation):
 		var anim = _animation_player.get_animation(skill_animation)
 		if anim != null:
@@ -1232,9 +1288,9 @@ func _finish_skill() -> void:
 	_is_casting_skill = false
 	_skill_cooldown = skill_cooldown_time
 	_hide_skill_warning()
-	
+
 	_apply_skill1_damage_to_heroes_in_range()
-	
+
 	_stop_animation()
 	_resume_target_after_skill()
 
@@ -1251,7 +1307,7 @@ func _start_skill2() -> void:
 	_skill2_hit_targets.clear()
 	_skill2_timer = 0.0
 	_skill2_total_time = skill2_cast_time
-	
+
 	_skill2_start_pos = _enemy.global_position
 	var angle := _enemy.rotation.y + PI / 2.0
 	var forward := Vector3(sin(angle), 0.0, cos(angle))
@@ -1260,11 +1316,8 @@ func _start_skill2() -> void:
 	var charge_distance := attack_range * skill2_distance_multiplier
 	_skill2_end_pos = _skill2_start_pos + forward * charge_distance
 	_skill2_end_pos.y = _skill2_start_pos.y
-	_push_network_control_command("cast_skill", {
-		"skill_id": 2,
-		"target_pos": _skill2_end_pos
-	})
-	
+	_push_network_control_command("cast_skill", {"skill_id": 2, "target_pos": _skill2_end_pos})
+
 	if _animation_player.has_animation(skill2_animation):
 		var anim = _animation_player.get_animation(skill2_animation)
 		if anim != null:
@@ -1324,23 +1377,23 @@ func _resume_target_after_skill() -> void:
 func _show_skill_warning() -> void:
 	if _skill_warning != null:
 		return
-	
+
 	var skill_range := attack_range * skill_range_multiplier
-	
+
 	var shader := Shader.new()
 	shader.code = "shader_type spatial;\nrender_mode unshaded, cull_disabled, shadows_disabled;\nvoid fragment() {\n\tvec2 uv = UV * 2.0 - 1.0;\n\tfloat dist = length(uv);\n\tif (dist > 1.0) { discard; }\n\tif (dist > 0.96) {\n\t\tALBEDO = vec3(1.0, 0.0, 0.0);\n\t\tALPHA = 0.85;\n\t} else {\n\t\tALBEDO = vec3(1.0, 0.2, 0.2);\n\t\tALPHA = 0.25;\n\t}\n}\n"
-	
+
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
-	
+
 	var mesh := PlaneMesh.new()
 	mesh.size = Vector2(skill_range * 2.0, skill_range * 2.0)
-	
+
 	_skill_warning = MeshInstance3D.new()
 	_skill_warning.mesh = mesh
 	_skill_warning.material_override = mat
 	_skill_warning.position = Vector3(_enemy.global_position.x, 1.0, _enemy.global_position.z)
-	
+
 	get_parent().add_child(_skill_warning)
 
 
@@ -1354,7 +1407,7 @@ func _hide_skill_warning() -> void:
 func _interrupt_attack_for_chase() -> void:
 	if not _is_attacking:
 		return
-	
+
 	_is_attacking = false
 	_stop_attack_combo_after_current = false
 	_current_attack_index = 0
@@ -1371,10 +1424,10 @@ func _finalize_death() -> void:
 	if _death_finalized:
 		return
 	_death_finalized = true
-	
+
 	if _hp_bar != null:
 		_hp_bar.visible = false
-	
+
 	if _enemy != null:
 		_enemy.visible = false
 
@@ -1424,12 +1477,57 @@ func apply_floor_profile(profile: Dictionary, reset_runtime: bool = true) -> voi
 	_cache_base_progression_stats()
 	if profile.is_empty():
 		return
-	max_hp = maxi(int(round(float(_base_progression_stats.get("max_hp", max_hp)) * float(profile.get("boss_hp_multiplier", 1.0)))), 1)
-	damage_per_hit = maxi(int(round(float(_base_progression_stats.get("damage_per_hit", damage_per_hit)) * float(profile.get("boss_damage_multiplier", 1.0)))), 1)
-	skill_damage = maxi(int(round(float(_base_progression_stats.get("skill_damage", skill_damage)) * float(profile.get("boss_skill_damage_multiplier", 1.0)))), 1)
-	skill2_damage = maxi(int(round(float(_base_progression_stats.get("skill2_damage", skill2_damage)) * float(profile.get("boss_skill_damage_multiplier", 1.0)))), 1)
-	armor = float(_base_progression_stats.get("armor", armor)) + float(profile.get("boss_armor_bonus", 0.0))
-	phase_wave_unit_count = maxi(int(_base_progression_stats.get("phase_wave_unit_count", phase_wave_unit_count)), 0)
+	max_hp = maxi(
+		int(
+			round(
+				(
+					float(_base_progression_stats.get("max_hp", max_hp))
+					* float(profile.get("boss_hp_multiplier", 1.0))
+				)
+			)
+		),
+		1
+	)
+	damage_per_hit = maxi(
+		int(
+			round(
+				(
+					float(_base_progression_stats.get("damage_per_hit", damage_per_hit))
+					* float(profile.get("boss_damage_multiplier", 1.0))
+				)
+			)
+		),
+		1
+	)
+	skill_damage = maxi(
+		int(
+			round(
+				(
+					float(_base_progression_stats.get("skill_damage", skill_damage))
+					* float(profile.get("boss_skill_damage_multiplier", 1.0))
+				)
+			)
+		),
+		1
+	)
+	skill2_damage = maxi(
+		int(
+			round(
+				(
+					float(_base_progression_stats.get("skill2_damage", skill2_damage))
+					* float(profile.get("boss_skill_damage_multiplier", 1.0))
+				)
+			)
+		),
+		1
+	)
+	armor = (
+		float(_base_progression_stats.get("armor", armor))
+		+ float(profile.get("boss_armor_bonus", 0.0))
+	)
+	phase_wave_unit_count = maxi(
+		int(_base_progression_stats.get("phase_wave_unit_count", phase_wave_unit_count)), 0
+	)
 	if not reset_runtime:
 		_current_hp = clampi(_current_hp, 0, max_hp)
 		_current_hp_phase = _resolve_hp_phase(_current_hp)
@@ -1447,7 +1545,9 @@ func reset_to_spawn_origin() -> void:
 	_enemy.rotation = next_rotation
 
 
-func set_spawn_origin(world_position: Vector3, yaw: float = 0.0, move_immediately: bool = false) -> void:
+func set_spawn_origin(
+	world_position: Vector3, yaw: float = 0.0, move_immediately: bool = false
+) -> void:
 	_spawn_origin = world_position
 	_spawn_yaw = yaw
 	if _enemy == null or not is_instance_valid(_enemy):
@@ -1509,9 +1609,7 @@ func _reset_for_new_floor() -> void:
 	_refresh_hp_bar_anchor_height_and_position()
 	_update_hp_bar()
 	_play_idle_animation()
-	_push_network_control_command("idle", {
-		"target_pos": _enemy.global_position
-	})
+	_push_network_control_command("idle", {"target_pos": _enemy.global_position})
 
 
 func export_network_state() -> Dictionary:
@@ -1582,11 +1680,17 @@ func apply_network_state(state: Dictionary) -> void:
 		_current_hp = clampi(int(state["hp"]), 0, maxi(max_hp, 1))
 	_apply_remote_damage_popup_sync(state)
 	if state.has("incoming_damage_bonus_temp_percent"):
-		_incoming_damage_bonus_temporary_percent = maxf(float(state["incoming_damage_bonus_temp_percent"]), 0.0)
+		_incoming_damage_bonus_temporary_percent = maxf(
+			float(state["incoming_damage_bonus_temp_percent"]), 0.0
+		)
 	if state.has("incoming_damage_bonus_permanent_percent"):
-		_incoming_damage_bonus_permanent_percent = maxf(float(state["incoming_damage_bonus_permanent_percent"]), 0.0)
+		_incoming_damage_bonus_permanent_percent = maxf(
+			float(state["incoming_damage_bonus_permanent_percent"]), 0.0
+		)
 	if state.has("incoming_damage_bonus_time_left"):
-		_incoming_damage_bonus_time_left = maxf(float(state["incoming_damage_bonus_time_left"]), 0.0)
+		_incoming_damage_bonus_time_left = maxf(
+			float(state["incoming_damage_bonus_time_left"]), 0.0
+		)
 	if state.has("armor"):
 		armor = float(state["armor"])
 	if state.has("dead"):
@@ -1681,14 +1785,25 @@ func _apply_network_animation_state(state: Dictionary) -> void:
 			if String(_animation_player.current_animation) != death_animation:
 				_animation_player.play(death_animation, -1.0, 1.0, false)
 		return
-	if _is_casting_skill2 and skill2_animation != "" and _animation_player.has_animation(skill2_animation):
+	if (
+		_is_casting_skill2
+		and skill2_animation != ""
+		and _animation_player.has_animation(skill2_animation)
+	):
 		_configure_remote_animation_loop(skill2_animation)
 		if String(_animation_player.current_animation) != skill2_animation:
 			_animation_player.play(skill2_animation, -1.0, 1.0, false)
 		return
-	if _is_casting_skill and skill_animation != "" and _animation_player.has_animation(skill_animation):
+	if (
+		_is_casting_skill
+		and skill_animation != ""
+		and _animation_player.has_animation(skill_animation)
+	):
 		_configure_remote_animation_loop(skill_animation)
-		if not _animation_player.is_playing() or String(_animation_player.current_animation) != skill_animation:
+		if (
+			not _animation_player.is_playing()
+			or String(_animation_player.current_animation) != skill_animation
+		):
 			_animation_player.play(skill_animation, -1.0, speed_scale, false)
 		else:
 			_animation_player.speed_scale = speed_scale
@@ -1698,14 +1813,19 @@ func _apply_network_animation_state(state: Dictionary) -> void:
 		if fallback_attack_anim != "" and _animation_player.has_animation(fallback_attack_anim):
 			_configure_remote_animation_loop(fallback_attack_anim)
 			if String(_animation_player.current_animation) != fallback_attack_anim:
-				_animation_player.play(fallback_attack_anim, -1.0, maxf(_get_attack_speed_scale(), 0.05), false)
+				_animation_player.play(
+					fallback_attack_anim, -1.0, maxf(_get_attack_speed_scale(), 0.05), false
+				)
 			return
 	if _is_moving:
 		_play_walk_animation()
 		return
 	if desired_anim != "" and should_play and _animation_player.has_animation(desired_anim):
 		_configure_remote_animation_loop(desired_anim)
-		if not _animation_player.is_playing() or String(_animation_player.current_animation) != desired_anim:
+		if (
+			not _animation_player.is_playing()
+			or String(_animation_player.current_animation) != desired_anim
+		):
 			_animation_player.play(desired_anim)
 		_animation_player.speed_scale = speed_scale
 		return

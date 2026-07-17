@@ -189,7 +189,9 @@ func _build_fixed(parent: Control, config: Dictionary) -> Dictionary:
 	}
 
 
-func _create_skill_button(key: String, skill_name: String, active: bool, config: Dictionary) -> PanelContainer:
+func _create_skill_button(
+	key: String, skill_name: String, active: bool, config: Dictionary
+) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = config.get("skill_button_size", Vector2(60, 60))
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -200,7 +202,14 @@ func _create_skill_button(key: String, skill_name: String, active: bool, config:
 	key_label.text = key
 	key_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	key_label.position = Vector2(4, 2)
-	key_label.add_theme_color_override("font_color", config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0)) if active else config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0)))
+	key_label.add_theme_color_override(
+		"font_color",
+		(
+			config.get("accent_color", Color(0.78, 0.66, 0.2, 1.0))
+			if active
+			else config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0))
+		)
+	)
 	key_label.add_theme_font_size_override("font_size", 11)
 	panel.add_child(key_label)
 
@@ -211,7 +220,14 @@ func _create_skill_button(key: String, skill_name: String, active: bool, config:
 		name_label.set_anchors_preset(Control.PRESET_CENTER)
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		name_label.add_theme_color_override("font_color", config.get("text_color", Color(0.95, 0.92, 0.78, 1.0)) if active else config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0)))
+		name_label.add_theme_color_override(
+			"font_color",
+			(
+				config.get("text_color", Color(0.95, 0.92, 0.78, 1.0))
+				if active
+				else config.get("text_dim", Color(0.6, 0.55, 0.45, 1.0))
+			)
+		)
 		name_label.add_theme_font_size_override("font_size", 12)
 		panel.add_child(name_label)
 
@@ -220,7 +236,9 @@ func _create_skill_button(key: String, skill_name: String, active: bool, config:
 	cd_label.text = ""
 	cd_label.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	cd_label.position = Vector2(-24, -20)
-	cd_label.add_theme_color_override("font_color", config.get("cooldown_text_color", Color(1.0, 0.5, 0.3, 1.0)))
+	cd_label.add_theme_color_override(
+		"font_color", config.get("cooldown_text_color", Color(1.0, 0.5, 0.3, 1.0))
+	)
 	cd_label.add_theme_font_size_override("font_size", 12)
 	panel.add_child(cd_label)
 
@@ -247,8 +265,16 @@ func _get_skill_button_stylebox(config: Dictionary, active: bool) -> StyleBox:
 	if texture_stylebox != null and active:
 		return texture_stylebox
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = config.get("button_bg_active", Color(0.12, 0.1, 0.18, 1.0)) if active else config.get("button_bg_inactive", Color(0.08, 0.07, 0.1, 1.0))
-	sb.border_color = config.get("button_border_active", Color(0.55, 0.45, 0.15, 1.0)) if active else config.get("button_border_inactive", Color(0.25, 0.2, 0.15, 1.0))
+	sb.bg_color = (
+		config.get("button_bg_active", Color(0.12, 0.1, 0.18, 1.0))
+		if active
+		else config.get("button_bg_inactive", Color(0.08, 0.07, 0.1, 1.0))
+	)
+	sb.border_color = (
+		config.get("button_border_active", Color(0.55, 0.45, 0.15, 1.0))
+		if active
+		else config.get("button_border_inactive", Color(0.25, 0.2, 0.15, 1.0))
+	)
 	sb.set_border_width_all(2)
 	sb.corner_radius_top_left = 3
 	sb.corner_radius_top_right = 3
@@ -257,7 +283,9 @@ func _get_skill_button_stylebox(config: Dictionary, active: bool) -> StyleBox:
 	return sb
 
 
-func _setup_skill_button_masks(skill_key: String, button: PanelContainer, config: Dictionary) -> Dictionary:
+func _setup_skill_button_masks(
+	skill_key: String, button: PanelContainer, config: Dictionary
+) -> Dictionary:
 	if button == null:
 		return {}
 	var mana_mask := button.get_node_or_null("ManaMask") as ColorRect

@@ -3,21 +3,31 @@ class_name SkillStatusService
 
 
 func update_skill_cast_masks(
-		hero_ctrl: Node,
-		observing_boss: bool,
-		observing_enemy: bool,
-		observing_remote: bool,
-		skill_mana_masks: Dictionary,
-		skill_cd_masks: Dictionary,
-		skill_cd_mask_materials: Dictionary
-	) -> void:
+	hero_ctrl: Node,
+	observing_boss: bool,
+	observing_enemy: bool,
+	observing_remote: bool,
+	skill_mana_masks: Dictionary,
+	skill_cd_masks: Dictionary,
+	skill_cd_mask_materials: Dictionary
+) -> void:
 	var tracked_skill_keys: PackedStringArray = PackedStringArray(["Q", "W", "E", "R"])
 	if hero_ctrl == null or observing_boss or observing_enemy or observing_remote:
 		for key in tracked_skill_keys:
-			_set_skill_cast_mask_state(String(key), false, false, 0.0, skill_mana_masks, skill_cd_masks, skill_cd_mask_materials)
+			_set_skill_cast_mask_state(
+				String(key),
+				false,
+				false,
+				0.0,
+				skill_mana_masks,
+				skill_cd_masks,
+				skill_cd_mask_materials
+			)
 		return
 	var current_mana: int = _variant_to_int(hero_ctrl.get("current_mana"), 0)
-	var cdr_percent: float = clampf(_variant_to_float(hero_ctrl.get("cooldown_reduction_percent_total"), 0.0), 0.0, 80.0)
+	var cdr_percent: float = clampf(
+		_variant_to_float(hero_ctrl.get("cooldown_reduction_percent_total"), 0.0), 0.0, 80.0
+	)
 	var cdr_ratio: float = cdr_percent * 0.01
 	var skill_configs: Array[Dictionary] = [
 		{
@@ -35,20 +45,24 @@ func update_skill_cast_masks(
 	]
 	var has_active_e: bool = _variant_to_bool(hero_ctrl.get("skill_e_active"), false)
 	if has_active_e:
-		skill_configs.append({
-			"key": "E",
-			"mana_cost_prop": "evasive_mana_cost",
-			"cd_prop": "_e_cooldown",
-			"base_cd_prop": "evasive_cooldown_time"
-		})
+		skill_configs.append(
+			{
+				"key": "E",
+				"mana_cost_prop": "evasive_mana_cost",
+				"cd_prop": "_e_cooldown",
+				"base_cd_prop": "evasive_cooldown_time"
+			}
+		)
 	var has_active_r: bool = _variant_to_bool(hero_ctrl.get("skill_r_active"), false)
 	if has_active_r:
-		skill_configs.append({
-			"key": "R",
-			"mana_cost_prop": "ranged_r_mana_cost",
-			"cd_prop": "_r_cooldown",
-			"base_cd_prop": "ranged_r_cooldown_time"
-		})
+		skill_configs.append(
+			{
+				"key": "R",
+				"mana_cost_prop": "ranged_r_mana_cost",
+				"cd_prop": "_r_cooldown",
+				"base_cd_prop": "ranged_r_cooldown_time"
+			}
+		)
 	for config in skill_configs:
 		var skill_key: String = str(config.get("key", ""))
 		var mana_cost_prop: String = str(config.get("mana_cost_prop", ""))
@@ -66,24 +80,36 @@ func update_skill_cast_masks(
 			else:
 				cooldown_ratio = 1.0
 		var no_mana_mask: bool = (not is_cooling) and mana_cost > 0 and current_mana < mana_cost
-		_set_skill_cast_mask_state(skill_key, no_mana_mask, is_cooling, cooldown_ratio, skill_mana_masks, skill_cd_masks, skill_cd_mask_materials)
+		_set_skill_cast_mask_state(
+			skill_key,
+			no_mana_mask,
+			is_cooling,
+			cooldown_ratio,
+			skill_mana_masks,
+			skill_cd_masks,
+			skill_cd_mask_materials
+		)
 	if not has_active_e:
-		_set_skill_cast_mask_state("E", false, false, 0.0, skill_mana_masks, skill_cd_masks, skill_cd_mask_materials)
+		_set_skill_cast_mask_state(
+			"E", false, false, 0.0, skill_mana_masks, skill_cd_masks, skill_cd_mask_materials
+		)
 	if not has_active_r:
-		_set_skill_cast_mask_state("R", false, false, 0.0, skill_mana_masks, skill_cd_masks, skill_cd_mask_materials)
+		_set_skill_cast_mask_state(
+			"R", false, false, 0.0, skill_mana_masks, skill_cd_masks, skill_cd_mask_materials
+		)
 
 
 func update_skill_name_labels(
-		hero_ctrl: Node,
-		observing_boss: bool,
-		observing_enemy: bool,
-		observing_remote: bool,
-		skill_button_by_key: Dictionary,
-		q_skill_name_label: Label,
-		w_skill_name_label: Label,
-		e_skill_name_label: Label,
-		r_skill_name_label: Label
-	) -> void:
+	hero_ctrl: Node,
+	observing_boss: bool,
+	observing_enemy: bool,
+	observing_remote: bool,
+	skill_button_by_key: Dictionary,
+	q_skill_name_label: Label,
+	w_skill_name_label: Label,
+	e_skill_name_label: Label,
+	r_skill_name_label: Label
+) -> void:
 	var e_button: Control = skill_button_by_key.get("E", null) as Control
 	if observing_boss or observing_enemy or observing_remote:
 		if e_button != null:
@@ -117,7 +143,9 @@ func update_skill_name_labels(
 		else:
 			if e_button != null:
 				e_button.visible = true
-			_set_label_text(e_skill_name_label, e_name_text if not e_name_text.is_empty() else "E技能")
+			_set_label_text(
+				e_skill_name_label, e_name_text if not e_name_text.is_empty() else "E技能"
+			)
 
 	if r_skill_name_label != null:
 		var r_active: bool = _variant_to_bool(hero_ctrl.get("skill_r_active"), false)
@@ -135,7 +163,13 @@ func update_skill_name_labels(
 				_set_label_text(r_skill_name_label, "被动")
 
 
-func update_flash_cd(hero_ctrl: Node, observing_boss: bool, observing_enemy: bool, observing_remote: bool, flash_cd_label: Label) -> void:
+func update_flash_cd(
+	hero_ctrl: Node,
+	observing_boss: bool,
+	observing_enemy: bool,
+	observing_remote: bool,
+	flash_cd_label: Label
+) -> void:
 	if flash_cd_label == null:
 		return
 	if observing_boss or observing_enemy or observing_remote:
@@ -149,7 +183,13 @@ func update_flash_cd(hero_ctrl: Node, observing_boss: bool, observing_enemy: boo
 	flash_cd_label.text = "%.1f" % float(cd) if float(cd) > 0.0 else ""
 
 
-func update_haste_cd(hero_ctrl: Node, observing_boss: bool, observing_enemy: bool, observing_remote: bool, haste_cd_label: Label) -> void:
+func update_haste_cd(
+	hero_ctrl: Node,
+	observing_boss: bool,
+	observing_enemy: bool,
+	observing_remote: bool,
+	haste_cd_label: Label
+) -> void:
 	if haste_cd_label == null:
 		return
 	if observing_boss or observing_enemy or observing_remote:
@@ -168,7 +208,13 @@ func update_haste_cd(hero_ctrl: Node, observing_boss: bool, observing_enemy: boo
 		haste_cd_label.text = ""
 
 
-func update_e_skill_cd(hero_ctrl: Node, observing_boss: bool, observing_enemy: bool, observing_remote: bool, e_skill_cd_label: Label) -> void:
+func update_e_skill_cd(
+	hero_ctrl: Node,
+	observing_boss: bool,
+	observing_enemy: bool,
+	observing_remote: bool,
+	e_skill_cd_label: Label
+) -> void:
 	if e_skill_cd_label == null:
 		return
 	if observing_boss or observing_enemy or observing_remote:
@@ -184,7 +230,13 @@ func update_e_skill_cd(hero_ctrl: Node, observing_boss: bool, observing_enemy: b
 	e_skill_cd_label.text = "%.1f" % e_cd if e_cd > 0.01 else ""
 
 
-func update_r_skill_status(hero_ctrl: Node, observing_boss: bool, observing_enemy: bool, observing_remote: bool, r_skill_cd_label: Label) -> void:
+func update_r_skill_status(
+	hero_ctrl: Node,
+	observing_boss: bool,
+	observing_enemy: bool,
+	observing_remote: bool,
+	r_skill_cd_label: Label
+) -> void:
 	if r_skill_cd_label == null:
 		return
 	if observing_boss or observing_enemy or observing_remote:
@@ -210,23 +262,27 @@ func update_r_skill_status(hero_ctrl: Node, observing_boss: bool, observing_enem
 		return
 	var is_transformed: bool = _variant_to_bool(hero_ctrl.get("_is_transformed"), false)
 	if is_transformed:
-		var transform_left: float = maxf(_variant_to_float(hero_ctrl.get("_transform_time_left"), 0.0), 0.0)
+		var transform_left: float = maxf(
+			_variant_to_float(hero_ctrl.get("_transform_time_left"), 0.0), 0.0
+		)
 		r_skill_cd_label.text = "↑%.1f" % transform_left
 		return
 	var current_count: int = maxi(_variant_to_int(hero_ctrl.get("_attack_count"), 0), 0)
-	var required_count: int = maxi(_variant_to_int(hero_ctrl.get("passive_transform_attack_count"), 1), 1)
+	var required_count: int = maxi(
+		_variant_to_int(hero_ctrl.get("passive_transform_attack_count"), 1), 1
+	)
 	r_skill_cd_label.text = "%d/%d" % [mini(current_count, required_count), required_count]
 
 
 func _set_skill_cast_mask_state(
-		skill_key: String,
-		show_mana_mask: bool,
-		show_cd_mask: bool,
-		cooldown_ratio: float,
-		skill_mana_masks: Dictionary,
-		skill_cd_masks: Dictionary,
-		skill_cd_mask_materials: Dictionary
-	) -> void:
+	skill_key: String,
+	show_mana_mask: bool,
+	show_cd_mask: bool,
+	cooldown_ratio: float,
+	skill_mana_masks: Dictionary,
+	skill_cd_masks: Dictionary,
+	skill_cd_mask_materials: Dictionary
+) -> void:
 	var mana_mask: ColorRect = skill_mana_masks.get(skill_key, null) as ColorRect
 	if mana_mask != null and is_instance_valid(mana_mask):
 		mana_mask.visible = show_mana_mask

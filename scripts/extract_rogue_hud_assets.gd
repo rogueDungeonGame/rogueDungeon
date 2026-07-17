@@ -7,6 +7,7 @@ const TRANSPARENT_CLEAR_COLOR := Color(0, 0, 0, 0)
 
 var _exported: Array = []
 
+
 func _init() -> void:
 	var project_dir := ProjectSettings.globalize_path("res://").rstrip("/")
 	var repo_dir := project_dir.get_base_dir()
@@ -34,27 +35,39 @@ func _init() -> void:
 	print("Exported %d HUD assets to %s" % [_exported.size(), output_dir])
 	quit(OK)
 
+
 func _asset_specs() -> Array:
 	return [
 		{
 			"name": "hud_bottom_shell",
 			"rect": Rect2i(0, 592, 1920, 438),
 			"clear_fill_color": HUD_CLEAR_FILL_COLOR,
-			"clear": [
+			"clear":
+			[
 				Rect2i(22, 35, 333, 357),
 				Rect2i(392, 31, 68, 268),
 				Rect2i(504, 36, 443, 354),
-				Rect2i(1017, 69, 106, 88), Rect2i(1149, 69, 106, 88),
-				Rect2i(1017, 180, 106, 99), Rect2i(1149, 180, 106, 99),
-				Rect2i(1017, 296, 106, 105), Rect2i(1149, 296, 106, 105),
-				Rect2i(1351, 73, 100, 86), Rect2i(1482, 73, 100, 86),
-				Rect2i(1611, 73, 100, 86), Rect2i(1740, 73, 112, 86),
+				Rect2i(1017, 69, 106, 88),
+				Rect2i(1149, 69, 106, 88),
+				Rect2i(1017, 180, 106, 99),
+				Rect2i(1149, 180, 106, 99),
+				Rect2i(1017, 296, 106, 105),
+				Rect2i(1149, 296, 106, 105),
+				Rect2i(1351, 73, 100, 86),
+				Rect2i(1482, 73, 100, 86),
+				Rect2i(1611, 73, 100, 86),
+				Rect2i(1740, 73, 112, 86),
 				Rect2i(1851, 136, 9, 16),
-				Rect2i(1351, 184, 100, 97), Rect2i(1482, 184, 100, 97),
-				Rect2i(1611, 184, 100, 97), Rect2i(1740, 184, 100, 97),
-				Rect2i(1351, 298, 100, 104), Rect2i(1482, 298, 100, 104),
-				Rect2i(1611, 298, 100, 104), Rect2i(1740, 298, 100, 104),
-				Rect2i(1085, 16, 125, 31), Rect2i(1515, 16, 210, 31)
+				Rect2i(1351, 184, 100, 97),
+				Rect2i(1482, 184, 100, 97),
+				Rect2i(1611, 184, 100, 97),
+				Rect2i(1740, 184, 100, 97),
+				Rect2i(1351, 298, 100, 104),
+				Rect2i(1482, 298, 100, 104),
+				Rect2i(1611, 298, 100, 104),
+				Rect2i(1740, 298, 100, 104),
+				Rect2i(1085, 16, 125, 31),
+				Rect2i(1515, 16, 210, 31)
 			],
 			"nine_patch_margins": [32, 32, 32, 32]
 		},
@@ -68,9 +81,7 @@ func _asset_specs() -> Array:
 			"name": "panel_side_tabs_frame",
 			"rect": Rect2i(379, 592, 84, 438),
 			"clear_fill_color": HUD_CLEAR_FILL_COLOR,
-			"clear": [
-				Rect2i(13, 31, 68, 268)
-			],
+			"clear": [Rect2i(13, 31, 68, 268)],
 			"nine_patch_margins": [18, 18, 18, 18]
 		},
 		{
@@ -82,26 +93,37 @@ func _asset_specs() -> Array:
 		{
 			"name": "panel_inventory_frame",
 			"rect": Rect2i(980, 592, 333, 438),
-			"clear": [
+			"clear":
+			[
 				Rect2i(105, 16, 125, 31),
-				Rect2i(37, 69, 106, 88), Rect2i(169, 69, 106, 88),
-				Rect2i(37, 180, 106, 99), Rect2i(169, 180, 106, 99),
-				Rect2i(37, 296, 106, 105), Rect2i(169, 296, 106, 105)
+				Rect2i(37, 69, 106, 88),
+				Rect2i(169, 69, 106, 88),
+				Rect2i(37, 180, 106, 99),
+				Rect2i(169, 180, 106, 99),
+				Rect2i(37, 296, 106, 105),
+				Rect2i(169, 296, 106, 105)
 			],
 			"nine_patch_margins": [30, 30, 30, 30]
 		},
 		{
 			"name": "panel_skills_frame",
 			"rect": Rect2i(1313, 592, 607, 438),
-			"clear": [
+			"clear":
+			[
 				Rect2i(202, 16, 210, 31),
-				Rect2i(38, 73, 100, 86), Rect2i(169, 73, 100, 86),
-				Rect2i(298, 73, 100, 86), Rect2i(427, 73, 112, 86),
+				Rect2i(38, 73, 100, 86),
+				Rect2i(169, 73, 100, 86),
+				Rect2i(298, 73, 100, 86),
+				Rect2i(427, 73, 112, 86),
 				Rect2i(538, 136, 9, 16),
-				Rect2i(38, 184, 100, 97), Rect2i(169, 184, 100, 97),
-				Rect2i(298, 184, 100, 97), Rect2i(427, 184, 100, 97),
-				Rect2i(38, 298, 100, 104), Rect2i(169, 298, 100, 104),
-				Rect2i(298, 298, 100, 104), Rect2i(427, 298, 100, 104)
+				Rect2i(38, 184, 100, 97),
+				Rect2i(169, 184, 100, 97),
+				Rect2i(298, 184, 100, 97),
+				Rect2i(427, 184, 100, 97),
+				Rect2i(38, 298, 100, 104),
+				Rect2i(169, 298, 100, 104),
+				Rect2i(298, 298, 100, 104),
+				Rect2i(427, 298, 100, 104)
 			],
 			"nine_patch_margins": [30, 30, 30, 30]
 		},
@@ -188,6 +210,7 @@ func _asset_specs() -> Array:
 		}
 	]
 
+
 func _export_asset(source: Image, output_dir: String, spec: Dictionary) -> void:
 	var rect: Rect2i = spec["rect"]
 	var asset := Image.create(rect.size.x, rect.size.y, false, Image.FORMAT_RGBA8)
@@ -203,12 +226,15 @@ func _export_asset(source: Image, output_dir: String, spec: Dictionary) -> void:
 		push_error("Cannot save asset: %s" % output_path)
 		return
 
-	_exported.append({
-		"name": spec["name"],
-		"file": ProjectSettings.localize_path(output_path),
-		"source_rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y],
-		"nine_patch_margins": spec.get("nine_patch_margins", [0, 0, 0, 0])
-	})
+	_exported.append(
+		{
+			"name": spec["name"],
+			"file": ProjectSettings.localize_path(output_path),
+			"source_rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y],
+			"nine_patch_margins": spec.get("nine_patch_margins", [0, 0, 0, 0])
+		}
+	)
+
 
 func _fill_rect(image: Image, rect: Rect2i, color: Color) -> void:
 	var bounds := Rect2i(Vector2i.ZERO, image.get_size())
@@ -220,6 +246,7 @@ func _fill_rect(image: Image, rect: Rect2i, color: Color) -> void:
 		for x in range(clipped.position.x, clipped.position.x + clipped.size.x):
 			image.set_pixel(x, y, color)
 
+
 func _write_metadata(output_dir: String) -> void:
 	var metadata_path := output_dir.path_join("rogue_hud_assets.json")
 	var file := FileAccess.open(metadata_path, FileAccess.WRITE)
@@ -227,10 +254,8 @@ func _write_metadata(output_dir: String) -> void:
 		push_error("Cannot write metadata: %s" % metadata_path)
 		return
 
-	file.store_string(JSON.stringify({
-		"source": SOURCE_RELATIVE_PATH,
-		"assets": _exported
-	}, "\t"))
+	file.store_string(JSON.stringify({"source": SOURCE_RELATIVE_PATH, "assets": _exported}, "\t"))
+
 
 func _write_preview(output_dir: String) -> void:
 	var preview := Image.create(1500, 980, false, Image.FORMAT_RGBA8)
@@ -269,18 +294,23 @@ func _write_preview(output_dir: String) -> void:
 		asset.convert(Image.FORMAT_RGBA8)
 		var scale := float(preview_spec[2])
 		if not is_equal_approx(scale, 1.0):
-			var scaled_size := Vector2i(maxi(1, int(round(asset.get_width() * scale))), maxi(1, int(round(asset.get_height() * scale))))
+			var scaled_size := Vector2i(
+				maxi(1, int(round(asset.get_width() * scale))),
+				maxi(1, int(round(asset.get_height() * scale)))
+			)
 			asset.resize(scaled_size.x, scaled_size.y, Image.INTERPOLATE_NEAREST)
 		preview.blend_rect(asset, Rect2i(Vector2i.ZERO, asset.get_size()), preview_spec[1])
 
 	var preview_path := output_dir.path_join("_preview_rogue_hud_assets.png")
 	preview.save_png(preview_path)
 
+
 func _asset_path_by_name(asset_name: String) -> String:
 	for entry in _exported:
 		if str(entry["name"]) == asset_name:
 			return ProjectSettings.globalize_path(str(entry["file"]))
 	return ""
+
 
 func _draw_checker(image: Image, rect: Rect2i) -> void:
 	var cell := 24

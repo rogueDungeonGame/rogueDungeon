@@ -18,13 +18,13 @@ func extract_inventory_from_hero_controller(hero_controller: Node) -> Array:
 
 
 func collect_local_hero_base_state(
-		hero: Node3D,
-		hero_controller: Node,
-		int_from_variant_fn: Callable,
-		float_from_variant_fn: Callable,
-		bool_from_variant_fn: Callable,
-		sanitize_peer_hero_command_fn: Callable
-	) -> Dictionary:
+	hero: Node3D,
+	hero_controller: Node,
+	int_from_variant_fn: Callable,
+	float_from_variant_fn: Callable,
+	bool_from_variant_fn: Callable,
+	sanitize_peer_hero_command_fn: Callable
+) -> Dictionary:
 	var state: Dictionary = {}
 	if hero == null:
 		return state
@@ -38,57 +38,139 @@ func collect_local_hero_base_state(
 		state["max_hp"] = _call_int(int_from_variant_fn, [hero_controller.get("max_hp"), 0], 0)
 		state["mana"] = _call_int(int_from_variant_fn, [hero_controller.get("current_mana"), 0], 0)
 		state["max_mana"] = _call_int(int_from_variant_fn, [hero_controller.get("max_mana"), 0], 0)
-		state["flash_cd"] = _call_float(float_from_variant_fn, [hero_controller.get("_flash_cooldown"), 0.0], 0.0)
-		state["haste_cd"] = _call_float(float_from_variant_fn, [hero_controller.get("_haste_cooldown"), 0.0], 0.0)
-		state["haste_active"] = _call_bool(bool_from_variant_fn, [hero_controller.get("_haste_active"), false], false)
-		state["haste_left"] = _call_float(float_from_variant_fn, [hero_controller.get("_haste_time_left"), 0.0], 0.0)
-		state["r_cooldown"] = _call_float(float_from_variant_fn, [hero_controller.get("_r_cooldown"), 0.0], 0.0)
-		state["is_moving"] = _call_bool(bool_from_variant_fn, [hero_controller.get("_is_moving"), false], false)
-		state["is_attacking"] = _call_bool(bool_from_variant_fn, [hero_controller.get("_is_attacking"), false], false)
-		state["skill_q_id"] = _call_int(int_from_variant_fn, [hero_controller.get("skill_q_id"), 0], 0)
+		state["flash_cd"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("_flash_cooldown"), 0.0], 0.0
+		)
+		state["haste_cd"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("_haste_cooldown"), 0.0], 0.0
+		)
+		state["haste_active"] = _call_bool(
+			bool_from_variant_fn, [hero_controller.get("_haste_active"), false], false
+		)
+		state["haste_left"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("_haste_time_left"), 0.0], 0.0
+		)
+		state["r_cooldown"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("_r_cooldown"), 0.0], 0.0
+		)
+		state["is_moving"] = _call_bool(
+			bool_from_variant_fn, [hero_controller.get("_is_moving"), false], false
+		)
+		state["is_attacking"] = _call_bool(
+			bool_from_variant_fn, [hero_controller.get("_is_attacking"), false], false
+		)
+		state["skill_q_id"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("skill_q_id"), 0], 0
+		)
 		state["skill_q_name"] = str(hero_controller.get("skill_q_name"))
-		state["skill_w_id"] = _call_int(int_from_variant_fn, [hero_controller.get("skill_w_id"), 0], 0)
+		state["skill_w_id"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("skill_w_id"), 0], 0
+		)
 		state["skill_w_name"] = str(hero_controller.get("skill_w_name"))
-		state["skill_r_id"] = _call_int(int_from_variant_fn, [hero_controller.get("skill_r_id"), 0], 0)
+		state["skill_r_id"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("skill_r_id"), 0], 0
+		)
 		state["hero_id"] = _call_int(int_from_variant_fn, [hero_controller.get("hero_id"), 1], 1)
 		state["hero_profile"] = str(hero_controller.get("hero_profile"))
-		state["hero_selected"] = _call_bool(bool_from_variant_fn, [hero_controller.get("hero_selection_confirmed"), false], false)
+		state["hero_selected"] = _call_bool(
+			bool_from_variant_fn, [hero_controller.get("hero_selection_confirmed"), false], false
+		)
 		if hero_controller.has_method("get_hp_bar_anchor_height"):
-			state["hp_bar_anchor_height"] = _call_float(float_from_variant_fn, [hero_controller.call("get_hp_bar_anchor_height"), 0.0], 0.0)
+			state["hp_bar_anchor_height"] = _call_float(
+				float_from_variant_fn, [hero_controller.call("get_hp_bar_anchor_height"), 0.0], 0.0
+			)
 		if hero_controller.has_method("get_collision_profile_id"):
 			state["collision_profile_id"] = str(hero_controller.call("get_collision_profile_id"))
 		if hero_controller.has_method("get_projectile_origin_global_position"):
-			var projectile_origin_variant: Variant = hero_controller.call("get_projectile_origin_global_position")
+			var projectile_origin_variant: Variant = hero_controller.call(
+				"get_projectile_origin_global_position"
+			)
 			if projectile_origin_variant is Vector3:
 				state["projectile_origin_pos"] = projectile_origin_variant
-		state["is_transformed"] = _call_bool(bool_from_variant_fn, [hero_controller.get("_is_transformed"), false], false)
-		state["transform_left"] = _call_float(float_from_variant_fn, [hero_controller.get("_transform_time_left"), 0.0], 0.0)
-		state["damage"] = _call_int(int_from_variant_fn, [hero_controller.get("damage_per_hit"), 0], 0)
-		state["flash_damage"] = _call_int(int_from_variant_fn, [hero_controller.get("flash_damage"), 0], 0)
-		state["flash_origin_damage_radius"] = _call_float(float_from_variant_fn, [hero_controller.get("flash_origin_damage_radius"), 0.0], 0.0)
-		state["flash_destination_damage_radius"] = _call_float(float_from_variant_fn, [hero_controller.get("flash_destination_damage_radius"), 0.0], 0.0)
-		state["ranged_q_ray_damage"] = _call_int(int_from_variant_fn, [hero_controller.get("ranged_q_ray_damage"), 0], 0)
-		state["ranged_q_ray_length"] = _call_float(float_from_variant_fn, [hero_controller.get("ranged_q_ray_length"), 0.0], 0.0)
-		state["ranged_r_damage"] = _call_int(int_from_variant_fn, [hero_controller.get("ranged_r_damage"), 0], 0)
-		state["ranged_r_radius"] = _call_float(float_from_variant_fn, [hero_controller.get("ranged_r_radius"), 0.0], 0.0)
-		state["ranged_r_cast_max_distance"] = _call_float(float_from_variant_fn, [hero_controller.get("ranged_r_cast_max_distance"), 0.0], 0.0)
-		state["poison_damage_per_second"] = _call_int(int_from_variant_fn, [hero_controller.get("poison_damage_per_second"), 0], 0)
-		state["poison_tick_interval"] = _call_float(float_from_variant_fn, [hero_controller.get("poison_tick_interval"), 1.0], 1.0)
-		state["armor"] = _call_float(float_from_variant_fn, [hero_controller.get("armor"), 0.0], 0.0)
-		state["move_speed"] = _call_float(float_from_variant_fn, [hero_controller.get("move_speed"), 0.0], 0.0)
-		state["attack_speed"] = _call_float(float_from_variant_fn, [hero_controller.get("attack_speed"), 0.0], 0.0)
-		state["attack_interval"] = _call_float(float_from_variant_fn, [hero_controller.get("attack_interval"), 0.0], 0.0)
-		state["attack_range"] = _call_float(float_from_variant_fn, [hero_controller.get("attack_range"), 0.0], 0.0)
-		state["cooldown_reduction_percent_total"] = _call_float(float_from_variant_fn, [hero_controller.get("cooldown_reduction_percent_total"), 0.0], 0.0)
-		state["physical_crit_chance"] = _call_float(float_from_variant_fn, [hero_controller.get("physical_crit_chance"), 0.0], 0.0)
-		state["physical_crit_multiplier"] = _call_float(float_from_variant_fn, [hero_controller.get("physical_crit_multiplier"), 0.0], 0.0)
-		state["spell_crit_chance"] = _call_float(float_from_variant_fn, [hero_controller.get("spell_crit_chance"), 0.0], 0.0)
-		state["spell_crit_multiplier"] = _call_float(float_from_variant_fn, [hero_controller.get("spell_crit_multiplier"), 0.0], 0.0)
+		state["is_transformed"] = _call_bool(
+			bool_from_variant_fn, [hero_controller.get("_is_transformed"), false], false
+		)
+		state["transform_left"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("_transform_time_left"), 0.0], 0.0
+		)
+		state["damage"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("damage_per_hit"), 0], 0
+		)
+		state["flash_damage"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("flash_damage"), 0], 0
+		)
+		state["flash_origin_damage_radius"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("flash_origin_damage_radius"), 0.0], 0.0
+		)
+		state["flash_destination_damage_radius"] = _call_float(
+			float_from_variant_fn,
+			[hero_controller.get("flash_destination_damage_radius"), 0.0],
+			0.0
+		)
+		state["ranged_q_ray_damage"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("ranged_q_ray_damage"), 0], 0
+		)
+		state["ranged_q_ray_length"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("ranged_q_ray_length"), 0.0], 0.0
+		)
+		state["ranged_r_damage"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("ranged_r_damage"), 0], 0
+		)
+		state["ranged_r_radius"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("ranged_r_radius"), 0.0], 0.0
+		)
+		state["ranged_r_cast_max_distance"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("ranged_r_cast_max_distance"), 0.0], 0.0
+		)
+		state["poison_damage_per_second"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("poison_damage_per_second"), 0], 0
+		)
+		state["poison_tick_interval"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("poison_tick_interval"), 1.0], 1.0
+		)
+		state["armor"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("armor"), 0.0], 0.0
+		)
+		state["move_speed"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("move_speed"), 0.0], 0.0
+		)
+		state["attack_speed"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("attack_speed"), 0.0], 0.0
+		)
+		state["attack_interval"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("attack_interval"), 0.0], 0.0
+		)
+		state["attack_range"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("attack_range"), 0.0], 0.0
+		)
+		state["cooldown_reduction_percent_total"] = _call_float(
+			float_from_variant_fn,
+			[hero_controller.get("cooldown_reduction_percent_total"), 0.0],
+			0.0
+		)
+		state["physical_crit_chance"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("physical_crit_chance"), 0.0], 0.0
+		)
+		state["physical_crit_multiplier"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("physical_crit_multiplier"), 0.0], 0.0
+		)
+		state["spell_crit_chance"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("spell_crit_chance"), 0.0], 0.0
+		)
+		state["spell_crit_multiplier"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("spell_crit_multiplier"), 0.0], 0.0
+		)
 		state["strength"] = _call_int(int_from_variant_fn, [hero_controller.get("strength"), 0], 0)
 		state["agility"] = _call_int(int_from_variant_fn, [hero_controller.get("agility"), 0], 0)
-		state["intelligence"] = _call_int(int_from_variant_fn, [hero_controller.get("intelligence"), 0], 0)
-		state["hp_regen_per_second"] = _call_float(float_from_variant_fn, [hero_controller.get("hp_regen_per_second"), 0.0], 0.0)
-		state["mana_regen_per_second"] = _call_float(float_from_variant_fn, [hero_controller.get("mana_regen_per_second"), 0.0], 0.0)
+		state["intelligence"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("intelligence"), 0], 0
+		)
+		state["hp_regen_per_second"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("hp_regen_per_second"), 0.0], 0.0
+		)
+		state["mana_regen_per_second"] = _call_float(
+			float_from_variant_fn, [hero_controller.get("mana_regen_per_second"), 0.0], 0.0
+		)
 		if hero_controller.has_method("get_necromancy_sync_state"):
 			var necro_variant: Variant = hero_controller.call("get_necromancy_sync_state")
 			if necro_variant is Dictionary:
@@ -111,10 +193,18 @@ func collect_local_hero_base_state(
 			state["is_dead"] = false
 		if hero_controller.has_method("get_network_command_state"):
 			var command_state_variant: Variant = hero_controller.call("get_network_command_state")
-			if sanitize_peer_hero_command_fn != null and sanitize_peer_hero_command_fn.is_valid() and command_state_variant is Dictionary:
-				state["command_bus"] = sanitize_peer_hero_command_fn.call(command_state_variant as Dictionary)
+			if (
+				sanitize_peer_hero_command_fn != null
+				and sanitize_peer_hero_command_fn.is_valid()
+				and command_state_variant is Dictionary
+			):
+				state["command_bus"] = sanitize_peer_hero_command_fn.call(
+					command_state_variant as Dictionary
+				)
 
-	var anim_player: AnimationPlayer = hero.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	var anim_player: AnimationPlayer = (
+		hero.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	)
 	if anim_player != null:
 		state["anim_name"] = String(anim_player.current_animation)
 		state["anim_playing"] = anim_player.is_playing()
@@ -122,11 +212,15 @@ func collect_local_hero_base_state(
 	return state
 
 
-func collect_local_equipment_state(hero_controller: Node, ui: Node, int_from_variant_fn: Callable) -> Dictionary:
+func collect_local_equipment_state(
+	hero_controller: Node, ui: Node, int_from_variant_fn: Callable
+) -> Dictionary:
 	var state: Dictionary = {}
 	if hero_controller != null:
 		state["inventory"] = extract_inventory_from_hero_controller(hero_controller)
-		state["hero_level"] = _call_int(int_from_variant_fn, [hero_controller.get("hero_level"), 1], 1)
+		state["hero_level"] = _call_int(
+			int_from_variant_fn, [hero_controller.get("hero_level"), 1], 1
+		)
 	if ui != null:
 		state["gold"] = _call_int(int_from_variant_fn, [ui.get("_gold"), 0], 0)
 		state["shop_level"] = _call_int(int_from_variant_fn, [ui.get("_shop_level"), 1], 1)
@@ -142,7 +236,13 @@ func collect_local_equipment_state(hero_controller: Node, ui: Node, int_from_var
 	return state
 
 
-func collect_boss_state(boss_controller: Node, build_network_boss_state_fn: Callable, int_from_variant_fn: Callable, float_from_variant_fn: Callable, bool_from_variant_fn: Callable) -> Dictionary:
+func collect_boss_state(
+	boss_controller: Node,
+	build_network_boss_state_fn: Callable,
+	int_from_variant_fn: Callable,
+	_float_from_variant_fn: Callable,
+	bool_from_variant_fn: Callable
+) -> Dictionary:
 	if boss_controller == null:
 		return {}
 	if boss_controller.has_method("export_network_state"):
@@ -158,7 +258,9 @@ func collect_boss_state(boss_controller: Node, build_network_boss_state_fn: Call
 		state["visible"] = boss_model.visible
 	state["hp"] = _call_int(int_from_variant_fn, [boss_controller.get("_current_hp"), 0], 0)
 	state["max_hp"] = _call_int(int_from_variant_fn, [boss_controller.get("max_hp"), 0], 0)
-	state["dead"] = _call_bool(bool_from_variant_fn, [boss_controller.get("_is_dead"), false], false)
+	state["dead"] = _call_bool(
+		bool_from_variant_fn, [boss_controller.get("_is_dead"), false], false
+	)
 	return _call_dict(build_network_boss_state_fn, [state])
 
 
@@ -171,7 +273,7 @@ func collect_mob_states_from_node(node: Node, build_network_mob_state_fn: Callab
 	if not (states_variant is Array):
 		return []
 	var filtered_states: Array = []
-	for state_variant in (states_variant as Array):
+	for state_variant in states_variant as Array:
 		if not (state_variant is Dictionary):
 			continue
 		var filtered_state: Dictionary = _call_dict(build_network_mob_state_fn, [state_variant])
@@ -181,7 +283,12 @@ func collect_mob_states_from_node(node: Node, build_network_mob_state_fn: Callab
 	return filtered_states
 
 
-func collect_breakable_states(scene_tree: SceneTree, breakable_group_name: StringName, object_has_property_fn: Callable, int_from_variant_fn: Callable) -> Array:
+func collect_breakable_states(
+	scene_tree: SceneTree,
+	breakable_group_name: StringName,
+	object_has_property_fn: Callable,
+	int_from_variant_fn: Callable
+) -> Array:
 	var states: Array = []
 	if scene_tree == null:
 		return states
@@ -198,13 +305,17 @@ func collect_breakable_states(scene_tree: SceneTree, breakable_group_name: Strin
 					exported_state["id"] = str(breakable_node.get_path())
 				states.append(exported_state)
 			continue
-		var fallback_state: Dictionary = build_breakable_fallback_state(breakable_node, object_has_property_fn, int_from_variant_fn)
+		var fallback_state: Dictionary = build_breakable_fallback_state(
+			breakable_node, object_has_property_fn, int_from_variant_fn
+		)
 		if not fallback_state.is_empty():
 			states.append(fallback_state)
 	return states
 
 
-func build_breakable_fallback_state(node: Node, object_has_property_fn: Callable, int_from_variant_fn: Callable) -> Dictionary:
+func build_breakable_fallback_state(
+	node: Node, object_has_property_fn: Callable, int_from_variant_fn: Callable
+) -> Dictionary:
 	if node == null:
 		return {}
 	var state: Dictionary = {}

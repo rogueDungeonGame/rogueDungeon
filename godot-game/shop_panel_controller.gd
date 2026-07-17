@@ -21,19 +21,19 @@ var _hover_text: String = ""
 
 
 func build(
-		root: Control,
-		ui_scale: float,
-		border_color: Color,
-		border_dark_color: Color,
-		text_color: Color,
-		detail_width: float,
-		detail_min_height: float,
-		detail_max_height: float,
-		detail_est_chars_per_line: float,
-		close_callback: Callable,
-		upgrade_callback: Callable,
-		refresh_callback: Callable
-	) -> void:
+	root: Control,
+	ui_scale: float,
+	border_color: Color,
+	border_dark_color: Color,
+	text_color: Color,
+	detail_width: float,
+	detail_min_height: float,
+	detail_max_height: float,
+	detail_est_chars_per_line: float,
+	close_callback: Callable,
+	upgrade_callback: Callable,
+	refresh_callback: Callable
+) -> void:
 	if root == null or not is_instance_valid(root):
 		return
 	if _panel != null and is_instance_valid(_panel):
@@ -162,7 +162,9 @@ func update_summary(shop_level_text: String, gold_text: String) -> void:
 		_gold_label.text = gold_text
 
 
-func update_action_buttons(upgrade_text: String, upgrade_disabled: bool, refresh_text: String, refresh_disabled: bool) -> void:
+func update_action_buttons(
+	upgrade_text: String, upgrade_disabled: bool, refresh_text: String, refresh_disabled: bool
+) -> void:
 	if _upgrade_btn != null:
 		_upgrade_btn.text = upgrade_text
 		_upgrade_btn.disabled = upgrade_disabled
@@ -180,7 +182,9 @@ func clear_item_hover_state() -> void:
 		_detail_popup.visible = false
 
 
-func on_item_mouse_entered(item_panel: Control, detail_text: String, hover_delay_sec: float) -> void:
+func on_item_mouse_entered(
+	item_panel: Control, detail_text: String, hover_delay_sec: float
+) -> void:
 	_hover_target = item_panel
 	_hover_text = detail_text
 	if _detail_timer != null:
@@ -224,8 +228,7 @@ func _build_item_detail_popup(border_color: Color, text_color: Color) -> void:
 	_detail_label.add_theme_color_override("font_color", text_color)
 	_detail_label.add_theme_font_size_override("font_size", _px_i(13))
 	_detail_label.custom_minimum_size = Vector2(
-		_detail_width - _px(24.0),
-		_detail_min_height - _px(18.0)
+		_detail_width - _px(24.0), _detail_min_height - _px(18.0)
 	)
 	margin.add_child(_detail_label)
 	_panel.add_child(_detail_popup)
@@ -260,19 +263,18 @@ func _show_item_detail(item_panel: Control, detail_text: String) -> void:
 	var compact_text: String = detail_text.strip_edges()
 	_detail_label.text = compact_text
 	var line_break_count: int = compact_text.count("\n")
-	var estimated_lines: int = line_break_count + int(ceil(float(compact_text.length()) / _detail_est_chars_per_line))
+	var estimated_lines: int = (
+		line_break_count + int(ceil(float(compact_text.length()) / _detail_est_chars_per_line))
+	)
 	estimated_lines = clampi(estimated_lines, 4, 8)
 	var target_height: float = clampf(
-		_px(24.0) + float(estimated_lines) * _px(18.0),
-		_detail_min_height,
-		_detail_max_height
+		_px(24.0) + float(estimated_lines) * _px(18.0), _detail_min_height, _detail_max_height
 	)
 	var target_size := Vector2(_detail_width, target_height)
 	_detail_popup.custom_minimum_size = target_size
 	_detail_popup.size = target_size
 	_detail_label.custom_minimum_size = Vector2(
-		_detail_width - _px(24.0),
-		target_height - _px(18.0)
+		_detail_width - _px(24.0), target_height - _px(18.0)
 	)
 	_detail_popup.visible = true
 	call_deferred("_position_item_detail_popup", item_panel)
