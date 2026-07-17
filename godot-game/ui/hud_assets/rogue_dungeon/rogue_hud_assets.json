@@ -1,0 +1,309 @@
+{
+	"assets": [
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/hud_bottom_shell.png",
+			"name": "hud_bottom_shell",
+			"nine_patch_margins": [
+				32,
+				32,
+				32,
+				32
+			],
+			"source_rect": [
+				0,
+				592,
+				1920,
+				438
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/panel_minimap_frame.png",
+			"name": "panel_minimap_frame",
+			"nine_patch_margins": [
+				30,
+				30,
+				30,
+				30
+			],
+			"source_rect": [
+				0,
+				592,
+				380,
+				438
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/panel_side_tabs_frame.png",
+			"name": "panel_side_tabs_frame",
+			"nine_patch_margins": [
+				18,
+				18,
+				18,
+				18
+			],
+			"source_rect": [
+				379,
+				592,
+				84,
+				438
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/panel_hero_stats_frame.png",
+			"name": "panel_hero_stats_frame",
+			"nine_patch_margins": [
+				34,
+				34,
+				34,
+				34
+			],
+			"source_rect": [
+				462,
+				592,
+				519,
+				438
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/panel_inventory_frame.png",
+			"name": "panel_inventory_frame",
+			"nine_patch_margins": [
+				30,
+				30,
+				30,
+				30
+			],
+			"source_rect": [
+				980,
+				592,
+				333,
+				438
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/panel_skills_frame.png",
+			"name": "panel_skills_frame",
+			"nine_patch_margins": [
+				30,
+				30,
+				30,
+				30
+			],
+			"source_rect": [
+				1313,
+				592,
+				607,
+				438
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/slot_item_gold.png",
+			"name": "slot_item_gold",
+			"nine_patch_margins": [
+				16,
+				16,
+				16,
+				16
+			],
+			"source_rect": [
+				1009,
+				653,
+				124,
+				106
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/slot_item_orange.png",
+			"name": "slot_item_orange",
+			"nine_patch_margins": [
+				16,
+				16,
+				16,
+				16
+			],
+			"source_rect": [
+				1141,
+				653,
+				124,
+				106
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/slot_item_red.png",
+			"name": "slot_item_red",
+			"nine_patch_margins": [
+				16,
+				16,
+				16,
+				16
+			],
+			"source_rect": [
+				1009,
+				763,
+				124,
+				117
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/slot_item_blue.png",
+			"name": "slot_item_blue",
+			"nine_patch_margins": [
+				16,
+				16,
+				16,
+				16
+			],
+			"source_rect": [
+				1141,
+				763,
+				124,
+				117
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/slot_item_green.png",
+			"name": "slot_item_green",
+			"nine_patch_margins": [
+				16,
+				16,
+				16,
+				16
+			],
+			"source_rect": [
+				1009,
+				886,
+				124,
+				116
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/slot_item_purple.png",
+			"name": "slot_item_purple",
+			"nine_patch_margins": [
+				16,
+				16,
+				16,
+				16
+			],
+			"source_rect": [
+				1141,
+				886,
+				124,
+				116
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/skill_button_frame.png",
+			"name": "skill_button_frame",
+			"nine_patch_margins": [
+				16,
+				16,
+				16,
+				16
+			],
+			"source_rect": [
+				1341,
+				653,
+				120,
+				106
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/skill_button_wide_frame.png",
+			"name": "skill_button_wide_frame",
+			"nine_patch_margins": [
+				16,
+				16,
+				16,
+				16
+			],
+			"source_rect": [
+				1341,
+				763,
+				120,
+				117
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/bar_frame_health.png",
+			"name": "bar_frame_health",
+			"nine_patch_margins": [
+				8,
+				8,
+				8,
+				8
+			],
+			"source_rect": [
+				527,
+				839,
+				157,
+				38
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/bar_frame_mana.png",
+			"name": "bar_frame_mana",
+			"nine_patch_margins": [
+				8,
+				8,
+				8,
+				8
+			],
+			"source_rect": [
+				527,
+				880,
+				157,
+				39
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/bar_frame_experience.png",
+			"name": "bar_frame_experience",
+			"nine_patch_margins": [
+				8,
+				8,
+				8,
+				8
+			],
+			"source_rect": [
+				766,
+				722,
+				180,
+				21
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/ornament_large_corner.png",
+			"name": "ornament_large_corner",
+			"nine_patch_margins": [
+				0,
+				0,
+				0,
+				0
+			],
+			"source_rect": [
+				457,
+				589,
+				70,
+				72
+			]
+		},
+		{
+			"file": "res://ui/hud_assets/rogue_dungeon/divider_panel_vertical.png",
+			"name": "divider_panel_vertical",
+			"nine_patch_margins": [
+				12,
+				24,
+				12,
+				24
+			],
+			"source_rect": [
+				972,
+				592,
+				36,
+				438
+			]
+		}
+	],
+	"source": "design-mockups/rogue-dungeon-main-hud-1920x1080-equipment-3x2-skills-3x4.png"
+}
