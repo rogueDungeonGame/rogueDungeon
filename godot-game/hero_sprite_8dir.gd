@@ -55,6 +55,8 @@ func _process(_delta: float) -> void:
 	_apply_visual_state()
 
 
+# ponytail: 本脚本挂在 NetSessionController 预加载的场景里，引用 HeroController
+# 类型会造成 脚本↔场景 循环加载（Parse Error: Busy），故保留动态探测
 func _find_hero_controller() -> Node:
 	var node: Node = get_parent()
 	while node != null:

@@ -603,20 +603,18 @@ func _try_apply_damage_to_hero() -> void:
 	if distance > attack_range:
 		return
 
-	var hero_controller := _hero.get_parent()
-	if hero_controller != null and hero_controller.has_method("apply_damage"):
-		hero_controller.call("apply_damage", damage_per_hit, false, _enemy, "physical")
+	var hero_controller := _hero.get_parent() as HeroController
+	if hero_controller != null:
+		hero_controller.apply_damage(damage_per_hit, false, _enemy, "physical")
 		if _is_hero_dead(_hero):
 			_stop_attack_combo_after_current = true
 			_retarget_hero_after_kill()
 		return
 	var target_peer_id: int = _get_remote_target_peer_id(_hero)
 	if target_peer_id > 0:
-		var net_ctrl: Node = _get_network_session_controller()
-		if net_ctrl != null and net_ctrl.has_method("request_damage_remote_hero"):
-			net_ctrl.call(
-				"request_damage_remote_hero", target_peer_id, damage_per_hit, false, "physical"
-			)
+		var net_ctrl: NetSessionController = _get_network_session_controller()
+		if net_ctrl != null:
+			net_ctrl.request_damage_remote_hero(target_peer_id, damage_per_hit, false, "physical")
 		if _is_hero_dead(_hero):
 			_stop_attack_combo_after_current = true
 			_retarget_hero_after_kill()
@@ -729,34 +727,24 @@ func _apply_damage_and_optional_slow_to_hero(
 	if _is_hero_dead(hero):
 		return false
 	var dealt: bool = false
-	var hero_controller: Node = hero.get_parent()
-	if hero_controller != null and hero_controller.has_method("apply_damage"):
-		hero_controller.call("apply_damage", maxi(damage, 0), false, _enemy, damage_type)
+	var hero_controller := hero.get_parent() as HeroController
+	if hero_controller != null:
+		hero_controller.apply_damage(maxi(damage, 0), false, _enemy, damage_type)
 		dealt = true
-		if (
-			slow_percent > 0.0
-			and slow_duration > 0.0
-			and hero_controller.has_method("apply_temporary_slow")
-		):
-			hero_controller.call("apply_temporary_slow", slow_percent, slow_duration)
+		if slow_percent > 0.0 and slow_duration > 0.0:
+			hero_controller.apply_temporary_slow(slow_percent, slow_duration)
 		return true
 	var target_peer_id: int = _get_remote_target_peer_id(hero)
 	if target_peer_id <= 0:
 		return dealt
-	var net_ctrl: Node = _get_network_session_controller()
+	var net_ctrl: NetSessionController = _get_network_session_controller()
 	if net_ctrl == null:
 		return dealt
-	if net_ctrl.has_method("request_damage_remote_hero"):
-		net_ctrl.call(
-			"request_damage_remote_hero", target_peer_id, maxi(damage, 0), false, damage_type
-		)
+	if true:
+		net_ctrl.request_damage_remote_hero(target_peer_id, maxi(damage, 0), false, damage_type)
 		dealt = true
-	if (
-		slow_percent > 0.0
-		and slow_duration > 0.0
-		and net_ctrl.has_method("request_slow_remote_hero")
-	):
-		net_ctrl.call("request_slow_remote_hero", target_peer_id, slow_percent, slow_duration)
+	if slow_percent > 0.0 and slow_duration > 0.0:
+		net_ctrl.request_slow_remote_hero(target_peer_id, slow_percent, slow_duration)
 	return dealt
 
 
@@ -1152,14 +1140,14 @@ func _is_hero_dead(hero: Node3D) -> bool:
 		return true
 	if not hero.visible:
 		return true
-	var hero_controller := hero.get_parent()
-	if hero_controller != null and hero_controller.has_method("is_dead"):
-		return bool(hero_controller.call("is_dead"))
+	var hero_controller := hero.get_parent() as HeroController
+	if hero_controller != null:
+		return bool(hero_controller.is_dead())
 	var peer_id: int = _get_remote_target_peer_id(hero)
 	if peer_id > 0:
-		var net_ctrl: Node = _get_network_session_controller()
-		if net_ctrl != null and net_ctrl.has_method("get_ui_peer_hero_state"):
-			var state_variant: Variant = net_ctrl.call("get_ui_peer_hero_state", peer_id)
+		var net_ctrl: NetSessionController = _get_network_session_controller()
+		if net_ctrl != null:
+			var state_variant: Variant = net_ctrl.get_ui_peer_hero_state(peer_id)
 			if state_variant is Dictionary:
 				var state: Dictionary = state_variant as Dictionary
 				if bool(state.get("is_dead", false)):
@@ -1169,15 +1157,15 @@ func _is_hero_dead(hero: Node3D) -> bool:
 	return false
 
 
-func _get_network_session_controller() -> Node:
+func _get_network_session_controller() -> NetSessionController:
 	var tree: SceneTree = get_tree()
 	if tree == null:
 		return null
-	return tree.get_first_node_in_group("net_session_controller")
+	return tree.get_first_node_in_group("net_session_controller") as NetSessionController
 
 
-func _get_tauren_spawner() -> Node:
-	return get_node_or_null(tauren_spawner_path)
+func _get_tauren_spawner() -> TaurenSpawner:
+	return get_node_or_null(tauren_spawner_path) as TaurenSpawner
 
 
 func _handle_hp_phase_spawn() -> void:
@@ -1211,15 +1199,13 @@ func _resolve_hp_phase(hp_value: int) -> int:
 
 
 func _spawn_phase_wave() -> void:
-	var spawner: Node = _get_tauren_spawner()
+	var spawner: TaurenSpawner = _get_tauren_spawner()
 	if spawner == null:
-		return
-	if not spawner.has_method("spawn_wave_at_position"):
 		return
 	var spawn_center: Vector3 = global_position
 	if phase_spawn_follow_boss and _enemy != null and is_instance_valid(_enemy):
 		spawn_center = _enemy.global_position
-	spawner.call("spawn_wave_at_position", phase_wave_unit_count, spawn_center)
+	spawner.spawn_wave_at_position(phase_wave_unit_count, spawn_center)
 
 
 func _get_remote_target_peer_id(target: Node3D) -> int:

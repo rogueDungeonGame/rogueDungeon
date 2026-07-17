@@ -633,9 +633,9 @@ func _is_target_dead(target: Node3D) -> bool:
 		return bool(controller.call("is_dead"))
 	var peer_id: int = _get_remote_target_peer_id(target)
 	if peer_id > 0:
-		var net_ctrl: Node = _get_network_session_controller()
-		if net_ctrl != null and net_ctrl.has_method("get_ui_peer_hero_state"):
-			var state_variant: Variant = net_ctrl.call("get_ui_peer_hero_state", peer_id)
+		var net_ctrl: NetSessionController = _get_network_session_controller()
+		if net_ctrl != null:
+			var state_variant: Variant = net_ctrl.get_ui_peer_hero_state(peer_id)
 			if state_variant is Dictionary:
 				var state: Dictionary = state_variant as Dictionary
 				if bool(state.get("is_dead", false)):
@@ -780,11 +780,9 @@ func _try_apply_damage_to_target() -> void:
 		return
 	var target_peer_id: int = _get_remote_target_peer_id(_target)
 	if target_peer_id > 0:
-		var net_ctrl: Node = _get_network_session_controller()
-		if net_ctrl != null and net_ctrl.has_method("request_damage_remote_hero"):
-			net_ctrl.call(
-				"request_damage_remote_hero", target_peer_id, final_damage, false, "physical"
-			)
+		var net_ctrl: NetSessionController = _get_network_session_controller()
+		if net_ctrl != null:
+			net_ctrl.request_damage_remote_hero(target_peer_id, final_damage, false, "physical")
 		if _is_target_dead(_target):
 			_target = _find_nearest_target()
 			return
@@ -1082,11 +1080,11 @@ func _reset_dynamic_detour_runtime() -> void:
 	_dynamic_blocked_time = 0.0
 
 
-func _get_network_session_controller() -> Node:
+func _get_network_session_controller() -> NetSessionController:
 	var tree: SceneTree = get_tree()
 	if tree == null:
 		return null
-	return tree.get_first_node_in_group("net_session_controller")
+	return tree.get_first_node_in_group("net_session_controller") as NetSessionController
 
 
 func _get_remote_target_peer_id(target: Node3D) -> int:

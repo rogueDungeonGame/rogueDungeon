@@ -529,11 +529,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _is_mouse_idle_for_model_inspect() -> bool:
-	var hero_controller: Node = _get_hero_controller()
+	var hero_controller: HeroController = _get_hero_controller()
 	if hero_controller == null:
 		return true
-	if hero_controller.has_method("is_mouse_idle_for_model_inspect"):
-		return bool(hero_controller.call("is_mouse_idle_for_model_inspect"))
+	return bool(hero_controller.is_mouse_idle_for_model_inspect())
 	return true
 
 
@@ -949,10 +948,10 @@ func _finalize_host_migration_after_start(local_is_host: bool) -> void:
 
 func _clear_cached_peer_runtime_for_migration() -> void:
 	var cached_peer_ids: Array = _peer_latest_equipment_state.keys()
-	var ui: Node = _get_game_ui()
-	if ui != null and ui.has_method("authority_drop_peer_state"):
+	var ui: GameUI = _get_game_ui()
+	if ui != null:
 		for peer_id_variant in cached_peer_ids:
-			ui.call("authority_drop_peer_state", int(peer_id_variant))
+			ui.authority_drop_peer_state(int(peer_id_variant))
 	_clear_remote_avatars()
 	_peer_latest_hero_state.clear()
 	_peer_latest_equipment_state.clear()
@@ -1496,9 +1495,9 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	_peer_input_latency_ms.erase(peer_id)
 	_peer_hero_selection_confirmed.erase(peer_id)
 	_peer_latest_hero_command.erase(peer_id)
-	var ui: Node = _get_game_ui()
-	if ui != null and ui.has_method("authority_drop_peer_state"):
-		ui.call("authority_drop_peer_state", peer_id)
+	var ui: GameUI = _get_game_ui()
+	if ui != null:
+		ui.authority_drop_peer_state(peer_id)
 	if _ui_observed_peer_id == peer_id:
 		_ui_observed_peer_id = 0
 		_notify_game_ui_observe_peer(0)
@@ -1699,21 +1698,18 @@ func rpc_request_equipment_action(request: Dictionary) -> void:
 func rpc_enemy_damage_result_from_authority(result: Dictionary) -> void:
 	if network_mode.strip_edges().to_lower() == "host":
 		return
-	var hero_controller: Node = _get_hero_controller()
-	if (
-		hero_controller != null
-		and hero_controller.has_method("on_authority_enemy_damage_confirmed")
-	):
-		hero_controller.call("on_authority_enemy_damage_confirmed", result)
+	var hero_controller: HeroController = _get_hero_controller()
+	if hero_controller != null:
+		hero_controller.on_authority_enemy_damage_confirmed(result)
 
 
 @rpc("authority", "call_remote", "reliable")
 func rpc_apply_equipment_commit_from_authority(commit: Dictionary) -> void:
 	if network_mode.strip_edges().to_lower() == "host":
 		return
-	var ui: Node = _get_game_ui()
-	if ui != null and ui.has_method("apply_authoritative_equipment_commit"):
-		ui.call("apply_authoritative_equipment_commit", commit)
+	var ui: GameUI = _get_game_ui()
+	if ui != null:
+		ui.apply_authoritative_equipment_commit(commit)
 	var state_variant: Variant = commit.get("state", null)
 	if state_variant is Dictionary:
 		var state: Dictionary = (state_variant as Dictionary).duplicate(true)
@@ -1775,18 +1771,18 @@ func rpc_apply_hero_damage_from_authority(
 ) -> void:
 	if network_mode.strip_edges().to_lower() == "host":
 		return
-	var hero_controller: Node = _get_hero_controller()
-	if hero_controller != null and hero_controller.has_method("apply_damage"):
-		hero_controller.call("apply_damage", maxi(amount, 0), ignore_armor, null, damage_type)
+	var hero_controller: HeroController = _get_hero_controller()
+	if hero_controller != null:
+		hero_controller.apply_damage(maxi(amount, 0), ignore_armor, null, damage_type)
 
 
 @rpc("authority", "call_remote", "reliable")
 func rpc_apply_hero_slow_from_authority(slow_percent: float, duration: float) -> void:
 	if network_mode.strip_edges().to_lower() == "host":
 		return
-	var hero_controller: Node = _get_hero_controller()
-	if hero_controller != null and hero_controller.has_method("apply_temporary_slow"):
-		hero_controller.call("apply_temporary_slow", slow_percent, duration)
+	var hero_controller: HeroController = _get_hero_controller()
+	if hero_controller != null:
+		hero_controller.apply_temporary_slow(slow_percent, duration)
 
 
 func _build_world_snapshot(force_full_sync: bool = false) -> Dictionary:
@@ -2291,10 +2287,10 @@ func _apply_client_equipment_state_from_sender(
 		return
 	var applied_state: Dictionary = equipment_state.duplicate(true)
 	if network_mode.strip_edges().to_lower() == "host":
-		var ui: Node = _get_game_ui()
-		if ui != null and ui.has_method("authority_ensure_peer_equipment_state"):
-			ui.call("authority_ensure_peer_equipment_state", sender_id, applied_state)
-		if ui != null and ui.has_method("authority_get_peer_equipment_state"):
+		var ui: GameUI = _get_game_ui()
+		if ui != null:
+			ui.authority_ensure_peer_equipment_state(sender_id, applied_state)
+		if ui != null:
 			var auth_state_variant: Variant = ui.call(
 				"authority_get_peer_equipment_state", sender_id
 			)
@@ -2556,7 +2552,7 @@ func _collect_local_hero_state() -> Dictionary:
 	var hero: Node3D = _get_local_hero()
 	if hero == null:
 		return {}
-	var hero_controller: Node = _get_hero_controller()
+	var hero_controller: HeroController = _get_hero_controller()
 	var state: Dictionary = _get_network_state_collection_service().collect_local_hero_base_state(
 		hero,
 		hero_controller,
@@ -2681,33 +2677,10 @@ func _collect_boss_state() -> Dictionary:
 
 
 func _apply_boss_state(state: Dictionary) -> void:
-	var boss_controller: Node = _get_boss_controller()
+	var boss_controller: EnemyAI = _get_boss_controller()
 	if boss_controller == null:
 		return
-	if boss_controller.has_method("apply_network_state"):
-		boss_controller.call("apply_network_state", state)
-		return
-
-	var boss_model_variant: Variant = boss_controller.get("_enemy")
-	if boss_model_variant is Node3D:
-		var boss_model: Node3D = boss_model_variant
-		var pos_variant: Variant = state.get("pos", boss_model.global_position)
-		if pos_variant is Vector3:
-			boss_model.global_position = pos_variant
-		var rot: Vector3 = boss_model.rotation
-		rot.y = _float_from_variant(state.get("yaw", rot.y), rot.y)
-		boss_model.rotation = rot
-		boss_model.visible = _bool_from_variant(state.get("visible", true), true)
-
-	if state.has("max_hp"):
-		boss_controller.set("max_hp", maxi(int(state["max_hp"]), 1))
-	if state.has("hp"):
-		var max_hp: int = _int_from_variant(boss_controller.get("max_hp"), 1)
-		boss_controller.set("_current_hp", clampi(int(state["hp"]), 0, maxi(max_hp, 1)))
-	if state.has("dead"):
-		boss_controller.set("_is_dead", _bool_from_variant(state["dead"], false))
-	if boss_controller.has_method("_update_hp_bar"):
-		boss_controller.call("_update_hp_bar")
+	boss_controller.apply_network_state(state)
 
 
 func _collect_mob_states() -> Array:
@@ -2824,6 +2797,7 @@ func _collect_mob_states_from_node(node: Node) -> Array:
 func _apply_mob_states_to_node(node: Node, states: Array, is_partial: bool = false) -> void:
 	if node == null:
 		return
+	# ponytail: node 是 TaurenSpawner 或 SummonedUnitManager，二型多态，保留动态探测
 	if not node.has_method("apply_network_states"):
 		return
 	node.call("apply_network_states", states, is_partial)
@@ -3251,7 +3225,7 @@ func _resolve_enemy_damage_controller(target_node: Node) -> Node:
 		return candidate
 	if not candidate.has_method("set_network_authority"):
 		return null
-	var boss_controller: Node = _get_boss_controller()
+	var boss_controller: EnemyAI = _get_boss_controller()
 	if candidate == boss_controller:
 		return candidate
 	var spawner: Node = _get_tauren_spawner()
@@ -3577,7 +3551,7 @@ func _is_peer_hero_selection_confirmed(peer_id: int) -> bool:
 
 
 func _is_local_hero_selection_confirmed() -> bool:
-	var hero_controller: Node = _get_hero_controller()
+	var hero_controller: HeroController = _get_hero_controller()
 	if hero_controller == null:
 		return false
 	return _bool_from_variant(hero_controller.get("hero_selection_confirmed"), false)
@@ -3710,8 +3684,8 @@ func _process_equipment_action_request(sender_id: int, request: Dictionary) -> D
 	if baseline_variant is Dictionary:
 		baseline_state = (baseline_variant as Dictionary).duplicate(true)
 	var commit: Dictionary = {}
-	var ui: Node = _get_game_ui()
-	if ui != null and ui.has_method("authority_handle_equipment_action"):
+	var ui: GameUI = _get_game_ui()
+	if ui != null:
 		var commit_variant: Variant = ui.call(
 			"authority_handle_equipment_action", sender_id, request, baseline_state
 		)
@@ -4490,7 +4464,7 @@ func _reset_local_skill_event_runtime(prime_from_hero: bool) -> void:
 	_local_prev_haste_active = false
 	if not prime_from_hero:
 		return
-	var hero_controller: Node = _get_hero_controller()
+	var hero_controller: HeroController = _get_hero_controller()
 	if hero_controller == null:
 		return
 	_local_prev_flash_cd = _float_from_variant(hero_controller.get("_flash_cooldown"), 0.0)
@@ -4560,7 +4534,7 @@ func _ensure_remote_players_root() -> void:
 func _apply_network_authority_mode() -> void:
 	var use_local_authority: bool = is_local_world_authority()
 
-	var boss_controller: Node = _get_boss_controller()
+	var boss_controller: EnemyAI = _get_boss_controller()
 	if boss_controller != null and boss_controller.has_method("set_network_authority"):
 		boss_controller.call("set_network_authority", use_local_authority)
 
@@ -4569,20 +4543,20 @@ func _apply_network_authority_mode() -> void:
 		spawner.call("set_network_authority", use_local_authority)
 
 
-func _get_hero_controller() -> Node:
-	return get_node_or_null(hero_controller_path)
+func _get_hero_controller() -> HeroController:
+	return get_node_or_null(hero_controller_path) as HeroController
 
 
-func _get_game_ui() -> Node:
-	return get_node_or_null(game_ui_path)
+func _get_game_ui() -> GameUI:
+	return get_node_or_null(game_ui_path) as GameUI
 
 
-func _get_boss_controller() -> Node:
-	return get_node_or_null(boss_controller_path)
+func _get_boss_controller() -> EnemyAI:
+	return get_node_or_null(boss_controller_path) as EnemyAI
 
 
-func _get_tauren_spawner() -> Node:
-	return get_node_or_null(tauren_spawner_path)
+func _get_tauren_spawner() -> TaurenSpawner:
+	return get_node_or_null(tauren_spawner_path) as TaurenSpawner
 
 
 func _get_summon_manager() -> Node:
@@ -4928,7 +4902,7 @@ func _is_click_on_boss(mouse_pos: Vector2) -> bool:
 	var camera: Camera3D = viewport.get_camera_3d()
 	if camera == null:
 		return false
-	var boss_controller: Node = _get_boss_controller()
+	var boss_controller: EnemyAI = _get_boss_controller()
 	if boss_controller == null:
 		return false
 	var boss_model: Node3D = null
@@ -4956,7 +4930,7 @@ func _pick_enemy_observe_state_by_mouse_position(mouse_pos: Vector2) -> Dictiona
 	var tree: SceneTree = get_tree()
 	if tree == null:
 		return {}
-	var boss_controller: Node = _get_boss_controller()
+	var boss_controller: EnemyAI = _get_boss_controller()
 	var pick_radius: float = maxf(remote_select_screen_radius, 8.0)
 	var best_distance: float = pick_radius
 	var best_state: Dictionary = {}
@@ -5046,27 +5020,24 @@ func _build_enemy_observe_state_from_controller(controller: Node) -> Dictionary:
 
 
 func _notify_game_ui_observe_peer(peer_id: int) -> void:
-	var ui: Node = _get_game_ui()
+	var ui: GameUI = _get_game_ui()
 	if ui == null:
 		return
-	if ui.has_method("set_observed_peer"):
-		ui.call("set_observed_peer", maxi(peer_id, 0))
+	ui.set_observed_peer(maxi(peer_id, 0))
 
 
 func _notify_game_ui_observe_boss(enabled: bool) -> void:
-	var ui: Node = _get_game_ui()
+	var ui: GameUI = _get_game_ui()
 	if ui == null:
 		return
-	if ui.has_method("set_observed_boss"):
-		ui.call("set_observed_boss", bool(enabled))
+	ui.set_observed_boss(bool(enabled))
 
 
 func _notify_game_ui_observe_enemy(enemy_state: Dictionary) -> void:
-	var ui: Node = _get_game_ui()
+	var ui: GameUI = _get_game_ui()
 	if ui == null:
 		return
-	if ui.has_method("set_observed_enemy"):
-		ui.call("set_observed_enemy", enemy_state)
+	ui.set_observed_enemy(enemy_state)
 
 
 func get_ui_self_peer_id() -> int:

@@ -66,7 +66,10 @@ func is_popup_open() -> bool:
 
 
 func update(
-	hero_ctrl: Node, is_observing_any: bool, popup_controller: Object, input_lock_changed: Callable
+	hero_ctrl: HeroController,
+	is_observing_any: bool,
+	popup_controller: Object,
+	input_lock_changed: Callable
 ) -> void:
 	if hero_ctrl == null:
 		return
@@ -98,7 +101,10 @@ func update(
 
 
 func on_option_pressed(
-	option_index: int, hero_ctrl: Node, popup_controller: Object, input_lock_changed: Callable
+	option_index: int,
+	hero_ctrl: HeroController,
+	popup_controller: Object,
+	input_lock_changed: Callable
 ) -> void:
 	if option_index < 0 or option_index >= _talent_current_options.size():
 		return
@@ -120,7 +126,7 @@ func on_option_pressed(
 		_set_talent_popup_visible(false, popup_controller, input_lock_changed)
 
 
-func build_bonus_bundle(hero_ctrl: Node) -> Dictionary:
+func build_bonus_bundle(hero_ctrl: HeroController) -> Dictionary:
 	if hero_ctrl == null:
 		return {}
 	var hero_id: int = _variant_to_int(hero_ctrl.get("hero_id"), 0)
@@ -130,7 +136,7 @@ func build_bonus_bundle(hero_ctrl: Node) -> Dictionary:
 
 
 func _reset_talent_selection_runtime(
-	hero_ctrl: Node, popup_controller: Object, input_lock_changed: Callable
+	hero_ctrl: HeroController, popup_controller: Object, input_lock_changed: Callable
 ) -> void:
 	_talent_pending_choice_count = 0
 	_talent_last_seen_hero_level = 0
@@ -158,7 +164,7 @@ func _set_talent_popup_visible(
 		input_lock_changed.call()
 
 
-func _get_current_talent_pool(hero_ctrl: Node) -> Array:
+func _get_current_talent_pool(hero_ctrl: HeroController) -> Array:
 	if hero_ctrl == null:
 		return []
 	var hero_id: int = _variant_to_int(hero_ctrl.get("hero_id"), 0)
@@ -184,7 +190,7 @@ func _pick_random_talent_options(pool: Array, count: int) -> Array:
 
 
 func _show_next_talent_popup(
-	hero_ctrl: Node, popup_controller: Object, input_lock_changed: Callable
+	hero_ctrl: HeroController, popup_controller: Object, input_lock_changed: Callable
 ) -> void:
 	if popup_controller == null:
 		return
@@ -312,11 +318,10 @@ func _build_rifleman_talent_bundle(counts: Dictionary) -> Dictionary:
 	return bundle
 
 
-func _apply_talent_bonuses_to_hero(hero_ctrl: Node) -> void:
+func _apply_talent_bonuses_to_hero(hero_ctrl: HeroController) -> void:
 	if hero_ctrl == null:
 		return
-	if hero_ctrl.has_method("apply_talent_bonuses"):
-		hero_ctrl.call("apply_talent_bonuses", build_bonus_bundle(hero_ctrl))
+	hero_ctrl.apply_talent_bonuses(build_bonus_bundle(hero_ctrl))
 
 
 func _variant_to_int(value: Variant, fallback: int = 0) -> int:
