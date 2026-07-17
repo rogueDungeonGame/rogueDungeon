@@ -304,8 +304,8 @@ func build_breakable_fallback_state(
 		return {}
 	var state: Dictionary = {}
 	var has_syncable_field: bool = false
-	if node.has_method("is_dead"):
-		state["dead"] = bool(node.is_dead())
+	if CombatTarget.is_damageable(node):
+		state["dead"] = CombatTarget.is_dead(node)
 		has_syncable_field = true
 	if _call_bool(object_has_property_fn, [node, "current_hp"], false):
 		state["hp"] = _call_int(int_from_variant_fn, [node.get("current_hp"), 0], 0)

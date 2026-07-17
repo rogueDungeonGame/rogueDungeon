@@ -629,8 +629,8 @@ func _is_target_dead(target: Node3D) -> bool:
 	if not target.visible:
 		return true
 	var controller := target.get_parent()
-	if controller != null and controller.has_method("is_dead"):
-		return bool(controller.call("is_dead"))
+	if CombatTarget.is_damageable(controller):
+		return CombatTarget.is_dead(controller)
 	var peer_id: int = _get_remote_target_peer_id(target)
 	if peer_id > 0:
 		var net_ctrl: NetSessionController = _get_network_session_controller()
@@ -761,17 +761,11 @@ func _try_apply_damage_to_target() -> void:
 		return
 	var target_controller := _target.get_parent()
 	var final_damage: int = _compute_attack_damage()
-	if target_controller != null and target_controller.has_method("apply_damage"):
+	if CombatTarget.is_damageable(target_controller):
 		if String(target_group_name) == "enemy":
-			if _model != null:
-				target_controller.call("apply_damage", final_damage, _model, "physical")
-			else:
-				target_controller.call("apply_damage", final_damage, null, "physical")
+			CombatTarget.apply_enemy_damage(target_controller, final_damage, _model, "physical")
 		else:
-			if _model != null:
-				target_controller.call("apply_damage", final_damage, false, _model)
-			else:
-				target_controller.call("apply_damage", final_damage)
+			CombatTarget.apply_hero_damage(target_controller, final_damage, false, _model)
 		if _is_target_dead(_target):
 			_target = _find_nearest_target()
 			return

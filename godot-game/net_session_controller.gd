@@ -2927,13 +2927,13 @@ func _consume_client_enemy_damage_request(sender_id: int, event: Dictionary) -> 
 			_record_damage_request_reject(sender_id, "gate_locked")
 			_reply_enemy_damage_request_result_to_client(sender_id, event_seq, false, "gate_locked")
 			return
-		if enemy_controller.has_method("is_dead") and bool(enemy_controller.call("is_dead")):
+		if CombatTarget.is_dead(enemy_controller):
 			_record_damage_request_reject(sender_id, "target_dead")
 			_reply_enemy_damage_request_result_to_client(sender_id, event_seq, false, "target_dead")
 			return
 		# 门是静态可破坏物，不需要套用怪物的远端化身/几何严格校验，避免客户端在同步抖动时被误拒。
 		var safe_gate_damage: int = clampi(requested_damage, 1, 200000)
-		enemy_controller.call("apply_damage", safe_gate_damage, null, "basic_attack")
+		CombatTarget.apply_enemy_damage(enemy_controller, safe_gate_damage, null, "basic_attack")
 		_record_damage_request_accept(sender_id)
 		_reply_enemy_damage_request_result_to_client(sender_id, event_seq, true)
 		return
@@ -3104,11 +3104,13 @@ func _consume_client_enemy_damage_request(sender_id: int, event: Dictionary) -> 
 		int(round(float(source_base_damage) * damage_cap_multiplier)), min_cap_floor
 	)
 	var safe_damage: int = clampi(requested_damage, 1, max_allowed_damage)
-	if enemy_controller.has_method("is_dead") and bool(enemy_controller.call("is_dead")):
+	if CombatTarget.is_dead(enemy_controller):
 		_record_damage_request_reject(sender_id, "target_dead")
 		_reply_enemy_damage_request_result_to_client(sender_id, event_seq, false, "target_dead")
 		return
-	enemy_controller.call("apply_damage", safe_damage, attacker_avatar, source_kind, context)
+	CombatTarget.apply_enemy_damage(
+		enemy_controller, safe_damage, attacker_avatar, source_kind, context
+	)
 	if source_kind == "q_ray" or source_kind == "precision_attack":
 		_apply_enemy_knockback_from_context(enemy_controller, context)
 	_record_damage_request_accept(sender_id)
@@ -3212,18 +3214,14 @@ func _resolve_enemy_damage_controller(target_node: Node) -> Node:
 	if target_node == null:
 		return null
 	var candidate: Node = target_node
-	if not candidate.has_method("apply_damage"):
+	if not CombatTarget.is_damageable(candidate):
 		candidate = target_node.get_parent()
-	if candidate == null:
-		return null
-	if not candidate.has_method("apply_damage"):
-		return null
-	if not candidate.has_method("is_dead"):
+	if not CombatTarget.is_damageable(candidate):
 		return null
 	# 可破坏物（如大门）没有 set_network_authority，但允许走客户端伤害请求。
 	if candidate.is_in_group(breakable_group_name):
 		return candidate
-	if not candidate.has_method("set_network_authority"):
+	if not (candidate is EnemyAI or candidate is TaurenUnitAI):
 		return null
 	var boss_controller: EnemyAI = _get_boss_controller()
 	if candidate == boss_controller:
@@ -3448,8 +3446,6 @@ func _validate_enemy_damage_geometry(
 func _apply_enemy_knockback_from_context(enemy_controller: Node, context: Dictionary) -> void:
 	if enemy_controller == null:
 		return
-	if not enemy_controller.has_method("apply_knockback"):
-		return
 	var distance: float = clampf(
 		_float_from_variant(context.get("knockback_distance", 0.0), 0.0), 0.0, 240.0
 	)
@@ -3477,8 +3473,8 @@ func _apply_enemy_knockback_from_context(enemy_controller: Node, context: Dictio
 				var direction_dot: float = ray_dir.dot(knockback_dir.normalized())
 				if direction_dot < 0.55:
 					return
-	enemy_controller.call(
-		"apply_knockback", knockback_dir.normalized(), distance, duration_sec, priority
+	CombatTarget.apply_knockback(
+		enemy_controller, knockback_dir.normalized(), distance, duration_sec, priority
 	)
 
 
@@ -4535,12 +4531,12 @@ func _apply_network_authority_mode() -> void:
 	var use_local_authority: bool = is_local_world_authority()
 
 	var boss_controller: EnemyAI = _get_boss_controller()
-	if boss_controller != null and boss_controller.has_method("set_network_authority"):
-		boss_controller.call("set_network_authority", use_local_authority)
+	if boss_controller != null:
+		boss_controller.set_network_authority(use_local_authority)
 
-	var spawner: Node = _get_tauren_spawner()
-	if spawner != null and spawner.has_method("set_network_authority"):
-		spawner.call("set_network_authority", use_local_authority)
+	var spawner: TaurenSpawner = _get_tauren_spawner()
+	if spawner != null:
+		spawner.set_network_authority(use_local_authority)
 
 
 func _get_hero_controller() -> HeroController:
@@ -4993,7 +4989,7 @@ func _looks_like_observable_enemy(node: Node) -> bool:
 func _build_enemy_observe_state_from_controller(controller: Node) -> Dictionary:
 	if controller == null:
 		return {}
-	if controller.has_method("is_dead") and bool(controller.call("is_dead")):
+	if CombatTarget.is_dead(controller):
 		return {}
 	if _object_has_property(controller, "_is_dead") and bool(controller.get("_is_dead")):
 		return {}

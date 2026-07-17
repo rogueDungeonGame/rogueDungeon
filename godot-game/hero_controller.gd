@@ -977,11 +977,8 @@ func _get_enemy_damage_bonus_percent(enemy: Node3D) -> float:
 	if enemy == null or not is_instance_valid(enemy):
 		return 0.0
 	var enemy_controller: Node = enemy.get_parent()
-	if (
-		enemy_controller != null
-		and enemy_controller.has_method("get_incoming_damage_bonus_percent")
-	):
-		return maxf(float(enemy_controller.call("get_incoming_damage_bonus_percent")), 0.0)
+	if enemy_controller is EnemyAI or enemy_controller is TaurenUnitAI:
+		return CombatTarget.get_incoming_damage_bonus_percent(enemy_controller)
 	var enemy_id: int = enemy.get_instance_id()
 	var entry_variant: Variant = _enemy_damage_bonus_runtime.get(enemy_id, {})
 	if not (entry_variant is Dictionary):
@@ -1001,8 +998,9 @@ func _apply_enemy_damage_bonus(
 	if bonus_percent <= 0.0:
 		return
 	var enemy_controller: Node = enemy.get_parent()
-	if enemy_controller != null and enemy_controller.has_method("apply_incoming_damage_bonus"):
-		enemy_controller.call("apply_incoming_damage_bonus", bonus_percent, duration_sec, permanent)
+	if CombatTarget.apply_incoming_damage_bonus(
+		enemy_controller, bonus_percent, duration_sec, permanent
+	):
 		return
 	var enemy_id: int = enemy.get_instance_id()
 	var entry_variant: Variant = _enemy_damage_bonus_runtime.get(enemy_id, {})
@@ -2287,7 +2285,7 @@ func _apply_charge_attack_effect_damage(primary_enemy: Node3D) -> void:
 	if primary_enemy == null or not is_instance_valid(primary_enemy):
 		return
 	var primary_enemy_controller: Node = primary_enemy.get_parent()
-	if primary_enemy_controller == null or not primary_enemy_controller.has_method("apply_damage"):
+	if not CombatTarget.is_damageable(primary_enemy_controller):
 		return
 	var agility_ratio: float = maxf(_charge_effect_float("attack_effect_agility_ratio", 0.0), 0.0)
 	if agility_ratio <= 0.0:
@@ -2340,7 +2338,7 @@ func _apply_spark_aoe_damage(
 		if _distance_xz(center, enemy.global_position) > safe_radius:
 			continue
 		var enemy_controller: Node = enemy.get_parent()
-		if enemy_controller == null or not enemy_controller.has_method("apply_damage"):
+		if not CombatTarget.is_damageable(enemy_controller):
 			continue
 		_apply_enemy_damage_with_network(
 			enemy_controller,
@@ -2356,7 +2354,7 @@ func _apply_spark_attack_effect_damage(primary_enemy: Node3D) -> void:
 	if primary_enemy == null or not is_instance_valid(primary_enemy):
 		return
 	var primary_enemy_controller: Node = primary_enemy.get_parent()
-	if primary_enemy_controller == null or not primary_enemy_controller.has_method("apply_damage"):
+	if not CombatTarget.is_damageable(primary_enemy_controller):
 		return
 
 	var effect_multiplier: float = maxf(_spark_effect_float("attack_effect_multiplier", 1.0), 1.0)
@@ -2658,11 +2656,7 @@ func _resolve_enemy_from_collider(collider: Node) -> Node3D:
 
 
 func _can_receive_skill_damage(enemy_controller: Node) -> bool:
-	if enemy_controller == null:
-		return false
-	if enemy_controller.has_method("can_receive_skill_damage"):
-		return bool(enemy_controller.call("can_receive_skill_damage"))
-	return true
+	return CombatTarget.can_receive_skill_damage(enemy_controller)
 
 
 func _handle_left_click() -> void:
@@ -3004,7 +2998,7 @@ func _apply_ranged_r_area_damage(center: Vector3, cast_origin: Vector3) -> void:
 		if distance > radius:
 			continue
 		var enemy_controller := enemy.get_parent()
-		if enemy_controller == null or not enemy_controller.has_method("apply_damage"):
+		if not CombatTarget.is_damageable(enemy_controller):
 			continue
 		if not _can_receive_skill_damage(enemy_controller):
 			continue
@@ -3186,7 +3180,7 @@ func _apply_ranged_q_ray_damage(ray_start: Vector3, ray_end: Vector3) -> void:
 		if lateral_distance > safe_hit_radius:
 			continue
 		var enemy_controller := enemy.get_parent()
-		if enemy_controller == null or not enemy_controller.has_method("apply_damage"):
+		if not CombatTarget.is_damageable(enemy_controller):
 			continue
 		if not _can_receive_skill_damage(enemy_controller):
 			continue
@@ -3240,14 +3234,12 @@ func _apply_q_ray_knockback_local_if_authority(
 		return
 	if distance <= 0.0:
 		return
-	if not enemy_controller.has_method("apply_knockback"):
-		return
 	var planar_dir: Vector3 = knockback_dir
 	planar_dir.y = 0.0
 	if planar_dir.length_squared() <= 0.0001:
 		return
-	enemy_controller.call(
-		"apply_knockback",
+	CombatTarget.apply_knockback(
+		enemy_controller,
 		planar_dir.normalized(),
 		distance,
 		clampf(duration_sec, 0.05, 0.5),
@@ -3276,7 +3268,7 @@ func _apply_flash_area_damage(
 		if distance > radius:
 			continue
 		var enemy_controller := enemy.get_parent()
-		if enemy_controller == null or not enemy_controller.has_method("apply_damage"):
+		if not CombatTarget.is_damageable(enemy_controller):
 			continue
 		if not _can_receive_skill_damage(enemy_controller):
 			continue
@@ -3422,7 +3414,7 @@ func _apply_poison_tick_damage(enemy: Node3D) -> void:
 	var enemy_controller: Node = enemy.get_parent()
 	if (
 		enemy_controller != null
-		and enemy_controller.has_method("apply_damage")
+		and CombatTarget.is_damageable(enemy_controller)
 		and _can_receive_skill_damage(enemy_controller)
 	):
 		var poison_multiplier: float = _talent_float("w_poison_damage_multiplier", 1.0)
@@ -3477,11 +3469,11 @@ func _apply_enemy_damage_with_network(
 				context
 			)
 			return bool(accepted_variant)
-	if enemy_controller.has_method("apply_damage"):
+	if CombatTarget.is_damageable(enemy_controller):
 		var attacker: Node3D = null
 		if _hero != null and is_instance_valid(_hero):
 			attacker = _hero
-		enemy_controller.call("apply_damage", safe_damage, attacker, source, context)
+		CombatTarget.apply_enemy_damage(enemy_controller, safe_damage, attacker, source, context)
 		return true
 	return false
 
@@ -3557,7 +3549,7 @@ func _resolve_enemy_from_damage_target_path(target_path: String) -> Node3D:
 	var direct_enemy: Node3D = target_node as Node3D
 	if direct_enemy != null and is_instance_valid(direct_enemy):
 		var parent_node: Node = direct_enemy.get_parent()
-		if parent_node != null and parent_node.has_method("apply_damage"):
+		if CombatTarget.is_damageable(parent_node):
 			return direct_enemy
 	return null
 
@@ -3616,7 +3608,7 @@ func _apply_confirmed_q_ray_effects(pending: Dictionary) -> void:
 		and is_instance_valid(target_enemy)
 	):
 		var enemy_controller: Node = target_enemy.get_parent()
-		if enemy_controller != null and enemy_controller.has_method("apply_damage"):
+		if CombatTarget.is_damageable(enemy_controller):
 			_apply_rifleman_precision_bonus(
 				enemy_controller,
 				target_enemy,
@@ -3642,7 +3634,7 @@ func _apply_confirmed_basic_attack_effects(pending: Dictionary) -> void:
 	var precision_triggered: bool = _consume_rifleman_precision_trigger()
 	if precision_triggered and target_enemy != null and is_instance_valid(target_enemy):
 		var enemy_controller: Node = target_enemy.get_parent()
-		if enemy_controller != null and enemy_controller.has_method("apply_damage"):
+		if CombatTarget.is_damageable(enemy_controller):
 			_apply_rifleman_precision_bonus(enemy_controller, target_enemy)
 	var attack_count_gain: int = maxi(int(pending.get("attack_count", 0)), 0)
 	if attack_count_gain > 0:
@@ -5108,7 +5100,7 @@ func _try_apply_damage_to_enemy() -> void:
 			return
 
 	var enemy_controller := _target_enemy.get_parent()
-	if enemy_controller != null and enemy_controller.has_method("apply_damage"):
+	if CombatTarget.is_damageable(enemy_controller):
 		var damage_result: Dictionary = _compute_physical_damage_result(damage_per_hit)
 		var final_damage: int = _get_damage_amount(damage_result)
 		if _submit_enemy_damage_with_confirmation(
@@ -5511,9 +5503,7 @@ func _is_enemy_dead(enemy: Node3D) -> bool:
 	if enemy == null or not is_instance_valid(enemy):
 		return true
 	var enemy_controller := enemy.get_parent()
-	if enemy_controller != null and enemy_controller.has_method("is_dead"):
-		return bool(enemy_controller.call("is_dead"))
-	return false
+	return CombatTarget.is_dead(enemy_controller)
 
 
 func _get_effective_ias_percent() -> float:
